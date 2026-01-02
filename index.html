@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meijin System - Tournament Management</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@900&family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --goban: #deb887; --ink: #1a1a1a; --paper: #fdfaf5; --accent: #8b0000; --win: #27ae60; }
+        body { font-family: 'Quicksand', sans-serif; background-color: #f4ece0; background-image: radial-gradient(#d4a359 0.5px, transparent 0.5px); background-size: 20px 20px; margin: 0; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        
+        /* Admin Bar */
+        .admin-bar { background: var(--ink); color: white; padding: 10px 20px; border-radius: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .admin-inputs { display: flex; gap: 10px; }
+        .admin-bar input { padding: 5px 10px; border-radius: 5px; border: none; width: 120px; }
+        .admin-bar button { width: auto; padding: 5px 15px; margin: 0; font-size: 0.8rem; }
+        
+        header { background: white; padding: 20px; border-radius: 20px; text-align: center; border-bottom: 8px solid var(--accent); box-shadow: 0 10px 20px rgba(0,0,0,0.05); margin-bottom: 30px; position: relative; }
+        .meijin-seal { position: absolute; top: 10px; right: 20px; border: 2px solid var(--accent); color: var(--accent); padding: 5px; font-family: 'Noto Serif JP', serif; font-weight: 900; transform: rotate(15deg); }
+        
+        .main-grid { display: grid; grid-template-columns: 350px 1fr; gap: 25px; }
+        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        h3 { font-family: 'Noto Serif JP', serif; border-bottom: 2px solid var(--goban); padding-bottom: 10px; margin-top: 0; }
+        
+        input, select { width: 100%; padding: 10px; margin: 8px 0; border: 2px solid #eee; border-radius: 8px; font-family: inherit; }
+        button { width: 100%; padding: 12px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; transition: 0.3s; margin-bottom: 5px; }
+        .btn-add { background: var(--ink); color: white; }
+        .btn-round { background: var(--accent); color: white; }
+        .btn-finish { background: var(--win); color: white; }
+        .btn-danger { background: #eee; color: #999; font-size: 0.7rem; }
+        
+        .scroll-area { max-height: 250px; overflow-y: auto; border: 1px solid #f0f0f0; padding: 10px; border-radius: 8px; }
+        .player-row { display: flex; align-items: center; justify-content: space-between; padding: 8px; border-bottom: 1px solid #eee; }
+        .match-box { background: var(--paper); border: 2px solid #eee; border-radius: 12px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .stone { width: 25px; height: 25px; border-radius: 50%; display: inline-block; box-shadow: 0 3px 6px rgba(0,0,0,0.2); }
+        .black { background: #111; } .white { background: #fff; border: 1px solid #ccc; }
+        .completed { background: #f0fff4; opacity: 0.8; }
+        .history-item { font-size: 0.8rem; padding: 8px; border-left: 3px solid var(--accent); background: #fafafa; margin-bottom: 5px; }
+
+        /* Logic for hiding/showing admin controls */
+        .admin-only { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="admin-bar">
+        <div id="loginStatus">Viewing as Guest (Read Only)</div>
+        <div class="admin-inputs" id="loginFields">
+            <input type="text" id="adminUser" placeholder="User">
+            <input type="password" id="adminPass" placeholder="Password">
+            <button class="btn-add" onclick="checkLogin()">Login</button>
+        </div>
+        <button id="logoutBtn" class="btn-danger" style="display:none; width:auto;" onclick="logout()">Logout</button>
+    </div>
+
+    <header>
+        <div class="meijin-seal">名人</div>
+        <h1>MEIJIN SYSTEM</h1>
+        <p id="tourneyTitle">Loading...</p>
+    </header>
+
+    <div class="main-grid">
+        <aside>
+            <div class="card">
+                <h3>Player Database</h3>
+                <div class="admin-only" id="dbInputs">
+                    <input type="text" id="dbName" placeholder="Name">
+                    <input type="text" id="dbRank" placeholder="Rank">
+                    <button class="btn-add" onclick="dbAddPlayer()">Add Player</button>
+                </div>
+                <div class="scroll-area" id="dbList"></div>
+            </div>
+
+            <div class="card">
+                <h3>Global Stats</h3>
+                <select id="statPlayer" onchange="updateChart()"></select>
+                <div style="height: 200px;"><canvas id="statChart"></canvas></div>
+            </div>
+        </aside>
+
+        <main>
+            <div id="tourneySetup" class="card" style="display:none;">
+                <h3>Tournament Registration</h3>
+                <input type="text" id="newTourneyName" placeholder="Tournament Name" class="admin-only">
+                <p id="regInstruction"><small>Players currently in the database are listed on the left.</small></p>
+                <button class="btn-round admin-only" id="startBtn" onclick="tourneyStart()">Start Tournament</button>
+            </div>
+
+            <div id="tourneyActive" class="card" style="display:none;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h3>Round <span id="roundNum">1</span></h3>
+                    <button onclick="tourneyArchive()" class="btn-finish admin-only" id="archiveBtn" style="width:auto;">Archive Tournament</button>
+                </div>
+                <div id="roundActions">
+                    </div>
+                <div id="matchZone"></div>
+            </div>
+
+            <div class="card">
+                <h3>Club Archives</h3>
+                <div class="scroll-area" id="archiveList"></div>
+                <button class="btn-danger admin-only" id="resetBtn" onclick="fullReset()">Wipe Database</button>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script>
+    let isAdmin = false;
+
+    function checkLogin() {
+        if (document.getElementById('adminUser').value === "admin" && 
+            document.getElementById('adminPass').value === "159753") {
+            isAdmin = true;
+            document.getElementById('loginFields').style.display = "none";
+            document.getElementById('logoutBtn').style.display = "block";
+            document.getElementById('loginStatus').innerText = "Logged in as Administrator";
+            document.getElementById('loginStatus').style.color = "#27ae60";
+            refreshUI();
+        } else { alert("Wrong credentials!"); }
+    }
+
+    function logout() { isAdmin = false; location.reload(); }
+
+    function refreshUI() {
+        document.querySelectorAll('.admin-only').forEach(el => {
+            el.style.display = isAdmin ? "block" : "none";
+        });
+        refreshState();
+    }
+
+    // --- DATA HANDLING ---
+    let db = JSON.parse(localStorage.getItem('mj_db')) || [];
+    let archives = JSON.parse(localStorage.getItem('mj_archives')) || [];
+    let activeTourney = JSON.parse(localStorage.getItem('mj_active')) || null;
+    let chartObj = null;
+
+    function save() {
+        localStorage.setItem('mj_db', JSON.stringify(db));
+        localStorage.setItem('mj_archives', JSON.stringify(archives));
+        localStorage.setItem('mj_active', JSON.stringify(activeTourney));
+    }
+
+    function dbAddPlayer() {
+        const n = document.getElementById('dbName').value, r = document.getElementById('dbRank').value;
+        if(!n || !r) return;
+        db.push({ id: Date.now().toString(), name: n, rank: r, totalWins:0, totalLosses:0 });
+        save(); renderDB();
+    }
+
+    function renderDB() {
+        const list = document.getElementById('dbList'), select = document.getElementById('statPlayer');
+        list.innerHTML = ""; select.innerHTML = "<option value=''>Select a player...</option>";
+        db.forEach(p => {
+            const isIn = activeTourney && activeTourney.players.find(ap => ap.id === p.id);
+            list.innerHTML += `
+                <div class="player-row">
+                    <span>${p.name} (${p.rank})</span>
+                    <input type="checkbox" ${isIn?'checked disabled':''} ${!isAdmin?'disabled':''} onchange="toggleEnroll('${p.id}')">
+                </div>`;
+            select.innerHTML += `<option value="${p.id}">${p.name}</option>`;
+        });
+    }
+
+    let enrolledIds = [];
+    function toggleEnroll(id) {
+        const idx = enrolledIds.indexOf(id);
+        if(idx === -1) enrolledIds.push(id); else enrolledIds.splice(idx,1);
+    }
+
+    function tourneyStart() {
+        const name = document.getElementById('newTourneyName').value || "Unnamed Cup";
+        if(enrolledIds.length < 2) return alert("At least 2 players required.");
+        activeTourney = { name, round: 1, players: db.filter(p => enrolledIds.includes(p.id)).map(p => ({...p, wins:0, pastOpponents:[]})), matches: [] };
+        enrolledIds = []; save(); refreshState();
+    }
+
+    function generateMatches() {
+        let pool = [...activeTourney.players].sort((a,b) => activeTourney.round === 1 ? rankVal(b.rank) - rankVal(a.rank) : b.wins - a.wins);
+        let paired = new Set();
+        activeTourney.matches = [];
+        for(let i=0; i<pool.length; i++) {
+            if(paired.has(pool[i].id)) continue;
+            let found = false;
+            for(let j=i+1; j<pool.length; j++) {
+                if(!paired.has(pool[j].id) && !pool[i].pastOpponents.includes(pool[j].id)) {
+                    activeTourney.matches.push({ id:Date.now()+j, p1:pool[i], p2:pool[j], p1Black:Math.random()>0.5, winnerId:null });
+                    paired.add(pool[i].id); paired.add(pool[j].id);
+                    found = true; break;
+                }
+            }
+            if(!found && !paired.has(pool[i].id)) { pool[i].wins++; paired.add(pool[i].id); }
+        }
+        save(); refreshState();
+    }
+
+    function setWinner(mId, wId, lId) {
+        if(!isAdmin) return;
+        const m = activeTourney.matches.find(x => x.id === mId);
+        m.winnerId = wId;
+        activeTourney.players.find(p => p.id === wId).wins++;
+        activeTourney.players.find(p => p.id === wId).pastOpponents.push(lId);
+        activeTourney.players.find(p => p.id === lId).pastOpponents.push(wId);
+        db.find(p => p.id === wId).totalWins++;
+        db.find(p => p.id === lId).totalLosses++;
+        save(); refreshState();
+    }
+
+    function refreshState() {
+        renderDB();
+        const setup = document.getElementById('tourneySetup'), active = document.getElementById('tourneyActive');
+        const title = document.getElementById('tourneyTitle'), arcList = document.getElementById('archiveList');
+
+        arcList.innerHTML = archives.map(a => `<div class="history-item"><strong>${a.name}</strong> - Winner: ${a.winner} (${a.date})</div>`).join('');
+
+        if(!activeTourney) {
+            setup.style.display = "block"; active.style.display = "none";
+            title.innerText = "Welcome to the Meijin Tournament";
+        } else {
+            setup.style.display = "none"; active.style.display = "block";
+            title.innerText = activeTourney.name;
+            document.getElementById('roundNum').innerText = activeTourney.round;
+            
+            document.getElementById('matchZone').innerHTML = activeTourney.matches.map(m => `
+                <div class="match-box ${m.winnerId?'completed':''}">
+                    <div style="text-align:center; width:40%;">
+                        <div class="stone ${m.p1Black?'black':'white'}"></div><br>${m.p1.name}<br>
+                        ${!m.winnerId && isAdmin ? `<button onclick="setWinner(${m.id},'${m.p1.id}','${m.p2.id}')" class="btn-finish" style="font-size:0.7rem;">Winner</button>` : (m.winnerId===m.p1.id?'🏆':'')}
+                    </div>
+                    <strong>VS</strong>
+                    <div style="text-align:center; width:40%;">
+                        <div class="stone ${m.p1Black?'white':'black'}"></div><br>${m.p2.name}<br>
+                        ${!m.winnerId && isAdmin ? `<button onclick="setWinner(${m.id},'${m.p2.id}','${m.p1.id}')" class="btn-finish" style="font-size:0.7rem;">Winner</button>` : (m.winnerId===m.p2.id?'🏆':'')}
+                    </div>
+                </div>`).join('');
+
+            const actArea = document.getElementById('roundActions');
+            if(activeTourney.matches.length > 0 && activeTourney.matches.every(m => m.winnerId)) {
+                actArea.innerHTML = isAdmin ? `<button class="btn-round" onclick="nextRound()">Next Round</button>` : `<p style="color:var(--win)">Round Complete</p>`;
+            } else if(activeTourney.matches.length === 0) {
+                actArea.innerHTML = isAdmin ? `<button class="btn-round" onclick="generateMatches()">Draw Pairings</button>` : `<p>Pairings pending...</p>`;
+            } else { actArea.innerHTML = `<p><small>Matches in progress...</small></p>`; }
+        }
+    }
+
+    function nextRound() { activeTourney.round++; activeTourney.matches = []; save(); refreshState(); }
+    function tourneyArchive() {
+        const w = [...activeTourney.players].sort((a,b) => b.wins - a.wins)[0];
+        archives.unshift({ name: activeTourney.name, winner: w.name, date: new Date().toLocaleDateString() });
+        activeTourney = null; save(); refreshState();
+    }
+    function updateChart() {
+        const p = db.find(x => x.id === document.getElementById('statPlayer').value);
+        if(!p) return;
+        if(chartObj) chartObj.destroy();
+        chartObj = new Chart(document.getElementById('statChart'), { type: 'doughnut', data: { labels: ['Wins','Losses'], datasets: [{ data: [p.totalWins, p.totalLosses], backgroundColor: ['#27ae60','#333'] }] }, options: { maintainAspectRatio: false } });
+    }
+    function rankVal(r) { r = r.toLowerCase(); return r.includes('k') ? 30 - parseInt(r) : 30 + parseInt(r); }
+    function fullReset() { if(confirm("Clear ALL data?")) { localStorage.clear(); location.reload(); } }
+
+    refreshState();
+</script>
+</body>
+</html>
