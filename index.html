@@ -3353,63 +3353,97 @@
         });
     }
 
-    function updateRoundProgress() {
-    if (!state.activeTournament || !state.activeTournament.roundProgress) {
-        const roundProgressHTML = '<div class="empty-state">No round data available</div>';
-        document.getElementById('roundProgressSection').innerHTML = roundProgressHTML;
+   function updateRoundProgress() {
+    const progressSection = document.getElementById('roundProgressSection');
+    if (!progressSection) return;
+    
+    try {
+        // Vérifier si un tournoi est actif via les éléments DOM
+        const tournamentTitle = document.getElementById('tournamentTitle')?.textContent;
+        const currentRound = document.getElementById('currentRound')?.textContent;
+        const totalRounds = document.getElementById('totalRounds')?.textContent;
         
-        // Mettre des valeurs par défaut pour la progression
-        document.getElementById('tournamentProgressText').textContent = 'Round 0/0';
-        document.getElementById('tournamentProgressFill').style.width = '0%';
-        document.getElementById('matchesCompleted').textContent = '0';
-        document.getElementById('totalMatchesEstimate').textContent = '0';
-        return;
+        if (!tournamentTitle || tournamentTitle === 'Active Tournament') {
+            progressSection.innerHTML = '<div class="empty-state">No active tournament</div>';
+            return;
+        }
+        
+        // Récupérer les données depuis Firebase si possible
+        const tournament = state?.activeTournament;
+        
+        if (!tournament) {
+            // Fallback: créer des données par défaut basées sur ce qu'on voit
+            const playerCount = parseInt(document.getElementById('tournamentPlayerCount')?.textContent || '0');
+            const roundNum = parseInt(currentRound || '1');
+            const roundsTotal = parseInt(totalRounds || '3');
+            
+            // Créer des données de progression par défaut
+            const defaultProgress = Array(roundsTotal).fill(0).map((_, i) => ({
+                round: i + 1,
+                completedMatches: i + 1 < roundNum ? Math.floor(playerCount / 2) : 0,
+                totalMatches: Math.floor(playerCount / 2)
+            }));
+            
+            // Générer l'HTML
+            const html = defaultProgress.map((round, index) => {
+                const isCurrent = index + 1 === roundNum;
+                const progress = round.totalMatches > 0 ? (round.completedMatches / round.totalMatches) * 100 : 0;
+                
+                return `
+                    <div class="round-item ${isCurrent ? 'pulse' : ''}">
+                        <div class="round-number" style="${isCurrent ? 'background: var(--accent);' : ''}">
+                            ${index + 1}
+                        </div>
+                        <div class="round-info">
+                            <div class="round-title">Round ${index + 1} ${isCurrent ? '(Current)' : ''}</div>
+                            <div class="round-stats">
+                                <span>${round.completedMatches}/${round.totalMatches} matches</span>
+                                <span>${Math.round(progress)}% complete</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            progressSection.innerHTML = html;
+        } else {
+            // Utiliser les données réelles du tournoi
+            if (!tournament.roundProgress || !Array.isArray(tournament.roundProgress)) {
+                tournament.roundProgress = Array(tournament.totalRounds || 3).fill(0).map((_, i) => ({
+                    round: i + 1,
+                    completedMatches: 0,
+                    totalMatches: Math.floor((tournament.participants?.length || 0) / 2)
+                }));
+            }
+            
+            const html = tournament.roundProgress.map((round, index) => {
+                const isCurrent = index + 1 === tournament.round;
+                const progress = round.totalMatches > 0 ? (round.completedMatches / round.totalMatches) * 100 : 0;
+                
+                return `
+                    <div class="round-item ${isCurrent ? 'pulse' : ''}">
+                        <div class="round-number" style="${isCurrent ? 'background: var(--accent);' : ''}">
+                            ${index + 1}
+                        </div>
+                        <div class="round-info">
+                            <div class="round-title">Round ${index + 1} ${isCurrent ? '(Current)' : ''}</div>
+                            <div class="round-stats">
+                                <span>${round.completedMatches || 0}/${round.totalMatches || 0} matches</span>
+                                <span>${Math.round(progress)}% complete</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            progressSection.innerHTML = html;
+        }
+        
+    } catch (error) {
+        console.error('Error in updateRoundProgress:', error);
+        progressSection.innerHTML = '<div class="empty-state">Error loading round progress</div>';
     }
-    
-    const roundProgressHTML = state.activeTournament.roundProgress.map((round, index) => {
-        const isCurrentRound = index + 1 === state.activeTournament.round;
-        const progress = round.totalMatches > 0 ? (round.completedMatches / round.totalMatches) * 100 : 0;
-        
-        return `
-            <div class="round-item ${isCurrentRound ? 'pulse' : ''}" style="${isCurrentRound ? 'border-color: var(--accent);' : ''}">
-                <div class="round-number" style="${isCurrentRound ? 'background: var(--accent);' : ''}">
-                    ${index + 1}
-                </div>
-                <div class="round-info">
-                    <div class="round-title">Round ${index + 1} ${isCurrentRound ? '(Current)' : ''}</div>
-                    <div class="round-stats">
-                        <span>${round.completedMatches}/${round.totalMatches} matches</span>
-                        <span>${Math.round(progress)}% complete</span>
-                    </div>
-                    <div class="progress-bar" style="margin-top: 8px; height: 6px;">
-                        <div class="progress-fill" style="width: ${progress}%; background: ${isCurrentRound ? 'var(--accent)' : 'var(--secondary)'};"></div>
-                    </div>
-                </div>
-            </div>
-        `;
-    }).join('');
-    
-    document.getElementById('roundProgressSection').innerHTML = roundProgressHTML || 
-        '<div class="empty-state">No round data available</div>';
-    
-    // Update tournament progress
-    const totalRounds = state.activeTournament.totalRounds || 0;
-    const currentRound = state.activeTournament.round || 0;
-    const tournamentProgress = totalRounds > 0 ? ((currentRound - 1) / totalRounds) * 100 : 0;
-    
-    document.getElementById('tournamentProgressText').textContent = `Round ${currentRound}/${totalRounds}`;
-    document.getElementById('tournamentProgressFill').style.width = `${tournamentProgress}%`;
-    
-    // Update matches statistics
-    const totalMatchesPlayed = state.activeTournament.matches ? 
-        state.activeTournament.matches.filter(m => m.winner).length : 0;
-    const participantsCount = state.activeTournament.participants ? state.activeTournament.participants.length : 0;
-    const estimatedTotalMatches = Math.floor(participantsCount / 2) * totalRounds;
-    
-    document.getElementById('matchesCompleted').textContent = totalMatchesPlayed;
-    document.getElementById('totalMatchesEstimate').textContent = estimatedTotalMatches;
 }
-
     function updateRankings() {
         const sortedPlayers = [...state.players].sort((a, b) => {
             if (a.elo !== undefined && b.elo !== undefined) {
@@ -4070,7 +4104,12 @@
     window.deleteSelectedMatch = deleteSelectedMatch;
     window.setBulkWinner = setBulkWinner;
     window.editMatchManually = editMatchManually;
+
+    // Exposer pour le debug
+window.appState = state;
+window.appIsAdmin = isAdmin;
 </script>
 </body>
 </html>
+
 
