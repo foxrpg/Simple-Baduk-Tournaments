@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meijin System - Firebase Cloud Edition</title>
+    <title>Meijin System - Firebase Cloud</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@900&family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
     
@@ -11,27 +11,21 @@
         :root { --goban: #deb887; --ink: #1a1a1a; --paper: #fdfaf5; --accent: #8b0000; --win: #27ae60; }
         body { font-family: 'Quicksand', sans-serif; background-color: #f4ece0; background-image: radial-gradient(#d4a359 0.5px, transparent 0.5px); background-size: 20px 20px; margin: 0; padding: 20px; }
         .container { max-width: 1200px; margin: 0 auto; }
-        
-        /* Admin Bar */
         .admin-bar { background: var(--ink); color: white; padding: 10px 20px; border-radius: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
         .admin-inputs { display: flex; gap: 10px; }
         .admin-bar input { padding: 5px 10px; border-radius: 5px; border: none; width: 120px; }
         .admin-bar button { width: auto; padding: 5px 15px; margin: 0; font-size: 0.8rem; background: var(--accent); color: white; border: none; border-radius: 5px; cursor: pointer; }
-        
         header { background: white; padding: 20px; border-radius: 20px; text-align: center; border-bottom: 8px solid var(--accent); box-shadow: 0 10px 20px rgba(0,0,0,0.05); margin-bottom: 30px; position: relative; }
         .meijin-seal { position: absolute; top: 10px; right: 20px; border: 2px solid var(--accent); color: var(--accent); padding: 5px; font-family: 'Noto Serif JP', serif; font-weight: 900; transform: rotate(15deg); }
-        
         .main-grid { display: grid; grid-template-columns: 350px 1fr; gap: 25px; }
         .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
         h3 { font-family: 'Noto Serif JP', serif; border-bottom: 2px solid var(--goban); padding-bottom: 10px; margin-top: 0; }
-        
         input, select { width: 100%; padding: 10px; margin: 8px 0; border: 2px solid #eee; border-radius: 8px; font-family: inherit; box-sizing: border-box; }
         button { width: 100%; padding: 12px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; transition: 0.3s; margin-bottom: 5px; }
         .btn-add { background: var(--ink); color: white; }
         .btn-round { background: var(--accent); color: white; }
         .btn-finish { background: var(--win); color: white; }
         .btn-danger { background: #eee; color: #999; font-size: 0.7rem; }
-        
         .scroll-area { max-height: 250px; overflow-y: auto; border: 1px solid #f0f0f0; padding: 10px; border-radius: 8px; }
         .player-row { display: flex; align-items: center; justify-content: space-between; padding: 8px; border-bottom: 1px solid #eee; }
         .match-box { background: var(--paper); border: 2px solid #eee; border-radius: 12px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
@@ -39,7 +33,6 @@
         .black { background: #111; } .white { background: #fff; border: 1px solid #ccc; }
         .completed { background: #f0fff4; opacity: 0.8; }
         .history-item { font-size: 0.8rem; padding: 8px; border-left: 3px solid var(--accent); background: #fafafa; margin-bottom: 5px; }
-
         .admin-only { display: none; }
     </style>
 </head>
@@ -66,7 +59,7 @@
         <aside>
             <div class="card">
                 <h3>Players</h3>
-                <div class="admin-only">
+                <div class="admin-only" id="addPlayerSection">
                     <input type="text" id="dbName" placeholder="Name">
                     <input type="text" id="dbRank" placeholder="Rank (e.g. 1d)">
                     <button class="btn-add" onclick="dbAddPlayer()">Add to Database</button>
@@ -82,8 +75,8 @@
 
         <main>
             <div id="tourneySetup" class="card" style="display:none;">
-                <h3>New Tournament</h3>
-                <div class="admin-only">
+                <h3>Tournament Registration</h3>
+                <div class="admin-only" id="setupControls">
                     <input type="text" id="newTourneyName" placeholder="Event Name">
                     <button class="btn-round" onclick="tourneyStart()">Start Event</button>
                 </div>
@@ -109,7 +102,6 @@
 </div>
 
 <script type="module">
-    // FIREBASE SETUP
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getDatabase, ref, set, onValue, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
@@ -126,13 +118,11 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // STATE
     window.isAdmin = false;
+    window.enrolledIds = [];
     let cloudData = { players: [], archives: [], activeTourney: null };
-    let enrolledIds = [];
     let chartObj = null;
 
-    // AUTH
     window.checkLogin = () => {
         if(document.getElementById('adminUser').value === "admin" && document.getElementById('adminPass').value === "159753") {
             window.isAdmin = true;
@@ -146,7 +136,6 @@
         } else { alert("Access Denied"); }
     };
 
-    // SYNC
     onValue(ref(db, '/'), (snapshot) => {
         const data = snapshot.val();
         cloudData.players = data?.players || [];
@@ -155,7 +144,6 @@
         refreshState();
     });
 
-    // FUNCTIONS
     window.dbAddPlayer = () => {
         const n = document.getElementById('dbName').value, r = document.getElementById('dbRank').value;
         if(!n || !r) return;
@@ -165,16 +153,16 @@
     };
 
     window.toggleEnroll = (id) => {
-        const idx = enrolledIds.indexOf(id);
-        idx === -1 ? enrolledIds.push(id) : enrolledIds.splice(idx,1);
+        const idx = window.enrolledIds.indexOf(id);
+        idx === -1 ? window.enrolledIds.push(id) : window.enrolledIds.splice(idx,1);
     };
 
     window.tourneyStart = () => {
         const name = document.getElementById('newTourneyName').value || "Winter Season";
-        if(enrolledIds.length < 2) return alert("Select at least 2 players");
-        const participants = cloudData.players.filter(p => enrolledIds.includes(p.id)).map(p => ({...p, wins:0, pOpp:[]}));
+        if(window.enrolledIds.length < 2) return alert("Select at least 2 players");
+        const participants = cloudData.players.filter(p => window.enrolledIds.includes(p.id)).map(p => ({...p, wins:0, pOpp:[]}));
         set(ref(db, 'activeTourney'), { name, round: 1, players: participants, matches: [] });
-        enrolledIds = [];
+        window.enrolledIds = [];
     };
 
     window.generateMatches = () => {
@@ -222,19 +210,27 @@
     window.fullReset = () => { if(confirm("ERASE CLOUD DATABASE?")) set(ref(db, '/'), null); };
 
     function refreshState() {
-        // Render DB
         const list = document.getElementById('dbList'), sel = document.getElementById('statPlayer');
         list.innerHTML = ""; sel.innerHTML = "<option value=''>Player Stats...</option>";
+        
         cloudData.players.forEach(p => {
-            const isIn = cloudData.activeTourney?.players.find(ap => ap.id === p.id);
-            list.innerHTML += `<div class="player-row"><span>${p.name} (${p.rank})</span><input type="checkbox" ${isIn?'checked disabled':''} ${!window.isAdmin?'disabled':''} onchange="toggleEnroll('${p.id}')"></div>`;
+            const isAlreadyActive = cloudData.activeTourney?.players.find(ap => ap.id === p.id);
+            const isSelectedNow = window.enrolledIds.includes(p.id);
+            
+            list.innerHTML += `
+                <div class="player-row">
+                    <span>${p.name} (${p.rank})</span>
+                    <input type="checkbox" 
+                        ${isAlreadyActive ? 'checked disabled' : ''} 
+                        ${isSelectedNow ? 'checked' : ''} 
+                        ${!window.isAdmin ? 'disabled' : ''} 
+                        onchange="toggleEnroll('${p.id}')">
+                </div>`;
             sel.innerHTML += `<option value="${p.id}">${p.name}</option>`;
         });
 
-        // Render Archives
         document.getElementById('archiveList').innerHTML = cloudData.archives.map(a => `<div class="history-item"><strong>${a.name}</strong> - Champion: ${a.winner} (${a.date})</div>`).join('');
 
-        // Tournament View
         const setup = document.getElementById('tourneySetup'), active = document.getElementById('tourneyActive'), title = document.getElementById('tourneyTitle');
         if(!cloudData.activeTourney) {
             setup.style.display = "block"; active.style.display = "none";
