@@ -4,45 +4,54 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Meijin System - Honinbo Road</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@900&family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
     <style>
-        :root { --goban: #deb887; --ink: #1a1a1a; --paper: #fdfaf5; --accent: #8b0000; --win: #27ae60; --gold: #d4af37; }
-        body { font-family: 'Quicksand', sans-serif; background-color: #f4ece0; padding: 20px; }
+        :root { 
+            --goban: #deb887; --ink: #1a1a1a; --paper: #fdfaf5; --accent: #8b0000; 
+            --win: #27ae60; --gold: #d4af37; --bg: #f4ece0; --card: #ffffff; --text: #1a1a1a;
+        }
+        [data-theme="dark"] {
+            --bg: #121212; --card: #1e1e1e; --text: #e0e0e0; --paper: #2d2d2d; --ink: #000000;
+        }
+
+        body { font-family: 'Quicksand', sans-serif; background-color: var(--bg); color: var(--text); padding: 20px; transition: 0.3s; }
         .container { max-width: 1200px; margin: 0 auto; }
         
         .admin-bar { background: var(--ink); color: white; padding: 10px 20px; border-radius: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
         .admin-bar input { padding: 5px; border-radius: 5px; border: none; width: 100px; margin: 0 5px; }
 
-        /* Honinbo Qualifier Banner */
-        .qualifier-banner { background: linear-gradient(45deg, #1a1a1a, #444); color: var(--gold); padding: 20px; border-radius: 15px; border: 3px solid var(--gold); text-align: center; margin-bottom: 25px; display: none; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
-        .qualifier-banner h2 { margin: 0; font-family: 'Noto Serif JP', serif; letter-spacing: 2px; }
+        .theme-toggle { cursor: pointer; background: #444; border: none; color: white; padding: 5px 10px; border-radius: 5px; font-size: 0.8rem; }
+
+        .qualifier-banner { background: linear-gradient(45deg, #1a1a1a, #444); color: var(--gold); padding: 20px; border-radius: 15px; border: 3px solid var(--gold); text-align: center; margin-bottom: 25px; display: none; }
         .qualifier-names { font-size: 1.5rem; font-weight: bold; color: white; margin-top: 10px; }
 
-        header { background: white; padding: 20px; border-radius: 20px; text-align: center; border-bottom: 8px solid var(--accent); margin-bottom: 30px; }
+        header { background: var(--card); padding: 20px; border-radius: 20px; text-align: center; border-bottom: 8px solid var(--accent); margin-bottom: 30px; }
         .main-grid { display: grid; grid-template-columns: 320px 1fr; gap: 25px; }
-        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .card { background: var(--card); padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; }
         
-        .rules-card { background: #fffde7; border-left: 5px solid var(--goban); padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; }
-        .match-box { background: var(--paper); border: 2px solid #eee; border-radius: 12px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-        .stone { width: 22px; height: 22px; border-radius: 50%; display: inline-block; vertical-align: middle; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
-        .black { background: #111; } .white { background: #fff; border: 1px solid #ccc; }
+        .rules-card { background: rgba(255, 253, 231, 0.1); border-left: 5px solid var(--goban); padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; }
+        .rules-title { font-weight: bold; color: var(--accent); margin-bottom: 5px; text-transform: uppercase; }
+
+        .match-box { background: var(--paper); border: 1px solid rgba(128,128,128,0.2); border-radius: 12px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .stone { width: 24px; height: 24px; border-radius: 50%; display: inline-block; vertical-align: middle; box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+        .black { background: #000; } .white { background: #fff; border: 1px solid #ccc; }
         
-        .btn-finish { background: var(--win); color: white; border: none; padding: 5px 12px; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        .btn-swap { background: #eee; color: #666; border: 1px solid #ccc; padding: 3px 8px; border-radius: 4px; cursor: pointer; font-size: 0.7rem; margin-top: 5px; }
-        .btn-round { background: var(--accent); color: white; width: 100%; padding: 12px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; }
-        
+        .btn-finish { background: var(--win); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .btn-round { background: var(--accent); color: white; width: 100%; padding: 12px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; margin-top: 10px; }
         .admin-only { display: none; }
         .scroll-area { max-height: 400px; overflow-y: auto; }
-        .player-row { display: flex; align-items: center; justify-content: space-between; padding: 8px; border-bottom: 1px solid #eee; }
-        .points-badge { background: var(--ink); color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.8rem; font-weight: bold; }
+        .player-row { display: flex; align-items: center; justify-content: space-between; padding: 10px; border-bottom: 1px solid rgba(128,128,128,0.1); }
+        .points-badge { background: var(--accent); color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.8rem; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="admin-bar">
-        <div id="loginStatus">Guest Mode</div>
+        <div>
+            <span id="loginStatus">Guest</span>
+            <button class="theme-toggle" onclick="toggleTheme()">🌓 Toggle Theme</button>
+        </div>
         <div id="loginFields">
             <input type="text" id="adminUser" placeholder="User">
             <input type="password" id="adminPass" placeholder="Pass">
@@ -53,31 +62,29 @@
 
     <div id="honinboBanner" class="qualifier-banner">
         <h2>HONINBO TOURNAMENT QUALIFIERS</h2>
-        <div id="qualifierNames" class="qualifier-names">--- & ---</div>
-        <p style="margin: 5px 0 0; font-size: 0.8rem; opacity: 0.8;">Automatically qualified based on current season rankings</p>
+        <div id="qualifierNames" class="qualifier-names">---</div>
     </div>
 
     <header>
         <h1>MEIJIN SYSTEM</h1>
-        <p id="tourneyTitle">Connecting...</p>
-        <div id="cycleStatus" style="font-weight: bold; color: var(--accent); margin-top: 10px;">Season Progress: 0/4 Tournaments</div>
+        <p id="cycleStatus">Season Progress: 0/4</p>
     </header>
 
     <div class="main-grid">
         <aside>
             <div class="rules-card">
-                <div class="rules-title">📜 System Rules</div>
-                • Win: <b>+10 pts</b> | Loss: <b>-5 pts</b><br>
-                • <b>Top 2</b> qualify for Honinbo<br>
-                • Reset every <b>4 tournaments</b>
+                <div class="rules-title">📜 Match Settings</div>
+                • Time: <b>45 min + 15s Fischer</b><br>
+                • Komi: <b>6.5 points</b><br>
+                • Win: <b>+10 pts</b> | Loss: <b>-5 pts</b>
             </div>
 
             <div class="card">
-                <h3>Rankings</h3>
+                <h3>Global Rankings</h3>
                 <div class="admin-only">
                     <input type="text" id="dbName" placeholder="Name">
                     <input type="text" id="dbRank" placeholder="Rank">
-                    <button onclick="dbAddPlayer()" style="width:100%; background:var(--ink); color:white; border:none; padding:8px; margin-top:5px; cursor:pointer;">Add Player</button>
+                    <button onclick="dbAddPlayer()" style="width:100%; margin-top:5px;">Add Player</button>
                 </div>
                 <div id="dbList" class="scroll-area"></div>
             </div>
@@ -85,22 +92,22 @@
 
         <main>
             <div id="tourneySetup" class="card">
-                <h3>New Tournament</h3>
-                <input type="text" id="newTourneyName" placeholder="Tournament Name" class="admin-only">
-                <button class="btn-round admin-only" onclick="tourneyStart()">Start Event</button>
+                <h3>Tournament Management</h3>
+                <input type="text" id="newTourneyName" placeholder="Event Name" class="admin-only" style="width:100%; margin-bottom:10px; padding:10px;">
+                <button class="btn-round admin-only" onclick="tourneyStart()">Start New Event</button>
             </div>
 
             <div id="tourneyActive" class="card" style="display:none;">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <h3 id="activeName">Live Matches</h3>
-                    <button class="admin-only btn-finish" onclick="tourneyArchive()">Finish & Archive</button>
+                    <h3 id="activeTitle">Active Matches</h3>
+                    <button class="admin-only btn-finish" onclick="tourneyArchive()">Finish Tournament</button>
                 </div>
                 <div id="roundActions"></div>
                 <div id="matchZone"></div>
             </div>
 
             <div class="card">
-                <h3>Tournament History</h3>
+                <h3>Hall of Fame</h3>
                 <div id="archiveList" class="scroll-area"></div>
             </div>
         </main>
@@ -127,6 +134,11 @@
     window.enrolledIds = [];
     let state = { players: [], active: null, archives: [], tourneyCount: 0 };
 
+    window.toggleTheme = () => {
+        const theme = document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        document.body.setAttribute('data-theme', theme);
+    };
+
     window.checkLogin = () => {
         if(document.getElementById('adminUser').value === "admin" && document.getElementById('adminPass').value === "159753") {
             window.isAdmin = true;
@@ -141,17 +153,14 @@
         if (docSnap.exists()) {
             state = docSnap.data();
             renderUI();
-        } else {
-            setDoc(doc(db, "system", "current"), { players: [], archives: [], active: null, tourneyCount: 0 });
         }
     });
 
     window.dbAddPlayer = async () => {
         const n = document.getElementById('dbName').value, r = document.getElementById('dbRank').value;
         if(!n) return;
-        const newPlayers = [...state.players, { id: Date.now().toString(), name: n, rank: r, points: 0 }];
+        const newPlayers = [...state.players, { id: Date.now().toString(), name: n, rank: r, points: 0, wins: 0, losses: 0 }];
         await updateDoc(doc(db, "system", "current"), { players: newPlayers });
-        document.getElementById('dbName').value = "";
     };
 
     window.toggleEnroll = (id) => {
@@ -160,14 +169,11 @@
     };
 
     window.tourneyStart = async () => {
-        if(window.enrolledIds.length < 2) return alert("Select players");
+        if(window.enrolledIds.length < 2) return alert("Select players first");
         const participants = state.players.filter(p => window.enrolledIds.includes(p.id)).map(p => ({...p, tWins:0, pOpp:[]}));
-        const newActive = { 
-            name: document.getElementById('newTourneyName').value || "Tournament",
-            players: participants,
-            matches: []
-        };
-        await updateDoc(doc(db, "system", "current"), { active: newActive });
+        await updateDoc(doc(db, "system", "current"), { 
+            active: { name: document.getElementById('newTourneyName').value || "Event", players: participants, matches: [], round: 1 } 
+        });
         window.enrolledIds = [];
     };
 
@@ -186,16 +192,11 @@
         await updateDoc(doc(db, "system", "current"), { "active.matches": matches });
     };
 
-    window.swapColors = async (mId) => {
-        const matches = state.active.matches.map(m => m.id === mId ? {...m, p1B: !m.p1B} : m);
-        await updateDoc(doc(db, "system", "current"), { "active.matches": matches });
-    };
-
     window.setWinner = async (mId, wId, lId) => {
         const matches = state.active.matches.map(m => m.id === mId ? {...m, winId: wId} : m);
         const globalPlayers = state.players.map(p => {
-            if(p.id === wId) return {...p, points: (p.points || 0) + 10};
-            if(p.id === lId) return {...p, points: Math.max(0, (p.points || 0) - 5)};
+            if(p.id === wId) return {...p, points: (p.points||0)+10, wins: (p.wins||0)+1};
+            if(p.id === lId) return {...p, points: Math.max(0, (p.points||0)-5), losses: (p.losses||0)+1};
             return p;
         });
         await updateDoc(doc(db, "system", "current"), { "active.matches": matches, "players": globalPlayers });
@@ -204,74 +205,47 @@
     window.tourneyArchive = async () => {
         let count = (state.tourneyCount || 0) + 1;
         let players = state.players;
-        let archives = state.archives;
-        
-        const winner = [...state.active.players].sort((a,b) => b.tWins - a.tWins)[0];
-        archives = [{ name: state.active.name, winner: winner?.name || "N/A", date: new Date().toLocaleDateString() }, ...archives];
-
-        // Reset Logic every 4 tournaments
-        if(count >= 4) {
-            alert("Season 4/4 finished! Points will reset for the next cycle.");
-            count = 0;
-            players = players.map(p => ({...p, points: 0}));
-        }
-
+        if(count >= 4) { count = 0; players = players.map(p => ({...p, points: 0})); }
         await updateDoc(doc(db, "system", "current"), {
-            archives: archives,
-            active: null,
-            tourneyCount: count,
-            players: players
+            archives: [{ name: state.active.name, date: new Date().toLocaleDateString() }, ...state.archives],
+            active: null, tourneyCount: count, players: players
         });
     };
 
     function renderUI() {
-        // Rankings list (Sorted by points)
-        const sortedPlayers = [...state.players].sort((a,b) => (b.points||0) - (a.points||0));
-        document.getElementById('dbList').innerHTML = sortedPlayers.map(p => `
+        const sorted = [...state.players].sort((a,b) => b.points - a.points);
+        document.getElementById('dbList').innerHTML = sorted.map(p => `
             <div class="player-row">
-                <span><b>${p.name}</b> <small>(${p.rank})</small></span>
+                <span><b>${p.name}</b> <br><small>${p.wins||0}W - ${p.losses||0}L</small></span>
                 <div>
-                    <span class="points-badge">${p.points || 0} pts</span>
-                    <input type="checkbox" ${!window.isAdmin?'disabled':''} onchange="toggleEnroll('${p.id}')">
+                    <span class="points-badge">${p.points||0} pt</span>
+                    <input type="checkbox" class="admin-only" onchange="toggleEnroll('${p.id}')">
                 </div>
             </div>`).join('');
 
-        // Honinbo Logic
-        if(sortedPlayers.length >= 2 && sortedPlayers[0].points > 0) {
+        if(sorted.length >= 2 && sorted[0].points > 0) {
             document.getElementById('honinboBanner').style.display = "block";
-            document.getElementById('qualifierNames').innerText = `${sortedPlayers[0].name} & ${sortedPlayers[1].name}`;
-        } else {
-            document.getElementById('honinboBanner').style.display = "none";
+            document.getElementById('qualifierNames').innerText = `${sorted[0].name} & ${sorted[1].name}`;
         }
 
-        document.getElementById('cycleStatus').innerText = `Season Progress: ${state.tourneyCount || 0}/4 Tournaments`;
-        document.getElementById('archiveList').innerHTML = state.archives.map(a => `<div class="history-item">🏆 <b>${a.winner}</b> - ${a.name}</div>`).join('');
+        document.getElementById('cycleStatus').innerText = `Season Progress: ${state.tourneyCount}/4`;
+        document.getElementById('archiveList').innerHTML = state.archives.map(a => `<div class="history-item">📍 ${a.name} (${a.date})</div>`).join('');
 
         const setup = document.getElementById('tourneySetup'), activeZone = document.getElementById('tourneyActive');
         if(!state.active) {
             setup.style.display = "block"; activeZone.style.display = "none";
-            document.getElementById('tourneyTitle').innerText = "Tournament Hub";
         } else {
             setup.style.display = "none"; activeZone.style.display = "block";
-            document.getElementById('tourneyTitle').innerText = state.active.name;
+            document.getElementById('activeTitle').innerText = state.active.name;
             document.getElementById('matchZone').innerHTML = state.active.matches.map(m => `
                 <div class="match-box">
-                    <div style="text-align:center; width:40%">
-                        <div class="stone ${m.p1B?'black':'white'}"></div><br><b>${m.p1.name}</b><br>
-                        ${!m.winId && window.isAdmin ? `<button onclick="setWinner(${m.id},'${m.p1.id}','${m.p2.id}')" class="btn-finish">Win</button>` : (m.winId===m.p1.id?'⭐':'')}
-                    </div>
-                    <div style="text-align:center">VS<br>${!m.winId && window.isAdmin ? `<button class="btn-swap" onclick="swapColors(${m.id})">Swap</button>` : ''}</div>
-                    <div style="text-align:center; width:40%">
-                        <div class="stone ${m.p1B?'white':'black'}"></div><br><b>${m.p2.name}</b><br>
-                        ${!m.winId && window.isAdmin ? `<button onclick="setWinner(${m.id},'${m.p2.id}','${m.p1.id}')" class="btn-finish">Win</button>` : (m.winId===m.p2.id?'⭐':'')}
-                    </div>
+                    <div style="text-align:center; width:40%"><div class="stone ${m.p1B?'black':'white'}"></div><br>${m.p1.name}<br>${!m.winId && window.isAdmin?`<button onclick="setWinner(${m.id},'${m.p1.id}','${m.p2.id}')">Win</button>`:(m.winId===m.p1.id?'⭐':'')}</div>
+                    <div>VS</div>
+                    <div style="text-align:center; width:40%"><div class="stone ${m.p1B?'white':'black'}"></div><br>${m.p2.name}<br>${!m.winId && window.isAdmin?`<button onclick="setWinner(${m.id},'${m.p2.id}','${m.p1.id}')">Win</button>`:(m.winId===m.p2.id?'⭐':'')}</div>
                 </div>`).join('');
-
-            const btnZone = document.getElementById('roundActions');
-            if(state.active.matches.length === 0) {
-                btnZone.innerHTML = window.isAdmin ? `<button class="btn-round" onclick="generateMatches()">Draw Pairs</button>` : `<p>Waiting for pairings...</p>`;
-            } else { btnZone.innerHTML = ""; }
+            document.getElementById('roundActions').innerHTML = (window.isAdmin && state.active.matches.length === 0) ? `<button class="btn-round" onclick="generateMatches()">Draw Pairs</button>` : '';
         }
+        if(window.isAdmin) document.querySelectorAll('.admin-only').forEach(el => el.style.display = "block");
     }
 </script>
 </body>
