@@ -120,6 +120,10 @@
             background-clip: text;
         }
 
+       .admin-hidden {
+    display: none !important;
+}
+
         .header-controls {
             display: flex;
             align-items: center;
@@ -2644,6 +2648,18 @@
         showNotification('Players swapped in selected match', 'success');
     }
 
+function updateAdminVisibility() {
+    const adminElements = document.querySelectorAll('.admin-element');
+    
+    adminElements.forEach(element => {
+        if (isAdmin) {
+            element.classList.remove('admin-hidden');
+        } else {
+            element.classList.add('admin-hidden');
+        }
+    });
+}
+    
     // 11. Sauvegarde des modifications d'un match
     async function saveMatchChanges() {
         const matchId = document.getElementById('editMatchSelect').value;
@@ -4090,4 +4106,5 @@
 </script>
 </body>
 </html>
+
 
