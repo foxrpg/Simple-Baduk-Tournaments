@@ -555,38 +555,52 @@
             font-weight: 500;
         }
 
-        /* Ajoute dans la section <style> */
-.win-btn {
-    padding: 8px 16px;
-    background: linear-gradient(135deg, var(--success) 0%, var(--success-light) 100%);
-    color: white;
-    border: none;
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    font-weight: 600;
-    transition: all 0.3s ease;
-    min-width: 140px;
-}
+        .win-btn {
+            padding: 8px 16px;
+            background: linear-gradient(135deg, var(--success) 0%, var(--success-light) 100%);
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            min-width: 140px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
 
-.win-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
-}
+        .win-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
+        }
 
-.match-player.winner {
-    background: linear-gradient(135deg, rgba(46, 204, 113, 0.1) 0%, transparent 100%);
-    border: 2px solid var(--success);
-}
+        .match-player.winner {
+            background: linear-gradient(135deg, rgba(46, 204, 113, 0.1) 0%, transparent 100%);
+            border: 2px solid var(--success);
+            position: relative;
+        }
 
-.badge-success {
-    background: var(--success);
-    color: white;
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    display: inline-block;
-}
+        .match-player.winner::after {
+            content: "🏆";
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 1.5rem;
+        }
+
+        .badge-success {
+            background: var(--success);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
 
         .player-stats {
             display: flex;
@@ -767,11 +781,10 @@
             border-radius: var(--radius-md);
             transition: all 0.3s ease;
             position: relative;
-        }
-
-        .match-player.winner {
-            background: linear-gradient(135deg, rgba(46, 204, 113, 0.1) 0%, transparent 100%);
-            border: 2px solid var(--success);
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
 
         .stone-display {
@@ -784,12 +797,6 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            cursor: pointer;
-        }
-
-        .stone-display.swappable:hover {
-            transform: scale(1.1);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
         }
 
         .stone-display.black {
@@ -844,43 +851,7 @@
             flex-direction: column;
             gap: 10px;
             align-items: center;
-        }
-
-        .win-btn {
-            padding: 10px 20px;
-            border-radius: var(--radius-md);
-            border: none;
-            background: linear-gradient(135deg, var(--success) 0%, var(--success-light) 100%);
-            color: white;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            min-width: 120px;
-            text-align: center;
-        }
-
-        .win-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
-        }
-
-        .lose-btn {
-            padding: 8px 16px;
-            border-radius: var(--radius-md);
-            border: none;
-            background: var(--secondary);
-            color: white;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            min-width: 120px;
-            text-align: center;
-            font-size: 0.9rem;
-        }
-
-        .lose-btn:hover {
-            background: var(--primary);
-            transform: translateY(-1px);
+            margin-top: 15px;
         }
 
         .match-status {
@@ -888,6 +859,7 @@
             font-size: 1.3rem;
             font-weight: 700;
             color: var(--accent);
+            padding: 0 20px;
         }
 
         /* Tournament Setup */
@@ -1158,11 +1130,6 @@
 
         .badge-bronze {
             background: var(--bronze);
-            color: white;
-        }
-
-        .badge-success {
-            background: var(--success);
             color: white;
         }
 
@@ -2256,7 +2223,7 @@
 
     // Fonction pour masquer/afficher les éléments admin
     function toggleAdminElements(show) {
-        const adminElements = document.querySelectorAll('.admin-hidden, .admin-only');
+        const adminElements = document.querySelectorAll('.admin-hidden');
         adminElements.forEach(el => {
             if (show) {
                 el.classList.remove('admin-hidden');
@@ -3003,7 +2970,7 @@
         showNotification('Match created successfully', 'success');
     }
 
-    // Swap colors function - AMÉLIORÉE
+    // CORRIGÉ : Fonction pour échanger les couleurs d'un match
     async function swapMatchColors(matchId) {
         if (!isAdmin) {
             showNotification('Admin access required', 'error');
@@ -3025,7 +2992,7 @@
         });
         
         // Animation visuelle
-        const stoneDisplay = document.querySelector(`.match-card [data-match-id="${matchId}"] .stone-display`);
+        const stoneDisplay = document.querySelector(`[data-match-id="${matchId}"] .stone-display`);
         if (stoneDisplay) {
             stoneDisplay.classList.add('color-swap-animation');
             setTimeout(() => stoneDisplay.classList.remove('color-swap-animation'), 500);
@@ -3034,6 +3001,7 @@
         showNotification('Colors swapped', 'info');
     }
 
+    // CORRIGÉ : Fonction pour déclarer un vainqueur
     async function setMatchWinner(matchId, winnerId) {
         if (!isAdmin) {
             showNotification('Admin access required', 'error');
@@ -3041,10 +3009,14 @@
         }
 
         const match = state.activeTournament.matches.find(m => m.id === matchId);
+        if (!match) return;
+
         const loserId = winnerId === match.player1.id ? match.player2.id : match.player1.id;
         
         const winner = state.players.find(p => p.id === winnerId);
         const loser = state.players.find(p => p.id === loserId);
+
+        if (!winner || !loser) return;
 
         // Calculate Elo changes
         const winnerElo = state.eloRatings[winnerId] || state.systemSettings.initialElo;
@@ -3067,7 +3039,7 @@
                     wins: (p.wins || 0) + 1,
                     elo: eloChanges.newWinnerElo,
                     history: [...(p.history || [0]), (p.points || 0) + state.activeTournament.settings.pointsPerWin],
-                    tournamentsPlayed: (p.tournamentsPlayed || 0) + (state.activeTournament.matches.filter(m => m.winner === p.id).length === 0 ? 1 : 0)
+                    tournamentsPlayed: (p.tournamentsPlayed || 0) + 1
                 };
             }
             if (p.id === loserId) {
@@ -3077,9 +3049,7 @@
                     losses: (p.losses || 0) + 1,
                     elo: eloChanges.newLoserElo,
                     history: [...(p.history || [0]), Math.max(0, (p.points || 0) + state.activeTournament.settings.pointsPerLoss)],
-                    tournamentsPlayed: (p.tournamentsPlayed || 0) + (state.activeTournament.matches.filter(m => 
-                        (m.player1.id === p.id || m.player2.id === p.id) && m.winner
-                    ).length === 0 ? 1 : 0)
+                    tournamentsPlayed: (p.tournamentsPlayed || 0) + 1
                 };
             }
             return p;
@@ -3353,21 +3323,22 @@
         }
     }
 
-    // UI Update Functions avec améliorations
+    // CORRIGÉ : Mise à jour de l'interface utilisateur
     function updateUI() {
-    updateRankings();
-    updateTournamentView();
-    updateStatistics();
-    updateRecentMatches();
-    updateSeasonTimeline();
-    updateRoundProgress(); // Cette ligne est OK maintenant
-    if (chart) chart.destroy();
-    renderChart();
-    updateSeasonInfo();
-    if (isAdmin) {
-        updateEditMatchSelect();
+        updateRankings();
+        updateTournamentView();
+        updateStatistics();
+        updateRecentMatches();
+        updateSeasonTimeline();
+        updateRoundProgress();
+        if (chart) chart.destroy();
+        renderChart();
+        updateSeasonInfo();
+        if (isAdmin) {
+            updateEditMatchSelect();
+        }
     }
-}
+
     function updateEditMatchSelect() {
         if (!state.activeTournament) return;
         
@@ -3386,97 +3357,123 @@
         });
     }
 
-   function updateRoundProgress() {
-    const progressSection = document.getElementById('roundProgressSection');
-    if (!progressSection) return;
-    
-    try {
-        // Vérifier si un tournoi est actif via les éléments DOM
-        const tournamentTitle = document.getElementById('tournamentTitle')?.textContent;
-        const currentRound = document.getElementById('currentRound')?.textContent;
-        const totalRounds = document.getElementById('totalRounds')?.textContent;
+    function updateRoundProgress() {
+        const progressSection = document.getElementById('roundProgressSection');
+        if (!progressSection) return;
         
-        if (!tournamentTitle || tournamentTitle === 'Active Tournament') {
+        if (!state.activeTournament) {
             progressSection.innerHTML = '<div class="empty-state">No active tournament</div>';
             return;
         }
         
-        // Récupérer les données depuis Firebase si possible
-        const tournament = state?.activeTournament;
-        
-        if (!tournament) {
-            // Fallback: créer des données par défaut basées sur ce qu'on voit
-            const playerCount = parseInt(document.getElementById('tournamentPlayerCount')?.textContent || '0');
-            const roundNum = parseInt(currentRound || '1');
-            const roundsTotal = parseInt(totalRounds || '3');
+        const tournament = state.activeTournament;
+        const html = tournament.roundProgress.map((round, index) => {
+            const isCurrent = index + 1 === tournament.round;
+            const progress = round.totalMatches > 0 ? (round.completedMatches / round.totalMatches) * 100 : 0;
             
-            // Créer des données de progression par défaut
-            const defaultProgress = Array(roundsTotal).fill(0).map((_, i) => ({
-                round: i + 1,
-                completedMatches: i + 1 < roundNum ? Math.floor(playerCount / 2) : 0,
-                totalMatches: Math.floor(playerCount / 2)
-            }));
-            
-            // Générer l'HTML
-            const html = defaultProgress.map((round, index) => {
-                const isCurrent = index + 1 === roundNum;
-                const progress = round.totalMatches > 0 ? (round.completedMatches / round.totalMatches) * 100 : 0;
-                
-                return `
-                    <div class="round-item ${isCurrent ? 'pulse' : ''}">
-                        <div class="round-number" style="${isCurrent ? 'background: var(--accent);' : ''}">
-                            ${index + 1}
-                        </div>
-                        <div class="round-info">
-                            <div class="round-title">Round ${index + 1} ${isCurrent ? '(Current)' : ''}</div>
-                            <div class="round-stats">
-                                <span>${round.completedMatches}/${round.totalMatches} matches</span>
-                                <span>${Math.round(progress)}% complete</span>
-                            </div>
+            return `
+                <div class="round-item ${isCurrent ? 'pulse' : ''}">
+                    <div class="round-number" style="${isCurrent ? 'background: var(--accent);' : ''}">
+                        ${index + 1}
+                    </div>
+                    <div class="round-info">
+                        <div class="round-title">Round ${index + 1} ${isCurrent ? '(Current)' : ''}</div>
+                        <div class="round-stats">
+                            <span>${round.completedMatches || 0}/${round.totalMatches || 0} matches</span>
+                            <span>${Math.round(progress)}% complete</span>
                         </div>
                     </div>
-                `;
-            }).join('');
-            
-            progressSection.innerHTML = html;
-        } else {
-            // Utiliser les données réelles du tournoi
-            if (!tournament.roundProgress || !Array.isArray(tournament.roundProgress)) {
-                tournament.roundProgress = Array(tournament.totalRounds || 3).fill(0).map((_, i) => ({
-                    round: i + 1,
-                    completedMatches: 0,
-                    totalMatches: Math.floor((tournament.participants?.length || 0) / 2)
-                }));
-            }
-            
-            const html = tournament.roundProgress.map((round, index) => {
-                const isCurrent = index + 1 === tournament.round;
-                const progress = round.totalMatches > 0 ? (round.completedMatches / round.totalMatches) * 100 : 0;
-                
-                return `
-                    <div class="round-item ${isCurrent ? 'pulse' : ''}">
-                        <div class="round-number" style="${isCurrent ? 'background: var(--accent);' : ''}">
-                            ${index + 1}
-                        </div>
-                        <div class="round-info">
-                            <div class="round-title">Round ${index + 1} ${isCurrent ? '(Current)' : ''}</div>
-                            <div class="round-stats">
-                                <span>${round.completedMatches || 0}/${round.totalMatches || 0} matches</span>
-                                <span>${Math.round(progress)}% complete</span>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-            
-            progressSection.innerHTML = html;
-        }
+                </div>
+            `;
+        }).join('');
         
-    } catch (error) {
-        console.error('Error in updateRoundProgress:', error);
-        progressSection.innerHTML = '<div class="empty-state">Error loading round progress</div>';
+        progressSection.innerHTML = html;
     }
-}
+
+    // CORRIGÉ : Affichage des matchs avec boutons pour admin et résultats pour invités
+    function updateMatchesDisplay() {
+        if (!state.activeTournament) return;
+        
+        const currentRound = state.activeTournament.round;
+        const matchesThisRound = state.activeTournament.matches.filter(m => m.round === currentRound);
+        
+        const matchesHTML = matchesThisRound.map(match => {
+            const isCompleted = !!match.winner;
+            const winnerIsPlayer1 = match.winner === match.player1.id;
+            
+            return `
+                <div class="match-card ${isCompleted ? 'completed' : ''}" data-match-id="${match.id}">
+                    <!-- Joueur 1 -->
+                    <div class="match-player ${winnerIsPlayer1 && isCompleted ? 'winner' : ''}">
+                        ${isAdmin && !isCompleted ? `
+                            <button onclick="swapMatchColors('${match.id}')" class="swap-colors-btn" title="Swap colors">
+                                ↻
+                            </button>
+                        ` : ''}
+                        
+                        <div class="stone-display ${match.player1IsBlack ? 'black' : 'white'}"></div>
+                        
+                        <div class="player-label">${match.player1.name}</div>
+                        <div class="player-subtext">${match.player1.rank} • ${state.eloRatings[match.player1.id] || state.systemSettings.initialElo} Elo</div>
+                        
+                        ${isCompleted ? 
+                            (winnerIsPlayer1 ? 
+                                '<div class="badge badge-success">🏆 WINNER</div>' : 
+                                '<div style="margin-top: 10px; opacity: 0.5;">Defeated</div>'
+                            ) : 
+                            (isAdmin ? 
+                                `<div class="match-actions">
+                                    <button onclick="setMatchWinner('${match.id}', '${match.player1.id}')" class="win-btn">
+                                        🏆 ${match.player1.name} Wins
+                                    </button>
+                                </div>` : 
+                                '<div style="margin-top: 10px; color: var(--text-secondary); font-size: 0.9rem;">Match in progress</div>'
+                            )
+                        }
+                    </div>
+                    
+                    <!-- Statut du match -->
+                    <div class="match-status">
+                        VS
+                        ${isCompleted ? '<div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 5px;">Completed</div>' : ''}
+                    </div>
+                    
+                    <!-- Joueur 2 -->
+                    <div class="match-player ${!winnerIsPlayer1 && isCompleted ? 'winner' : ''}">
+                        ${isAdmin && !isCompleted ? `
+                            <button onclick="swapMatchColors('${match.id}')" class="swap-colors-btn" title="Swap colors">
+                                ↻
+                            </button>
+                        ` : ''}
+                        
+                        <div class="stone-display ${!match.player1IsBlack ? 'black' : 'white'}"></div>
+                        
+                        <div class="player-label">${match.player2.name}</div>
+                        <div class="player-subtext">${match.player2.rank} • ${state.eloRatings[match.player2.id] || state.systemSettings.initialElo} Elo</div>
+                        
+                        ${isCompleted ? 
+                            (!winnerIsPlayer1 ? 
+                                '<div class="badge badge-success">🏆 WINNER</div>' : 
+                                '<div style="margin-top: 10px; opacity: 0.5;">Defeated</div>'
+                            ) : 
+                            (isAdmin ? 
+                                `<div class="match-actions">
+                                    <button onclick="setMatchWinner('${match.id}', '${match.player2.id}')" class="win-btn">
+                                        🏆 ${match.player2.name} Wins
+                                    </button>
+                                </div>` : 
+                                '<div style="margin-top: 10px; color: var(--text-secondary); font-size: 0.9rem;">Match in progress</div>'
+                            )
+                        }
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+        document.getElementById('matchesZone').innerHTML = matchesHTML || 
+            '<div class="empty-state">No matches for this round yet</div>';
+    }
+
     function updateRankings() {
         const sortedPlayers = [...state.players].sort((a, b) => {
             if (a.elo !== undefined && b.elo !== undefined) {
@@ -3548,7 +3545,7 @@
                 document.getElementById('pointsPerLoss').value = state.activeTournament.settings?.pointsPerLoss || -5;
             }
             
-            // Update player selects avec amélioration
+            // Update player selects
             const participants = state.activeTournament.participants || [];
             const playerOptions = participants.map(p => 
                 `<option value="${p.id}">${p.name} (${p.rank}) - ${state.eloRatings[p.id] || state.systemSettings.initialElo} Elo</option>`
@@ -3573,140 +3570,6 @@
             const nextTournamentNum = (state.tournamentCount % 4) + 1;
             document.getElementById('nextTournamentNumber').textContent = nextTournamentNum;
         }
-    }
-
-    function updateMatchesDisplay() {
-    if (!state.activeTournament) return;
-    
-    const currentRound = state.activeTournament.round;
-    const matchesThisRound = state.activeTournament.matches.filter(m => m.round === currentRound);
-    
-    const matchesHTML = matchesThisRound.map(match => {
-        const isCompleted = !!match.winner;
-        const winnerIsPlayer1 = match.winner === match.player1.id;
-        
-        // HTML commun pour les deux modes
-        let matchHTML = `
-            <div class="match-card ${isCompleted ? 'completed' : ''}" data-match-id="${match.id}" data-player1-id="${match.player1.id}" data-player2-id="${match.player2.id}">
-                <div class="match-player ${winnerIsPlayer1 && isCompleted ? 'winner' : ''}">
-        `;
-        
-        // Bouton swap colors (admin seulement, match non terminé)
-        if (isAdmin && !isCompleted) {
-            matchHTML += `
-                <button onclick="swapMatchColors('${match.id}')" 
-                        class="swap-colors-btn" 
-                        title="Swap colors">
-                    ↻
-                </button>
-            `;
-        }
-        
-        // Pierre Go
-        matchHTML += `
-                    <div class="stone-display ${match.player1IsBlack ? 'black' : 'white'}">
-                    </div>
-                    
-                    <div class="player-label">${match.player1.name}</div>
-                    <div class="player-subtext">${match.player1.rank} • ${state.eloRatings[match.player1.id] || state.systemSettings.initialElo} Elo</div>
-        `;
-        
-        // PARTIE CRITIQUE : Boutons de victoire ou badge de vainqueur
-        if (isCompleted) {
-            // MODE INVITÉ ou ADMIN (match terminé) : afficher le badge de vainqueur
-            if (winnerIsPlayer1) {
-                matchHTML += `<div class="badge badge-success" style="margin-top: 10px;">🏆 WINNER</div>`;
-            } else {
-                matchHTML += `<div style="margin-top: 10px; opacity: 0.5;">Defeated</div>`;
-            }
-        } else {
-            // Match non terminé : afficher bouton admin OU message attente
-            if (isAdmin) {
-                // MODE ADMIN : bouton pour valider victoire
-                matchHTML += `
-                    <div class="match-actions" style="margin-top: 10px;">
-                        <button onclick="setMatchWinner('${match.id}', '${match.player1.id}')" 
-                                class="win-btn" 
-                                style="padding: 8px 16px; background: linear-gradient(135deg, var(--success) 0%, var(--success-light) 100%); color: white; border: none; border-radius: var(--radius-md); cursor: pointer; font-weight: 600;">
-                            🏆 ${match.player1.name} Wins
-                        </button>
-                    </div>
-                `;
-            } else {
-                // MODE INVITÉ : afficher "Match en cours"
-                matchHTML += `<div style="margin-top: 10px; color: var(--text-secondary); font-size: 0.9rem;">Match in progress</div>`;
-            }
-        }
-        
-        matchHTML += `
-                </div>
-                
-                <div class="match-status">
-                    VS
-                    ${isCompleted ? `<div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 5px;">Completed</div>` : ''}
-                </div>
-                
-                <div class="match-player ${!winnerIsPlayer1 && isCompleted ? 'winner' : ''}">
-        `;
-        
-        // Bouton swap colors pour joueur 2 (admin seulement)
-        if (isAdmin && !isCompleted) {
-            matchHTML += `
-                <button onclick="swapMatchColors('${match.id}')" 
-                        class="swap-colors-btn" 
-                        title="Swap colors">
-                    ↻
-                </button>
-            `;
-        }
-        
-        matchHTML += `
-                    <div class="stone-display ${!match.player1IsBlack ? 'black' : 'white'}">
-                    </div>
-                    
-                    <div class="player-label">${match.player2.name}</div>
-                    <div class="player-subtext">${match.player2.rank} • ${state.eloRatings[match.player2.id] || state.systemSettings.initialElo} Elo</div>
-        `;
-        
-        // Même logique pour le joueur 2
-        if (isCompleted) {
-            if (!winnerIsPlayer1) {
-                matchHTML += `<div class="badge badge-success" style="margin-top: 10px;">🏆 WINNER</div>`;
-            } else {
-                matchHTML += `<div style="margin-top: 10px; opacity: 0.5;">Defeated</div>`;
-            }
-        } else {
-            if (isAdmin) {
-                matchHTML += `
-                    <div class="match-actions" style="margin-top: 10px;">
-                        <button onclick="setMatchWinner('${match.id}', '${match.player2.id}')" 
-                                class="win-btn" 
-                                style="padding: 8px 16px; background: linear-gradient(135deg, var(--success) 0%, var(--success-light) 100%); color: white; border: none; border-radius: var(--radius-md); cursor: pointer; font-weight: 600;">
-                            🏆 ${match.player2.name} Wins
-                        </button>
-                    </div>
-                `;
-            } else {
-                matchHTML += `<div style="margin-top: 10px; color: var(--text-secondary); font-size: 0.9rem;">Match in progress</div>`;
-            }
-        }
-        
-        matchHTML += `
-                </div>
-            </div>
-        `;
-        
-        return matchHTML;
-    }).join('');
-    
-    document.getElementById('matchesZone').innerHTML = matchesHTML || 
-        '<div class="empty-state">No matches for this round yet</div>';
-}
-
-    function editMatchManually(matchId) {
-        switchTab('manual');
-        document.getElementById('editMatchSelect').value = matchId;
-        loadMatchForEditing();
     }
 
     function updateEnrollmentZone() {
@@ -4184,14 +4047,10 @@
     window.saveMatchChanges = saveMatchChanges;
     window.deleteSelectedMatch = deleteSelectedMatch;
     window.setBulkWinner = setBulkWinner;
-    window.editMatchManually = editMatchManually;
 
     // Exposer pour le debug
-window.appState = state;
-window.appIsAdmin = isAdmin;
+    window.appState = state;
+    window.appIsAdmin = isAdmin;
 </script>
 </body>
 </html>
-
-
-
