@@ -3357,38 +3357,38 @@
         });
     }
 
-    function updateRoundProgress() {
-        const progressSection = document.getElementById('roundProgressSection');
-        if (!progressSection) return;
+function updateRoundProgress() {
+    const progressSection = document.getElementById('round-progress');
+    if (!progressSection) return;
+    
+    // Protection complète
+    if (!tournament || !tournament.roundProgress || !Array.isArray(tournament.roundProgress)) {
+        progressSection.innerHTML = '<div class="no-progress">Progression non disponible</div>';
+        return;
+    }
+    
+    const html = tournament.roundProgress.map((round, index) => {
+        const isCurrent = index + 1 === tournament.round;
+        const progress = round.totalMatches > 0 ? (round.completedMatches / round.totalMatches) * 100 : 0;
         
-        if (!state.activeTournament) {
-            progressSection.innerHTML = '<div class="empty-state">No active tournament</div>';
-            return;
-        }
-        
-        const tournament = state.activeTournament;
-        const html = tournament.roundProgress.map((round, index) => {
-            const isCurrent = index + 1 === tournament.round;
-            const progress = round.totalMatches > 0 ? (round.completedMatches / round.totalMatches) * 100 : 0;
-            
-            return `
-                <div class="round-item ${isCurrent ? 'pulse' : ''}">
-                    <div class="round-number" style="${isCurrent ? 'background: var(--accent);' : ''}">
-                        ${index + 1}
-                    </div>
-                    <div class="round-info">
-                        <div class="round-title">Round ${index + 1} ${isCurrent ? '(Current)' : ''}</div>
-                        <div class="round-stats">
-                            <span>${round.completedMatches || 0}/${round.totalMatches || 0} matches</span>
-                            <span>${Math.round(progress)}% complete</span>
-                        </div>
+        return `
+            <div class="round-item ${isCurrent ? 'pulse' : ''}">
+                <div class="round-number" style="${isCurrent ? 'background: var(--accent);' : ''}">
+                    ${index + 1}
+                </div>
+                <div class="round-info">
+                    <div class="round-title">Round ${index + 1} ${isCurrent ? '(Current)' : ''}</div>
+                    <div class="round-stats">
+                        <span>${round.completedMatches || 0}/${round.totalMatches || 0} matches</span>
+                        <span>${Math.round(progress)}% complete</span>
                     </div>
                 </div>
-            `;
-        }).join('');
-        
-        progressSection.innerHTML = html;
-    }
+            </div>
+        `;
+    }).join('');
+    
+    progressSection.innerHTML = html;
+}
 
     // CORRIGÉ : Affichage des matchs avec boutons pour admin et résultats pour invités
     function updateMatchesDisplay() {
@@ -4054,3 +4054,4 @@
 </script>
 </body>
 </html>
+
