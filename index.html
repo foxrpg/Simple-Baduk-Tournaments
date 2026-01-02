@@ -744,6 +744,15 @@
             margin: 0 auto 15px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .stone-display.swappable:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
         }
 
         .stone-display.black {
@@ -762,20 +771,22 @@
             background: var(--warning);
             color: white;
             border: none;
-            width: 30px;
-            height: 30px;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            font-size: 0.9rem;
+            font-size: 1rem;
             transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(243, 156, 18, 0.3);
         }
 
         .swap-colors-btn:hover {
             transform: rotate(180deg);
             background: #e67e22;
+            box-shadow: 0 4px 12px rgba(230, 126, 34, 0.4);
         }
 
         .player-label {
@@ -791,6 +802,13 @@
             margin-bottom: 15px;
         }
 
+        .match-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+        }
+
         .win-btn {
             padding: 10px 20px;
             border-radius: var(--radius-md);
@@ -800,11 +818,32 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
+            min-width: 120px;
+            text-align: center;
         }
 
         .win-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
+        }
+
+        .lose-btn {
+            padding: 8px 16px;
+            border-radius: var(--radius-md);
+            border: none;
+            background: var(--secondary);
+            color: white;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 120px;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        .lose-btn:hover {
+            background: var(--primary);
+            transform: translateY(-1px);
         }
 
         .match-status {
@@ -1179,6 +1218,52 @@
         .tab-content.active {
             display: block;
         }
+
+        /* Round Progress */
+        .round-progress {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .round-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px;
+            background: var(--bg-light);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+        }
+
+        .round-number {
+            width: 36px;
+            height: 36px;
+            background: var(--secondary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        .round-info {
+            flex: 1;
+        }
+
+        .round-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .round-stats {
+            display: flex;
+            gap: 15px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
     </style>
 </head>
 <body>
@@ -1403,6 +1488,11 @@
                         </div>
                     </div>
 
+                    <!-- Round Progress -->
+                    <div class="round-progress" id="roundProgressSection">
+                        <!-- Round progress will be displayed here -->
+                    </div>
+
                     <!-- Matches Zone -->
                     <div class="matches-grid" id="matchesZone">
                         <!-- Matches will be displayed here -->
@@ -1412,10 +1502,14 @@
                     <div class="progress-container">
                         <div class="progress-header">
                             <span>Tournament Progress</span>
-                            <span id="matchProgress">0/0 matches</span>
+                            <span id="tournamentProgressText">Round 1/3</span>
                         </div>
                         <div class="progress-bar">
-                            <div id="progressFill" class="progress-fill" style="width: 0%"></div>
+                            <div id="tournamentProgressFill" class="progress-fill" style="width: 0%"></div>
+                        </div>
+                        <div style="text-align: center; margin-top: 10px; font-size: 0.9rem; color: var(--text-secondary);">
+                            <span id="matchesCompleted">0</span> matches completed • 
+                            <span id="totalMatchesEstimate">0</span> total matches estimated
                         </div>
                     </div>
                 </div>
@@ -1787,11 +1881,21 @@
                 pointsPerWin: parseInt(document.getElementById('pointsPerWin').value) || 10,
                 pointsPerLoss: parseInt(document.getElementById('pointsPerLoss').value) || -5
             },
+            roundProgress: Array(roundsCount).fill(0).map((_, i) => ({
+                round: i + 1,
+                completedMatches: 0,
+                totalMatches: 0
+            })),
             seedings: participants.map(p => ({ 
                 id: p.id, 
                 seed: (state.eloRatings[p.id] || state.systemSettings.initialElo) + Math.random() 
             })).sort((a, b) => b.seed - a.seed)
         };
+
+        // Calculate estimated matches per round
+        tournament.roundProgress.forEach(round => {
+            round.totalMatches = Math.floor(participants.length / 2);
+        });
 
         await updateDoc(systemRef, { 
             activeTournament: tournament,
@@ -1854,7 +1958,7 @@
         showNotification('Match created successfully', 'success');
     }
 
-    // Swap colors function
+    // Swap colors function - FIXED
     async function swapMatchColors(matchId) {
         if (!isAdmin) {
             showNotification('Admin access required', 'error');
@@ -1942,10 +2046,27 @@
             } : m
         );
 
+        // Update round progress
+        const currentRound = state.activeTournament.round;
+        const roundProgress = [...state.activeTournament.roundProgress];
+        const roundIndex = currentRound - 1;
+        
+        if (roundIndex >= 0 && roundIndex < roundProgress.length) {
+            const completedMatches = updatedMatches.filter(m => 
+                m.round === currentRound && m.winner
+            ).length;
+            
+            roundProgress[roundIndex] = {
+                ...roundProgress[roundIndex],
+                completedMatches: completedMatches
+            };
+        }
+
         await updateDoc(systemRef, {
             players: updatedPlayers,
             eloRatings: updatedEloRatings,
             "activeTournament.matches": updatedMatches,
+            "activeTournament.roundProgress": roundProgress,
             lastAction: `🏆 ${winner.name} defeated ${loser.name}! (+${eloChanges.newWinnerElo - winnerElo} Elo)`
         });
 
@@ -2187,8 +2308,54 @@
         updateStatistics();
         updateRecentMatches();
         updateSeasonTimeline();
+        updateRoundProgress();
         renderChart();
         updateSeasonInfo();
+    }
+
+    function updateRoundProgress() {
+        if (!state.activeTournament) return;
+        
+        const roundProgressHTML = state.activeTournament.roundProgress.map((round, index) => {
+            const isCurrentRound = index + 1 === state.activeTournament.round;
+            const progress = round.totalMatches > 0 ? (round.completedMatches / round.totalMatches) * 100 : 0;
+            
+            return `
+                <div class="round-item ${isCurrentRound ? 'pulse' : ''}" style="${isCurrentRound ? 'border-color: var(--accent);' : ''}">
+                    <div class="round-number" style="${isCurrentRound ? 'background: var(--accent);' : ''}">
+                        ${index + 1}
+                    </div>
+                    <div class="round-info">
+                        <div class="round-title">Round ${index + 1} ${isCurrentRound ? '(Current)' : ''}</div>
+                        <div class="round-stats">
+                            <span>${round.completedMatches}/${round.totalMatches} matches</span>
+                            <span>${Math.round(progress)}% complete</span>
+                        </div>
+                        <div class="progress-bar" style="margin-top: 8px; height: 6px;">
+                            <div class="progress-fill" style="width: ${progress}%; background: ${isCurrentRound ? 'var(--accent)' : 'var(--secondary)'};"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+        document.getElementById('roundProgressSection').innerHTML = roundProgressHTML || 
+            '<div class="empty-state">No round data available</div>';
+        
+        // Update tournament progress
+        const totalRounds = state.activeTournament.totalRounds;
+        const currentRound = state.activeTournament.round;
+        const tournamentProgress = ((currentRound - 1) / totalRounds) * 100;
+        
+        document.getElementById('tournamentProgressText').textContent = `Round ${currentRound}/${totalRounds}`;
+        document.getElementById('tournamentProgressFill').style.width = `${tournamentProgress}%`;
+        
+        // Update matches statistics
+        const totalMatchesPlayed = state.activeTournament.matches.filter(m => m.winner).length;
+        const estimatedTotalMatches = Math.floor(state.activeTournament.participants.length / 2) * totalRounds;
+        
+        document.getElementById('matchesCompleted').textContent = totalMatchesPlayed;
+        document.getElementById('totalMatchesEstimate').textContent = estimatedTotalMatches;
     }
 
     function updateRankings() {
@@ -2271,15 +2438,6 @@
             
             // Update matches
             updateMatchesDisplay();
-            
-            // Calculate progress
-            const matchesThisRound = state.activeTournament.matches.filter(m => m.round === state.activeTournament.round);
-            const completedMatches = matchesThisRound.filter(m => m.winner).length;
-            const totalMatchesThisRound = Math.floor(participants.length / 2);
-            const progress = totalMatchesThisRound > 0 ? (completedMatches / totalMatchesThisRound) * 100 : 0;
-            
-            document.getElementById('matchProgress').textContent = `${completedMatches}/${totalMatchesThisRound} matches`;
-            document.getElementById('progressFill').style.width = `${progress}%`;
         } else {
             document.getElementById('activeTournamentCard').style.display = 'none';
             document.getElementById('tournamentSetupCard').style.display = 'block';
@@ -2306,12 +2464,18 @@
             return `
                 <div class="match-card ${isCompleted ? 'completed' : ''}">
                     <div class="match-player ${winnerIsPlayer1 ? 'winner' : ''}">
-                        ${isAdmin ? `<button onclick="swapMatchColors('${match.id}')" class="swap-colors-btn">↻</button>` : ''}
-                        <div class="stone-display ${match.player1IsBlack ? 'black' : 'white'}"></div>
+                        ${isAdmin && !isCompleted ? `<button onclick="swapMatchColors('${match.id}')" class="swap-colors-btn">↻</button>` : ''}
+                        <div class="stone-display ${match.player1IsBlack ? 'black' : 'white'} ${isAdmin && !isCompleted ? 'swappable' : ''}" 
+                             ${isAdmin && !isCompleted ? `onclick="swapMatchColors('${match.id}')"` : ''}>
+                            ${isAdmin && !isCompleted ? '🔄' : ''}
+                        </div>
                         <div class="player-label">${match.player1.name}</div>
                         <div class="player-subtext">${match.player1.rank} • ${state.eloRatings[match.player1.id] || state.systemSettings.initialElo} Elo</div>
                         ${!isCompleted && isAdmin ? 
-                            `<button onclick="setMatchWinner('${match.id}', '${match.player1.id}')" class="win-btn">Winner</button>` : 
+                            `<div class="match-actions">
+                                <button onclick="setMatchWinner('${match.id}', '${match.player1.id}')" class="win-btn">🎯 Player 1 Wins</button>
+                                <button onclick="setMatchWinner('${match.id}', '${match.player2.id}')" class="lose-btn">Player 2 Wins</button>
+                            </div>` : 
                             (winnerIsPlayer1 ? '<div class="badge badge-success">WINNER</div>' : '')
                         }
                     </div>
@@ -2319,11 +2483,17 @@
                     <div class="match-status">VS</div>
                     
                     <div class="match-player ${!winnerIsPlayer1 && isCompleted ? 'winner' : ''}">
-                        <div class="stone-display ${!match.player1IsBlack ? 'black' : 'white'}"></div>
+                        <div class="stone-display ${!match.player1IsBlack ? 'black' : 'white'} ${isAdmin && !isCompleted ? 'swappable' : ''}"
+                             ${isAdmin && !isCompleted ? `onclick="swapMatchColors('${match.id}')"` : ''}>
+                            ${isAdmin && !isCompleted ? '🔄' : ''}
+                        </div>
                         <div class="player-label">${match.player2.name}</div>
                         <div class="player-subtext">${match.player2.rank} • ${state.eloRatings[match.player2.id] || state.systemSettings.initialElo} Elo</div>
                         ${!isCompleted && isAdmin ? 
-                            `<button onclick="setMatchWinner('${match.id}', '${match.player2.id}')" class="win-btn">Winner</button>` : 
+                            `<div class="match-actions">
+                                <button onclick="setMatchWinner('${match.id}', '${match.player2.id}')" class="win-btn">🎯 Player 2 Wins</button>
+                                <button onclick="setMatchWinner('${match.id}', '${match.player1.id}')" class="lose-btn">Player 1 Wins</button>
+                            </div>` : 
                             (!winnerIsPlayer1 && isCompleted ? '<div class="badge badge-success">WINNER</div>' : '')
                         }
                     </div>
