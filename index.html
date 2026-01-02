@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meijin System - Firestore Edition</title>
+    <title>Meijin System - Cloud Edition</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@900&family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
     <style>
@@ -11,11 +11,11 @@
         body { font-family: 'Quicksand', sans-serif; background-color: #f4ece0; padding: 20px; }
         .container { max-width: 1200px; margin: 0 auto; }
         
-        /* Barre Admin */
+        /* Admin Bar */
         .admin-bar { background: var(--ink); color: white; padding: 10px 20px; border-radius: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
         .admin-bar input { padding: 5px; border-radius: 5px; border: none; width: 100px; margin: 0 5px; }
         
-        /* Affichage des Règles */
+        /* Rules Display */
         .rules-card { background: #fffde7; border-left: 5px solid var(--goban); padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; }
         .rules-title { font-weight: bold; color: var(--accent); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px; }
 
@@ -40,35 +40,35 @@
 
 <div class="container">
     <div class="admin-bar">
-        <div id="loginStatus">Mode Spectateur</div>
+        <div id="loginStatus">Guest Mode</div>
         <div id="loginFields">
             <input type="text" id="adminUser" placeholder="User">
             <input type="password" id="adminPass" placeholder="Pass">
-            <button onclick="checkLogin()" style="cursor:pointer">Connexion</button>
+            <button onclick="checkLogin()" style="cursor:pointer">Login</button>
         </div>
-        <button id="logoutBtn" style="display:none; cursor:pointer" onclick="location.reload()">Déconnexion</button>
+        <button id="logoutBtn" style="display:none; cursor:pointer" onclick="location.reload()">Logout</button>
     </div>
 
     <header>
-        <h1>MEIJIN CLOUD SYSTEM</h1>
-        <p id="tourneyTitle">Chargement Firestore...</p>
+        <h1>MEIJIN SYSTEM</h1>
+        <p id="tourneyTitle">Connecting to Firestore...</p>
     </header>
 
     <div class="main-grid">
         <aside>
             <div class="rules-card">
-                <div class="rules-title">📜 Règles du Tournoi</div>
-                • Temps : <b>45 min</b> (Principal)<br>
-                • Incrément : <b>15s / coup</b> (Fischer)<br>
-                • Komi : <b>6,5 points</b>
+                <div class="rules-title">📜 Tournament Rules</div>
+                • Main Time: <b>45 min</b><br>
+                • Increment: <b>15s / move</b> (Fischer)<br>
+                • Komi: <b>6.5 points</b>
             </div>
 
             <div class="card">
-                <h3>Joueurs</h3>
+                <h3>Players Database</h3>
                 <div class="admin-only">
-                    <input type="text" id="dbName" placeholder="Nom">
-                    <input type="text" id="dbRank" placeholder="Niveau (ex: 2k)">
-                    <button onclick="dbAddPlayer()" style="width:100%; background:var(--ink); color:white; border:none; padding:8px; border-radius:5px; cursor:pointer; margin-top:5px;">Ajouter</button>
+                    <input type="text" id="dbName" placeholder="Name">
+                    <input type="text" id="dbRank" placeholder="Rank (e.g. 2k)">
+                    <button onclick="dbAddPlayer()" style="width:100%; background:var(--ink); color:white; border:none; padding:8px; border-radius:5px; cursor:pointer; margin-top:5px;">Add Player</button>
                 </div>
                 <div id="dbList" class="scroll-area"></div>
             </div>
@@ -76,23 +76,23 @@
 
         <main>
             <div id="tourneySetup" class="card">
-                <h3>Nouveau Tournoi</h3>
-                <input type="text" id="newTourneyName" placeholder="Nom de l'événement (ex: Coupe Meijin)" class="admin-only">
-                <button class="btn-round admin-only" onclick="tourneyStart()">Lancer le Tournoi</button>
-                <p id="guestMsg"><small>En attente du lancement par un administrateur...</small></p>
+                <h3>New Tournament</h3>
+                <input type="text" id="newTourneyName" placeholder="Event Name (e.g. Meijin Cup)" class="admin-only">
+                <button class="btn-round admin-only" onclick="tourneyStart()">Start Tournament</button>
+                <p id="guestMsg"><small>Waiting for admin to start the event...</small></p>
             </div>
 
             <div id="tourneyActive" class="card" style="display:none;">
                 <div style="display:flex; justify-content:space-between;">
-                    <h3 id="activeName">Matchs en cours</h3>
-                    <button class="admin-only btn-finish" style="height:30px" onclick="tourneyArchive()">Clôturer Tournoi</button>
+                    <h3 id="activeName">Live Matches</h3>
+                    <button class="admin-only btn-finish" style="height:30px" onclick="tourneyArchive()">Close Tournament</button>
                 </div>
                 <div id="roundActions"></div>
                 <div id="matchZone"></div>
             </div>
 
             <div class="card">
-                <h3>Palmarès</h3>
+                <h3>Hall of Fame</h3>
                 <div id="archiveList" class="scroll-area"></div>
             </div>
         </main>
@@ -124,7 +124,7 @@
             window.isAdmin = true;
             document.getElementById('loginFields').style.display = "none";
             document.getElementById('logoutBtn').style.display = "block";
-            document.getElementById('loginStatus').innerText = "Admin Connecté";
+            document.getElementById('loginStatus').innerText = "Admin Access Granted";
             document.getElementById('guestMsg').style.display = "none";
             document.querySelectorAll('.admin-only').forEach(el => el.style.display = "block");
             renderUI();
@@ -154,10 +154,10 @@
     };
 
     window.tourneyStart = async () => {
-        if(window.enrolledIds.length < 2) return alert("Sélectionnez au moins 2 joueurs");
+        if(window.enrolledIds.length < 2) return alert("Select at least 2 players");
         const participants = state.players.filter(p => window.enrolledIds.includes(p.id)).map(p => ({...p, tWins:0, pOpp:[]}));
         const newActive = { 
-            name: document.getElementById('newTourneyName').value || "Tournoi",
+            name: document.getElementById('newTourneyName').value || "Tournament",
             round: 1,
             players: participants,
             matches: []
@@ -181,7 +181,6 @@
         await updateDoc(doc(db, "system", "current"), { "active.matches": matches });
     };
 
-    // NOUVELLE FONCTION : Inverser les couleurs
     window.swapColors = async (mId) => {
         const matches = state.active.matches.map(m => 
             m.id === mId ? {...m, p1B: !m.p1B} : m
@@ -230,7 +229,7 @@
         const setup = document.getElementById('tourneySetup'), activeZone = document.getElementById('tourneyActive');
         if(!state.active) {
             setup.style.display = "block"; activeZone.style.display = "none";
-            document.getElementById('tourneyTitle').innerText = "Hub de Tournoi";
+            document.getElementById('tourneyTitle').innerText = "Tournament Hub";
         } else {
             setup.style.display = "none"; activeZone.style.display = "block";
             document.getElementById('tourneyTitle').innerText = state.active.name;
@@ -239,21 +238,21 @@
                 <div class="match-box">
                     <div style="text-align:center; width:42%">
                         <div class="stone ${m.p1B?'black':'white'}"></div><br><b>${m.p1.name}</b><br>
-                        ${!m.winId && window.isAdmin ? `<button onclick="setWinner(${m.id},'${m.p1.id}','${m.p2.id}')" class="btn-finish">Victoire</button>` : (m.winId===m.p1.id?'⭐':'')}
+                        ${!m.winId && window.isAdmin ? `<button onclick="setWinner(${m.id},'${m.p1.id}','${m.p2.id}')" class="btn-finish">Win</button>` : (m.winId===m.p1.id?'⭐':'')}
                     </div>
                     <div style="text-align:center">
                         VS<br>
-                        ${!m.winId && window.isAdmin ? `<button class="btn-swap" onclick="swapColors(${m.id})">Inverser ⇅</button>` : ''}
+                        ${!m.winId && window.isAdmin ? `<button class="btn-swap" onclick="swapColors(${m.id})">Swap ⇅</button>` : ''}
                     </div>
                     <div style="text-align:center; width:42%">
                         <div class="stone ${m.p1B?'white':'black'}"></div><br><b>${m.p2.name}</b><br>
-                        ${!m.winId && window.isAdmin ? `<button onclick="setWinner(${m.id},'${m.p2.id}','${m.p1.id}')" class="btn-finish">Victoire</button>` : (m.winId===m.p2.id?'⭐':'')}
+                        ${!m.winId && window.isAdmin ? `<button onclick="setWinner(${m.id},'${m.p2.id}','${m.p1.id}')" class="btn-finish">Win</button>` : (m.winId===m.p2.id?'⭐':'')}
                     </div>
                 </div>`).join('');
 
             const btnZone = document.getElementById('roundActions');
             if(state.active.matches.length === 0) {
-                btnZone.innerHTML = window.isAdmin ? `<button class="btn-round" onclick="generateMatches()">Générer les Matchs</button>` : `<p>En attente du tirage...</p>`;
+                btnZone.innerHTML = window.isAdmin ? `<button class="btn-round" onclick="generateMatches()">Draw Pairings</button>` : `<p>Waiting for pairings...</p>`;
             } else { btnZone.innerHTML = ""; }
         }
     }
