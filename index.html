@@ -2648,17 +2648,6 @@
         showNotification('Players swapped in selected match', 'success');
     }
 
-function updateAdminVisibility() {
-    const adminElements = document.querySelectorAll('.admin-element');
-    
-    adminElements.forEach(element => {
-        if (isAdmin) {
-            element.classList.remove('admin-hidden');
-        } else {
-            element.classList.add('admin-hidden');
-        }
-    });
-}
     
     // 11. Sauvegarde des modifications d'un match
     async function saveMatchChanges() {
@@ -4053,6 +4042,84 @@ function updateAdminVisibility() {
         });
     }
 
+    // Gestion de la visibilité admin
+function hideAdminElements() {
+    // Masquer tous les éléments admin
+    const adminSelectors = [
+        '#addPlayerForm',
+        '#tournamentSettings',
+        '.swap-colors-btn',
+        '.win-btn',
+        '.lose-btn',
+        '.advanced-match-controls',
+        '.manual-control-indicator',
+        '.quick-actions',
+        '.advanced-controls-grid',
+        '[onclick*="swapMatchColors"]',
+        '[onclick*="setMatchWinner"]',
+        '[onclick*="endTournament"]',
+        '[onclick*="clearCurrentMatches"]',
+        '[onclick*="generateSwissPairs"]',
+        '[onclick*="createManualMatch"]'
+    ];
+    
+    adminSelectors.forEach(selector => {
+        document.querySelectorAll(selector).forEach(el => {
+            el.style.display = 'none';
+        });
+    });
+}
+
+function showAdminElements() {
+    // Afficher tous les éléments admin
+    const adminSelectors = [
+        '#addPlayerForm',
+        '#tournamentSettings',
+        '.swap-colors-btn',
+        '.win-btn',
+        '.lose-btn',
+        '.advanced-match-controls',
+        '.manual-control-indicator',
+        '.quick-actions',
+        '.advanced-controls-grid',
+        '[onclick*="swapMatchColors"]',
+        '[onclick*="setMatchWinner"]',
+        '[onclick*="endTournament"]',
+        '[onclick*="clearCurrentMatches"]',
+        '[onclick*="generateSwissPairs"]',
+        '[onclick*="createManualMatch"]'
+    ];
+    
+    adminSelectors.forEach(selector => {
+        document.querySelectorAll(selector).forEach(el => {
+            el.style.display = '';
+        });
+    });
+}
+
+// Appeler ces fonctions dans login/logout
+function loginAdmin() {
+    // ... votre code existant ...
+    if (pin === "159753") {
+        isAdmin = true;
+        showAdminElements(); // <-- AJOUTER
+        // ... reste du code ...
+    }
+}
+
+function logoutAdmin() {
+    isAdmin = false;
+    hideAdminElements(); // <-- AJOUTER
+    // ... reste du code ...
+}
+
+// Au chargement initial
+document.addEventListener('DOMContentLoaded', () => {
+    if (!isAdmin) {
+        hideAdminElements();
+    }
+});
+
     // Initialize
     document.addEventListener('DOMContentLoaded', () => {
         const savedTheme = localStorage.getItem('meijin-theme') || 'dark';
@@ -4106,5 +4173,6 @@ function updateAdminVisibility() {
 </script>
 </body>
 </html>
+
 
 
