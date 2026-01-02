@@ -6,7 +6,7 @@
     <title>Meijin Go System - Pro Edition</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Serif+JP:wght@400;700;900&display=swap" rel="stylesheet">
-   <style>
+    <style>
         :root {
             --primary-dark: #1a1a2e;
             --primary: #162447;
@@ -120,9 +120,9 @@
             background-clip: text;
         }
 
-       .admin-hidden {
-    display: none !important;
-}
+        .admin-hidden {
+            display: none !important;
+        }
 
         .header-controls {
             display: flex;
@@ -1655,7 +1655,7 @@
                 <input type="password" id="adminPin" class="auth-input" placeholder="Admin PIN">
                 <button onclick="loginAdmin()" class="btn btn-primary">Login</button>
             </div>
-            <div id="adminControls" style="display: none;">
+            <div id="adminControls" class="admin-hidden">
                 <span style="margin-right: 15px; font-weight: 600; color: var(--accent);">Admin Mode</span>
                 <button onclick="logoutAdmin()" class="btn btn-danger">Logout</button>
             </div>
@@ -1707,7 +1707,7 @@
                 </div>
 
                 <!-- Add Player Form (Admin Only) -->
-                <div id="addPlayerForm" class="add-player-form">
+                <div id="addPlayerForm" class="add-player-form admin-hidden">
                     <div class="form-grid">
                         <div>
                             <input type="text" id="newPlayerName" class="form-input" placeholder="Player name">
@@ -1795,7 +1795,7 @@
             <div class="tabs" id="tournamentTabs">
                 <button class="tab active" onclick="switchTab('active')">🎯 Active Tournament</button>
                 <button class="tab" onclick="switchTab('history')">📜 Tournament History</button>
-                <button class="tab" onclick="switchTab('manual')">🛠️ Manual Management</button>
+                <button class="tab admin-hidden" onclick="switchTab('manual')" id="manualTab">🛠️ Manual Management</button>
             </div>
 
             <!-- Active Tournament -->
@@ -1813,7 +1813,7 @@
                                 </span>
                             </div>
                         </div>
-                        <div class="tournament-controls">
+                        <div class="tournament-controls admin-hidden">
                             <button onclick="generateSwissPairs()" class="btn btn-secondary">
                                 <span>🔀</span> Generate Pairs
                             </button>
@@ -1827,7 +1827,7 @@
                     </div>
 
                     <!-- NOUVEAU: Bouton d'inversion des couleurs global -->
-                    <div class="color-controls" id="globalColorControls">
+                    <div class="color-controls admin-hidden" id="globalColorControls">
                         <button onclick="swapAllMatchColors()" class="swap-colors-global-btn">
                             <span>🎨</span> Swap All Colors
                         </button>
@@ -1837,7 +1837,7 @@
                     </div>
 
                     <!-- Tournament Settings -->
-                    <div id="tournamentSettings" class="tournament-settings">
+                    <div id="tournamentSettings" class="tournament-settings admin-hidden">
                         <div class="pairing-title">⚙️ Tournament Settings</div>
                         <div class="settings-grid">
                             <div class="setting-item">
@@ -1856,7 +1856,7 @@
                     </div>
 
                     <!-- Manual Pairing avec améliorations -->
-                    <div id="manualPairingSection" class="pairing-section">
+                    <div id="manualPairingSection" class="pairing-section admin-hidden">
                         <div class="pairing-title">🔧 Manual Pairing</div>
                         <div class="player-select-controls">
                             <div class="player-select-row">
@@ -1896,7 +1896,7 @@
                     </div>
 
                     <!-- Gestion manuelle avancée (NOUVEAU) -->
-                    <div class="advanced-match-controls">
+                    <div class="advanced-match-controls admin-hidden">
                         <div class="pairing-title">🛠️ Advanced Match Management</div>
                         <div class="advanced-controls-grid">
                             <div class="advanced-control-item">
@@ -2098,7 +2098,7 @@
             </div>
 
             <!-- Tournament Setup -->
-            <div id="tournamentSetupCard" class="card">
+            <div id="tournamentSetupCard" class="card admin-hidden">
                 <div class="card-header">
                     <h2 class="card-title">🎯 New Tournament</h2>
                     <div style="color: var(--text-secondary); font-size: 0.9rem;">
@@ -2221,6 +2221,18 @@
     let isAdmin = false;
     let chart = null;
 
+    // Fonction pour masquer/afficher les éléments admin
+    function toggleAdminElements(show) {
+        const adminElements = document.querySelectorAll('.admin-hidden, .admin-only');
+        adminElements.forEach(el => {
+            if (show) {
+                el.classList.remove('admin-hidden');
+            } else {
+                el.classList.add('admin-hidden');
+            }
+        });
+    }
+
     // Theme Management
     function toggleTheme() {
         const currentTheme = document.body.getAttribute('data-theme') || 'light';
@@ -2246,14 +2258,7 @@
             isAdmin = true;
             document.getElementById('authSection').style.display = 'none';
             document.getElementById('adminControls').style.display = 'flex';
-            document.getElementById('addPlayerForm').classList.add('visible');
-            document.getElementById('tournamentSettings').style.display = 'block';
-            // Afficher les contrôles de couleur globale
-            document.getElementById('globalColorControls').style.display = 'flex';
-            // Afficher l'onglet de gestion manuelle
-            document.getElementById('tournamentTabs').innerHTML += `
-                <button class="tab" onclick="switchTab('manual')">🛠️ Manual Management</button>
-            `;
+            toggleAdminElements(true);
             showNotification('Admin login successful - Advanced controls enabled', 'success');
         } else {
             showNotification('Incorrect PIN', 'error');
@@ -2264,9 +2269,7 @@
         isAdmin = false;
         document.getElementById('authSection').style.display = 'flex';
         document.getElementById('adminControls').style.display = 'none';
-        document.getElementById('addPlayerForm').classList.remove('visible');
-        document.getElementById('tournamentSettings').style.display = 'none';
-        document.getElementById('globalColorControls').style.display = 'none';
+        toggleAdminElements(false);
         showNotification('Logged out successfully', 'info');
     }
 
@@ -2648,7 +2651,6 @@
         showNotification('Players swapped in selected match', 'success');
     }
 
-    
     // 11. Sauvegarde des modifications d'un match
     async function saveMatchChanges() {
         const matchId = document.getElementById('editMatchSelect').value;
@@ -3459,11 +3461,13 @@
             }
             
             // Update tournament settings inputs
-            document.getElementById('roundsCount').value = state.activeTournament.totalRounds;
-            document.getElementById('pointsPerWin').value = state.activeTournament.settings?.pointsPerWin || 10;
-            document.getElementById('pointsPerLoss').value = state.activeTournament.settings?.pointsPerLoss || -5;
+            if (isAdmin) {
+                document.getElementById('roundsCount').value = state.activeTournament.totalRounds;
+                document.getElementById('pointsPerWin').value = state.activeTournament.settings?.pointsPerWin || 10;
+                document.getElementById('pointsPerLoss').value = state.activeTournament.settings?.pointsPerLoss || -5;
+            }
             
-            // Update player selects with amélioration
+            // Update player selects avec amélioration
             const participants = state.activeTournament.participants || [];
             const playerOptions = participants.map(p => 
                 `<option value="${p.id}">${p.name} (${p.rank}) - ${state.eloRatings[p.id] || state.systemSettings.initialElo} Elo</option>`
@@ -3491,102 +3495,88 @@
     }
 
     function updateMatchesDisplay() {
-    if (!state.activeTournament) return;
-    
-    const currentRound = state.activeTournament.round;
-    const matchesThisRound = state.activeTournament.matches.filter(m => m.round === currentRound);
-    
-    const matchesHTML = matchesThisRound.map(match => {
-        const isCompleted = !!match.winner;
-        const winnerIsPlayer1 = match.winner === match.player1.id;
+        if (!state.activeTournament) return;
         
-        return `
-            <div class="match-card ${isCompleted ? 'completed' : ''}" data-match-id="${match.id}">
-                <div class="match-player ${winnerIsPlayer1 ? 'winner' : ''}">
-                    <!-- Bouton d'inversion avec amélioration -->
-                    ${isAdmin && !isCompleted ? 
-                        `<button onclick="swapMatchColors('${match.id}')" 
-                                style="position: absolute; top: 10px; right: 10px; background: var(--warning); color: white; border: none; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1rem; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(243, 156, 18, 0.3);">
-                            ↻
-                        </button>` 
-                        : ''}
-                    
-                    <!-- Pierre avec effet hover -->
-                    <div class="stone-display swappable ${match.player1IsBlack ? 'black' : 'white'}" 
-                         onclick="${isAdmin && !isCompleted ? `swapMatchColors('${match.id}')` : ''}"
-                         style="width: 50px; height: 50px; border-radius: 50%; margin: 0 auto 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); background: ${match.player1IsBlack ? 'radial-gradient(circle at 30% 30%, #666, #000)' : 'radial-gradient(circle at 30% 30%, #fff, #f0f0f0)'}; ${!match.player1IsBlack ? 'border: 2px solid #ddd;' : ''}">
+        const currentRound = state.activeTournament.round;
+        const matchesThisRound = state.activeTournament.matches.filter(m => m.round === currentRound);
+        
+        const matchesHTML = matchesThisRound.map(match => {
+            const isCompleted = !!match.winner;
+            const winnerIsPlayer1 = match.winner === match.player1.id;
+            
+            return `
+                <div class="match-card ${isCompleted ? 'completed' : ''}" data-match-id="${match.id}">
+                    <div class="match-player ${winnerIsPlayer1 ? 'winner' : ''}">
+                        ${isAdmin && !isCompleted ? 
+                            `<button onclick="swapMatchColors('${match.id}')" class="swap-colors-btn" title="Swap colors">
+                                ↻
+                            </button>` 
+                            : ''}
+                        
+                        <div class="stone-display swappable ${match.player1IsBlack ? 'black' : 'white'}" 
+                             onclick="${isAdmin && !isCompleted ? `swapMatchColors('${match.id}')` : ''}"
+                             style="cursor: ${isAdmin && !isCompleted ? 'pointer' : 'default'};">
+                        </div>
+                        
+                        <div class="player-label">${match.player1.name}</div>
+                        <div class="player-subtext">${match.player1.rank} • ${state.eloRatings[match.player1.id] || state.systemSettings.initialElo} Elo</div>
+                        
+                        ${!isCompleted && isAdmin ? 
+                            `<div class="match-actions">
+                                <button onclick="setMatchWinner('${match.id}', '${match.player1.id}')" class="win-btn">
+                                    🎯 ${match.player1.name} Wins
+                                </button>
+                                <button onclick="editMatchManually('${match.id}')" class="quick-action-btn">
+                                    🛠️ Edit
+                                </button>
+                            </div>` : 
+                            (winnerIsPlayer1 ? '<div class="badge badge-success">WINNER</div>' : '')
+                        }
                     </div>
                     
-                    <div class="player-label">${match.player1.name}</div>
-                    <div class="player-subtext">${match.player1.rank} • ${state.eloRatings[match.player1.id] || state.systemSettings.initialElo} Elo</div>
-                    
-                    ${!isCompleted && isAdmin ? 
-                        `<div style="display: flex; flex-direction: column; gap: 10px; align-items: center; margin-top: 10px;">
-                            <button onclick="setMatchWinner('${match.id}', '${match.player1.id}')" 
-                                    style="padding: 10px 20px; border-radius: var(--radius-md); border: none; background: linear-gradient(135deg, var(--success) 0%, var(--success-light) 100%); color: white; font-weight: 600; cursor: pointer; transition: all 0.3s ease; min-width: 120px; text-align: center;">
-                                🎯 ${match.player1.name} Wins
-                            </button>
-                            <button onclick="editMatchManually('${match.id}')" class="quick-action-btn" style="min-width: 120px;">
-                                🛠️ Edit
-                            </button>
-                        </div>` : 
-                        (winnerIsPlayer1 ? '<div style="background: var(--success); color: white; padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; margin-top: 10px;">WINNER</div>' : '')
-                    }
-                </div>
-                
-                <div style="text-align: center; font-size: 1.3rem; font-weight: 700; color: var(--accent);">
-                    VS
-                    ${isCompleted ? `<div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 5px;">Completed</div>` : ''}
-                </div>
-                
-                <div class="match-player ${!winnerIsPlayer1 && isCompleted ? 'winner' : ''}">
-                    <!-- Bouton d'inversion -->
-                    ${isAdmin && !isCompleted ? 
-                        `<button onclick="swapMatchColors('${match.id}')" 
-                                style="position: absolute; top: 10px; right: 10px; background: var(--warning); color: white; border: none; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1rem; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(243, 156, 18, 0.3);">
-                            ↻
-                        </button>` 
-                        : ''}
-                    
-                    <!-- Pierre avec effet hover -->
-                    <div class="stone-display swappable ${!match.player1IsBlack ? 'black' : 'white'}" 
-                         onclick="${isAdmin && !isCompleted ? `swapMatchColors('${match.id}')` : ''}"
-                         style="width: 50px; height: 50px; border-radius: 50%; margin: 0 auto 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); background: ${!match.player1IsBlack ? 'radial-gradient(circle at 30% 30%, #666, #000)' : 'radial-gradient(circle at 30% 30%, #fff, #f0f0f0)'}; ${match.player1IsBlack ? 'border: 2px solid #ddd;' : ''}">
+                    <div class="match-status">
+                        VS
+                        ${isCompleted ? `<div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 5px;">Completed</div>` : ''}
                     </div>
                     
-                    <div class="player-label">${match.player2.name}</div>
-                    <div class="player-subtext">${match.player2.rank} • ${state.eloRatings[match.player2.id] || state.systemSettings.initialElo} Elo</div>
-                    
-                    ${!isCompleted && isAdmin ? 
-                        `<div style="display: flex; flex-direction: column; gap: 10px; align-items: center; margin-top: 10px;">
-                            <button onclick="setMatchWinner('${match.id}', '${match.player2.id}')" 
-                                    style="padding: 10px 20px; border-radius: var(--radius-md); border: none; background: linear-gradient(135deg, var(--success) 0%, var(--success-light) 100%); color: white; font-weight: 600; cursor: pointer; transition: all 0.3s ease; min-width: 120px; text-align: center;">
-                                🎯 ${match.player2.name} Wins
-                            </button>
-                            <button onclick="editMatchManually('${match.id}')" class="quick-action-btn" style="min-width: 120px;">
-                                🛠️ Edit
-                            </button>
-                        </div>` : 
-                        (!winnerIsPlayer1 && isCompleted ? '<div style="background: var(--success); color: white; padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; margin-top: 10px;">WINNER</div>' : '')
-                    }
+                    <div class="match-player ${!winnerIsPlayer1 && isCompleted ? 'winner' : ''}">
+                        ${isAdmin && !isCompleted ? 
+                            `<button onclick="swapMatchColors('${match.id}')" class="swap-colors-btn" title="Swap colors">
+                                ↻
+                            </button>` 
+                            : ''}
+                        
+                        <div class="stone-display swappable ${!match.player1IsBlack ? 'black' : 'white'}" 
+                             onclick="${isAdmin && !isCompleted ? `swapMatchColors('${match.id}')` : ''}"
+                             style="cursor: ${isAdmin && !isCompleted ? 'pointer' : 'default'};">
+                        </div>
+                        
+                        <div class="player-label">${match.player2.name}</div>
+                        <div class="player-subtext">${match.player2.rank} • ${state.eloRatings[match.player2.id] || state.systemSettings.initialElo} Elo</div>
+                        
+                        ${!isCompleted && isAdmin ? 
+                            `<div class="match-actions">
+                                <button onclick="setMatchWinner('${match.id}', '${match.player2.id}')" class="win-btn">
+                                    🎯 ${match.player2.name} Wins
+                                </button>
+                                <button onclick="editMatchManually('${match.id}')" class="quick-action-btn">
+                                    🛠️ Edit
+                                </button>
+                            </div>` : 
+                            (!winnerIsPlayer1 && isCompleted ? '<div class="badge badge-success">WINNER</div>' : '')
+                        }
+                    </div>
                 </div>
-            </div>
-        `;
-    }).join('');
-    
-    document.getElementById('matchesZone').innerHTML = matchesHTML || 
-        '<div class="empty-state">No matches for this round yet</div>';
-}
-    // Fonction pour éditer un match manuellement
+            `;
+        }).join('');
+        
+        document.getElementById('matchesZone').innerHTML = matchesHTML || 
+            '<div class="empty-state">No matches for this round yet</div>';
+    }
+
     function editMatchManually(matchId) {
-        // Naviguer vers l'onglet de gestion manuelle
         switchTab('manual');
-        
-        // Sélectionner le match dans la liste
-        const matchSelect = document.getElementById('editMatchSelect');
-        matchSelect.value = matchId;
-        
-        // Charger les données du match
+        document.getElementById('editMatchSelect').value = matchId;
         loadMatchForEditing();
     }
 
@@ -3646,12 +3636,10 @@
                         </div>
                     </div>
                     
-                    <!-- Bouton pour voir les détails -->
                     <button class="history-expand-btn" onclick="toggleHistoryDetails(${index})">
                         📊 View Details
                     </button>
                     
-                    <!-- Détails de l'historique (cachés par défaut) -->
                     <div class="history-details" id="historyDetails${index}">
                         ${tournament.results ? `
                             <h4 style="margin: 15px 0 10px 0; color: var(--text-primary);">Final Rankings:</h4>
@@ -3678,28 +3666,6 @@
                                 </tbody>
                             </table>
                         ` : ''}
-                        
-                        ${tournament.matches && tournament.matches.length > 0 ? `
-                            <h4 style="margin: 15px 0 10px 0; color: var(--text-primary);">Notable Matches:</h4>
-                            <table class="history-details-table">
-                                <thead>
-                                    <tr>
-                                        <th>Round</th>
-                                        <th>Match</th>
-                                        <th>Winner</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${tournament.matches.slice(0, 3).map(match => `
-                                        <tr>
-                                            <td>${match.round || 1}</td>
-                                            <td>${match.player1?.name || 'Player 1'} vs ${match.player2?.name || 'Player 2'}</td>
-                                            <td>${match.winner ? (match.winner === match.player1?.id ? match.player1.name : match.player2.name) : 'Pending'}</td>
-                                        </tr>
-                                    `).join('')}
-                                </tbody>
-                            </table>
-                        ` : ''}
                     </div>
                 </div>
             `;
@@ -3711,7 +3677,6 @@
         document.getElementById('totalTournaments').textContent = state.tournamentHistory.length;
     }
 
-    // Fonction pour afficher/masquer les détails de l'historique
     function toggleHistoryDetails(index) {
         const detailsDiv = document.getElementById(`historyDetails${index}`);
         detailsDiv.classList.toggle('expanded');
@@ -3745,7 +3710,6 @@
         
         document.getElementById('seasonTimeline').innerHTML = seasonTimelineHTML;
         
-        // Update season progress
         const seasonProgress = (tournamentInSeason / 4) * 100;
         document.getElementById('seasonProgressText').textContent = `${tournamentInSeason}/4`;
         document.getElementById('seasonProgressFill').style.width = `${seasonProgress}%`;
@@ -3772,7 +3736,6 @@
     function updateRecentMatches() {
         const recentMatches = [];
         
-        // Add matches from active tournament
         if (state.activeTournament?.matches) {
             state.activeTournament.matches
                 .filter(m => m.winner)
@@ -3785,7 +3748,6 @@
                 });
         }
         
-        // Add matches from tournament history
         state.tournamentHistory.forEach(tournament => {
             tournament.matches
                 ?.filter(m => m.winner)
@@ -3799,7 +3761,6 @@
                 });
         });
         
-        // Sort by date and take top 8
         recentMatches.sort((a, b) => new Date(b.date) - new Date(a.date));
         const topRecentMatches = recentMatches.slice(0, 8);
         
@@ -4042,84 +4003,6 @@
         });
     }
 
-    // Gestion de la visibilité admin
-function hideAdminElements() {
-    // Masquer tous les éléments admin
-    const adminSelectors = [
-        '#addPlayerForm',
-        '#tournamentSettings',
-        '.swap-colors-btn',
-        '.win-btn',
-        '.lose-btn',
-        '.advanced-match-controls',
-        '.manual-control-indicator',
-        '.quick-actions',
-        '.advanced-controls-grid',
-        '[onclick*="swapMatchColors"]',
-        '[onclick*="setMatchWinner"]',
-        '[onclick*="endTournament"]',
-        '[onclick*="clearCurrentMatches"]',
-        '[onclick*="generateSwissPairs"]',
-        '[onclick*="createManualMatch"]'
-    ];
-    
-    adminSelectors.forEach(selector => {
-        document.querySelectorAll(selector).forEach(el => {
-            el.style.display = 'none';
-        });
-    });
-}
-
-function showAdminElements() {
-    // Afficher tous les éléments admin
-    const adminSelectors = [
-        '#addPlayerForm',
-        '#tournamentSettings',
-        '.swap-colors-btn',
-        '.win-btn',
-        '.lose-btn',
-        '.advanced-match-controls',
-        '.manual-control-indicator',
-        '.quick-actions',
-        '.advanced-controls-grid',
-        '[onclick*="swapMatchColors"]',
-        '[onclick*="setMatchWinner"]',
-        '[onclick*="endTournament"]',
-        '[onclick*="clearCurrentMatches"]',
-        '[onclick*="generateSwissPairs"]',
-        '[onclick*="createManualMatch"]'
-    ];
-    
-    adminSelectors.forEach(selector => {
-        document.querySelectorAll(selector).forEach(el => {
-            el.style.display = '';
-        });
-    });
-}
-
-// Appeler ces fonctions dans login/logout
-function loginAdmin() {
-    // ... votre code existant ...
-    if (pin === "159753") {
-        isAdmin = true;
-        showAdminElements(); // <-- AJOUTER
-        // ... reste du code ...
-    }
-}
-
-function logoutAdmin() {
-    isAdmin = false;
-    hideAdminElements(); // <-- AJOUTER
-    // ... reste du code ...
-}
-
-// Au chargement initial
-document.addEventListener('DOMContentLoaded', () => {
-    if (!isAdmin) {
-        hideAdminElements();
-    }
-});
-
     // Initialize
     document.addEventListener('DOMContentLoaded', () => {
         const savedTheme = localStorage.getItem('meijin-theme') || 'dark';
@@ -4127,6 +4010,9 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('themeIcon').textContent = savedTheme === 'dark' ? '☀️' : '🌙';
         
         document.getElementById('searchPlayers').addEventListener('input', () => filterPlayers('all'));
+        
+        // Masquer les éléments admin au chargement
+        toggleAdminElements(false);
         
         showNotification('Meijin Go System Pro loaded successfully', 'success');
     });
@@ -4173,6 +4059,3 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
-
-
-
