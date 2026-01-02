@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meijin & Honinbo System</title>
+    <title>Meijin & Honinbo System - Pro</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@900&family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
     <style>
@@ -13,42 +13,54 @@
         body { font-family: 'Quicksand', sans-serif; background-color: var(--bg); color: var(--text); transition: 0.3s; margin: 0; padding: 20px; }
         .container { max-width: 1200px; margin: 0 auto; }
         
+        /* Ticker (Fil d'actualité) */
+        .ticker { background: var(--ink); color: var(--gold); padding: 8px; font-size: 0.85rem; overflow: hidden; white-space: nowrap; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--gold); }
+        .ticker-content { display: inline-block; padding-left: 100%; animation: scroll 25s linear infinite; }
+        @keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
+
         /* Titles & Banners */
-        .title-card { background: linear-gradient(45deg, #1a1a1a, #444); border: 2px solid var(--gold); border-radius: 15px; padding: 20px; text-align: center; color: white; margin-bottom: 20px; }
-        .meijin-tag { color: var(--gold); font-family: 'Noto Serif JP', serif; font-size: 1.2rem; display: block; }
+        .title-card { background: linear-gradient(45deg, #1a1a1a, #444); border: 2px solid var(--gold); border-radius: 15px; padding: 25px; text-align: center; color: white; margin-bottom: 25px; box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
+        .meijin-tag { color: var(--gold); font-family: 'Noto Serif JP', serif; font-size: 1.4rem; display: block; letter-spacing: 2px; }
         
         .admin-bar { background: var(--ink); color: white; padding: 10px 20px; border-radius: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
         header { background: var(--card); padding: 20px; border-radius: 20px; text-align: center; border-bottom: 8px solid var(--accent); margin-bottom: 30px; }
         
-        .main-grid { display: grid; grid-template-columns: 320px 1fr; gap: 25px; }
+        .main-grid { display: grid; grid-template-columns: 340px 1fr; gap: 25px; }
         .card { background: var(--card); padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; }
         
-        .match-box { background: var(--paper); border: 1px solid rgba(128,128,128,0.2); border-radius: 12px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-        .stone { width: 22px; height: 22px; border-radius: 50%; display: inline-block; vertical-align: middle; }
+        .match-box { background: var(--paper); border: 1px solid rgba(128,128,128,0.2); border-radius: 12px; padding: 15px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; position: relative; }
+        .del-match { position: absolute; top: 5px; right: 8px; cursor: pointer; color: #ff4444; font-weight: bold; border: none; background: none; }
+        
+        .stone { width: 24px; height: 24px; border-radius: 50%; display: inline-block; vertical-align: middle; box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
         .black { background: #000; } .white { background: #fff; border: 1px solid #ccc; }
         
-        .btn-win { background: var(--win); color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
+        .btn-win { background: var(--win); color: white; border: none; padding: 6px 12px; border-radius: 5px; cursor: pointer; margin-top: 8px; font-weight: bold; }
         .admin-only { display: none; }
-        .player-row { display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid rgba(128,128,128,0.1); }
-        .points-badge { background: var(--accent); color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.8rem; }
+        .player-row { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid rgba(128,128,128,0.1); }
+        .points-badge { background: var(--accent); color: white; padding: 3px 10px; border-radius: 12px; font-size: 0.85rem; font-weight: bold; }
+        .badge-icon { font-size: 1.1rem; margin-left: 5px; vertical-align: middle; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="admin-bar">
-        <button onclick="toggleTheme()">🌓 Toggle Theme</button>
+        <button onclick="toggleTheme()" style="background:#444; color:white; border:none; padding:8px 15px; border-radius:8px; cursor:pointer;">🌓 Theme</button>
         <div id="loginFields">
-            <input type="password" id="adminPass" placeholder="Admin PIN">
-            <button onclick="checkLogin()">Login</button>
+            <input type="password" id="adminPass" placeholder="Admin PIN" style="padding:6px; border-radius:5px; border:none;">
+            <button onclick="checkLogin()" style="padding:6px 15px; border-radius:5px; border:none; background:var(--gold); color:black; font-weight:bold; cursor:pointer;">Login</button>
         </div>
-        <button id="logoutBtn" style="display:none;" onclick="location.reload()">Logout</button>
+        <button id="logoutBtn" style="display:none; background:#c0392b; color:white; border:none; padding:8px 15px; border-radius:8px; cursor:pointer;" onclick="location.reload()">Logout</button>
+    </div>
+
+    <div class="ticker">
+        <div id="newsTicker" class="ticker-content">Bienvenue sur le Meijin System. En attente du prochain match...</div>
     </div>
 
     <div id="championSection" class="title-card" style="display:none;">
-        <span class="meijin-tag">CURRENT HOLDER OF THE MEIJIN & HONINBO TITLES</span>
-        <h2 id="currentChamp" style="margin:10px 0; letter-spacing: 3px;">---</h2>
-        <div id="qualifiers" style="font-size: 0.9rem; opacity: 0.8;">Next Qualifiers: ---</div>
+        <span class="meijin-tag">MEIJIN & HONINBO TITLE HOLDER</span>
+        <h2 id="currentChamp" style="margin:10px 0; letter-spacing: 6px; font-size: 2.2rem; color: var(--gold);">---</h2>
+        <div id="qualifiers" style="font-size: 1.1rem;">Top 2 Qualifiers: ---</div>
     </div>
 
     <header>
@@ -61,7 +73,7 @@
             <div class="card">
                 <h3>Global Rankings</h3>
                 <div class="admin-only" style="margin-bottom:15px;">
-                    <input type="text" id="playerName" placeholder="Name" style="width:100px;">
+                    <input type="text" id="playerName" placeholder="Nom" style="width:130px; padding:5px;">
                     <button onclick="addPlayer()">Add</button>
                 </div>
                 <div id="rankingsList"></div>
@@ -73,23 +85,29 @@
 
         <main>
             <div id="activeTourney" class="card" style="display:none;">
-                <div style="display:flex; justify-content:space-between;">
-                    <h2 id="tourneyNameDisplay">Active Event</h2>
-                    <button class="admin-only" onclick="archiveTourney()" style="background:var(--accent); color:white; border:none; padding:5px 10px; border-radius:5px;">End Tournament</button>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h2 id="tourneyNameDisplay" style="margin:0; color:var(--accent);">Event</h2>
+                    <div>
+                        <button class="admin-only" onclick="clearMatchZone()" style="background:#7f8c8d; color:white; border:none; padding:8px 12px; border-radius:5px; cursor:pointer; margin-right:5px;">Next Round (Clear)</button>
+                        <button class="admin-only" onclick="archiveTourney()" style="background:var(--accent); color:white; border:none; padding:8px 12px; border-radius:5px; cursor:pointer;">End Tournament</button>
+                    </div>
                 </div>
-                <div id="manualPairing" class="admin-only" style="background:rgba(0,0,0,0.05); padding:10px; border-radius:10px; margin:10px 0;">
-                    <small>Manual Match Creation:</small><br>
-                    <select id="p1Select"></select> vs <select id="p2Select"></select>
-                    <button onclick="createMatch()">Add Match</button>
+                
+                <div id="manualPairing" class="admin-only" style="background:rgba(0,0,0,0.05); padding:15px; border-radius:10px; margin:20px 0; border: 2px dashed #ccc;">
+                    <strong>Manual Pair:</strong> 
+                    <select id="p1Select"></select> VS <select id="p2Select"></select>
+                    <button onclick="createMatch()" style="background:var(--ink); color:white; border:none; padding:5px 15px; border-radius:5px; cursor:pointer;">Add Match</button>
                 </div>
+
                 <div id="matchZone"></div>
             </div>
 
             <div id="setupTourney" class="card">
-                <h3>Launch Tournament</h3>
-                <input type="text" id="tourneyInput" placeholder="Tournament Name" style="width:100%; padding:10px; margin-bottom:10px;">
-                <div id="enrollmentZone"></div>
-                <button class="admin-only" onclick="startTourney()" style="width:100%; padding:10px; background:var(--ink); color:white; border:none; border-radius:10px; cursor:pointer;">Initialize Event</button>
+                <h3>New Tournament</h3>
+                <input type="text" id="tourneyInput" placeholder="Nom du tournoi" style="width:97%; padding:12px; margin-bottom:15px; border-radius:8px; border:1px solid #ccc;">
+                <div style="margin-bottom:10px;"><strong>Participants :</strong></div>
+                <div id="enrollmentZone" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 20px;"></div>
+                <button class="admin-only" onclick="startTourney()" style="width:100%; padding:15px; background:var(--ink); color:white; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">Initialize Event</button>
             </div>
         </main>
     </div>
@@ -97,13 +115,13 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, doc, onSnapshot, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getFirestore, doc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     const firebaseConfig = { apiKey: "AIzaSyDzse9aVDIAFscTbGs-3Disy2wdRHWPRF0", authDomain: "meijin-system.firebaseapp.com", projectId: "meijin-system", storageBucket: "meijin-system.firebasestorage.app", messagingSenderId: "935283801474", appId: "1:935283801474:web:4e161bff3b1c6ffb77a39b" };
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    let state = { players: [], active: null, archives: [], tourneyCount: 0, champ: "None" };
+    let state = { players: [], active: null, archives: [], tourneyCount: 0, champ: "None", lastAction: "" };
     let chart = null;
 
     window.toggleTheme = () => document.body.setAttribute('data-theme', document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
@@ -123,12 +141,14 @@
 
     window.addPlayer = async () => {
         const name = document.getElementById('playerName').value;
+        if(!name) return;
         const players = [...state.players, { id: Date.now().toString(), name, points: 0, wins: 0, losses: 0, history: [0] }];
         await updateDoc(doc(db, "system", "current"), { players });
+        document.getElementById('playerName').value = "";
     };
 
     window.startTourney = async () => {
-        const name = document.getElementById('tourneyInput').value || "Unnamed Event";
+        const name = document.getElementById('tourneyInput').value || "Event";
         const enrolled = Array.from(document.querySelectorAll('.enroll-check:checked')).map(cb => cb.value);
         const participants = state.players.filter(p => enrolled.includes(p.id));
         await updateDoc(doc(db, "system", "current"), { active: { name, players: participants, matches: [] } });
@@ -137,21 +157,35 @@
     window.createMatch = async () => {
         const p1Id = document.getElementById('p1Select').value;
         const p2Id = document.getElementById('p2Select').value;
-        if(p1Id === p2Id) return;
+        if(p1Id === p2Id) return alert("Double sélection impossible !");
         const p1 = state.active.players.find(p => p.id === p1Id);
         const p2 = state.active.players.find(p => p.id === p2Id);
         const matches = [...state.active.matches, { id: Date.now(), p1, p2, winId: null, p1B: Math.random() > 0.5 }];
         await updateDoc(doc(db, "system", "current"), { "active.matches": matches });
     };
 
+    window.deleteMatch = async (mId) => {
+        const matches = state.active.matches.filter(m => m.id !== mId);
+        await updateDoc(doc(db, "system", "current"), { "active.matches": matches });
+    };
+
+    window.clearMatchZone = async () => {
+        if(confirm("Vider la zone des matchs pour la ronde suivante ?")) {
+            await updateDoc(doc(db, "system", "current"), { "active.matches": [] });
+        }
+    };
+
     window.setWinner = async (mId, wId, lId) => {
+        const winner = state.players.find(p => p.id === wId);
+        const loser = state.players.find(p => p.id === lId);
         const players = state.players.map(p => {
             if(p.id === wId) return {...p, points: p.points + 10, wins: p.wins + 1};
             if(p.id === lId) return {...p, points: Math.max(0, p.points - 5), losses: p.losses + 1};
             return p;
         });
         const matches = state.active.matches.map(m => m.id === mId ? {...m, winId: wId} : m);
-        await updateDoc(doc(db, "system", "current"), { players, "active.matches": matches });
+        const lastAction = `🔥 ${winner.name} a triomphé de ${loser.name} ! (+10 pt)`;
+        await updateDoc(doc(db, "system", "current"), { players, "active.matches": matches, lastAction });
     };
 
     window.archiveTourney = async () => {
@@ -159,47 +193,53 @@
         let champ = state.champ;
         let players = state.players.map(p => ({...p, history: [...(p.history || []), p.points]}));
 
-        // Winner of the 4th tournament gets the titles
         if(count === 4) {
-            // Find winner of the current active tournament (based on wins in this event)
             const tourneyResults = state.active.players.map(p => {
-                const wins = state.active.matches.filter(m => m.winId === p.id).length;
-                return { name: p.name, wins };
+                const winsInEvent = state.active.matches.filter(m => m.winId === p.id).length;
+                return { name: p.name, wins: winsInEvent };
             }).sort((a,b) => b.wins - a.wins);
             
             champ = tourneyResults[0].name;
-            alert(`THE SEASON IS OVER! ${champ} is the new Meijin & Honinbo!`);
-            
-            // Reset for next season
+            alert(`CYCLE TERMINÉ ! ${champ} est sacré Meijin & Honinbo !`);
             count = 0;
             players = players.map(p => ({...p, points: 0, wins: 0, losses: 0, history: [0]}));
         }
 
         await updateDoc(doc(db, "system", "current"), { 
             archives: [{name: state.active.name, winner: state.active.players[0].name}, ...state.archives],
-            active: null, tourneyCount: count, players, champ
+            active: null, tourneyCount: count, players, champ, lastAction: `🏆 Fin du tournoi : ${state.active.name}`
         });
     };
 
     function renderUI() {
-        // Rankings
         const sorted = [...state.players].sort((a,b) => b.points - a.points);
-        document.getElementById('rankingsList').innerHTML = sorted.map(p => `
+        
+        // Rankings avec Badges
+        document.getElementById('rankingsList').innerHTML = sorted.map(p => {
+            let badge = "";
+            if (p.wins >= 3 && p.losses === 0) badge = "<span class='badge-icon' title='On Fire'>🔥</span>";
+            if (p.points >= 50) badge += "<span class='badge-icon' title='Grand Maître'>💎</span>";
+            
+            return `
             <div class="player-row">
-                <span><b>${p.name}</b> <small>(${p.wins}V - ${p.losses}D)</small></span>
+                <span><b>${p.name}</b> ${badge} <br><small>(${p.wins}V - ${p.losses}D)</small></span>
                 <span class="points-badge">${p.points} pt</span>
-            </div>`).join('');
+            </div>`;
+        }).join('');
+
+        // Ticker
+        document.getElementById('newsTicker').innerText = state.lastAction || "En attente de résultats...";
 
         // Enrollment
         document.getElementById('enrollmentZone').innerHTML = state.players.map(p => `
-            <label><input type="checkbox" class="enroll-check" value="${p.id}"> ${p.name}</label>
-        `).join(' ');
+            <label style="background:rgba(0,0,0,0.03); padding:5px; border-radius:5px;"><input type="checkbox" class="enroll-check" value="${p.id}"> ${p.name}</label>
+        `).join('');
 
-        // Champions Section
+        // Champions
         if(state.champ && state.champ !== "None") {
             document.getElementById('championSection').style.display = "block";
             document.getElementById('currentChamp').innerText = state.champ;
-            document.getElementById('qualifiers').innerText = `Top 2 Qualifiers: ${sorted[0]?.name || '?'} & ${sorted[1]?.name || '?'}`;
+            document.getElementById('qualifiers').innerText = `En route pour Honinbo : ${sorted[0]?.name || '?'} & ${sorted[1]?.name || '?'}`;
         }
 
         document.getElementById('cycleStatus').innerText = `Cycle: ${state.tourneyCount}/4 Tournaments`;
@@ -209,24 +249,23 @@
             document.getElementById('setupTourney').style.display = "none";
             document.getElementById('tourneyNameDisplay').innerText = state.active.name;
             
-            // Select dropdowns for manual pairing
             const options = state.active.players.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
             document.getElementById('p1Select').innerHTML = options;
             document.getElementById('p2Select').innerHTML = options;
 
             document.getElementById('matchZone').innerHTML = state.active.matches.map(m => `
                 <div class="match-box">
+                    ${window.isAdmin ? `<button class="del-match" onclick="deleteMatch(${m.id})">×</button>` : ''}
                     <div style="width:40%; text-align:center;">
-                        <div class="stone ${m.p1B?'black':'white'}"></div> ${m.p1.name}
-                        ${!m.winId && window.isAdmin ? `<br><button class="btn-win" onclick="setWinner(${m.id},'${m.p1.id}','${m.p2.id}')">Win</button>` : (m.winId === m.p1.id ? ' ⭐' : '')}
+                        <div class="stone ${m.p1B?'black':'white'}"></div><br><strong>${m.p1.name}</strong>
+                        ${!m.winId && window.isAdmin ? `<br><button class="btn-win" onclick="setWinner(${m.id},'${m.p1.id}','${m.p2.id}')">Win</button>` : (m.winId === m.p1.id ? '<br>⭐' : '')}
                     </div>
-                    <div>VS</div>
+                    <div style="font-weight:bold; color:var(--accent);">VS</div>
                     <div style="width:40%; text-align:center;">
-                        <div class="stone ${m.p1B?'white':'black'}"></div> ${m.p2.name}
-                        ${!m.winId && window.isAdmin ? `<br><button class="btn-win" onclick="setWinner(${m.id},'${m.p2.id}','${m.p1.id}')">Win</button>` : (m.winId === m.p2.id ? ' ⭐' : '')}
+                        <div class="stone ${m.p1B?'white':'black'}"></div><br><strong>${m.p2.name}</strong>
+                        ${!m.winId && window.isAdmin ? `<br><button class="btn-win" onclick="setWinner(${m.id},'${m.p2.id}','${m.p1.id}')">Win</button>` : (m.winId === m.p2.id ? '<br>⭐' : '')}
                     </div>
-                </div>
-            `).join('');
+                </div>`).join('');
         } else {
             document.getElementById('activeTourney').style.display = "none";
             document.getElementById('setupTourney').style.display = "block";
@@ -247,7 +286,7 @@
                     label: p.name, data: p.history || [0], borderColor: ['#8b0000', '#1a1a1a', '#d4af37', '#27ae60', '#2980b9'][i], tension: 0.3
                 }))
             },
-            options: { plugins: { legend: { display: false } } }
+            options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
         });
     }
 </script>
