@@ -4111,12 +4111,8 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Masquer les éléments admin au chargement
     toggleAdminElements(false);
-
-    // =================================================================
-    // EXPOSER LES FONCTIONS AU NIVEAU GLOBAL
-    // =================================================================
-
-    // Fonctions originales
+    
+    // Exposer les fonctions au niveau global pour les onclick HTML
     window.toggleTheme = toggleTheme;
     window.loginAdmin = loginAdmin;
     window.logoutAdmin = logoutAdmin;
@@ -4132,7 +4128,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.deselectAllPlayers = deselectAllPlayers;
     window.filterPlayers = filterPlayers;
     window.switchTab = switchTab;
-
+    
     // Nouvelles fonctions
     window.swapAllMatchColors = swapAllMatchColors;
     window.randomizeAllColors = randomizeAllColors;
@@ -4150,19 +4146,12 @@ document.addEventListener('DOMContentLoaded', () => {
     window.saveMatchChanges = saveMatchChanges;
     window.deleteSelectedMatch = deleteSelectedMatch;
     window.setBulkWinner = setBulkWinner;
-
+    
     // Exposer pour le debug
     window.appState = state;
     window.appIsAdmin = isAdmin;
+}); // ← CETTE ACCOLADE FERMANTE EST CRITIQUE
+
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
