@@ -1,4 +1,4 @@
-repars de ce code : <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -82,7 +82,6 @@ repars de ce code : <!DOCTYPE html>
             margin: 0 auto;
         }
 
-        /* Header */
         .header {
             display: flex;
             justify-content: space-between;
@@ -120,53 +119,50 @@ repars de ce code : <!DOCTYPE html>
             background-clip: text;
         }
 
-        /* Styles pour les perdants */
-.match-player.loser {
-    background: linear-gradient(135deg, rgba(231, 76, 60, 0.1) 0%, transparent 100%) !important;
-    border: 1px solid rgba(231, 76, 60, 0.3) !important;
-    opacity: 0.7;
-}
+        .match-player.loser {
+            background: linear-gradient(135deg, rgba(231, 76, 60, 0.1) 0%, transparent 100%) !important;
+            border: 1px solid rgba(231, 76, 60, 0.3) !important;
+            opacity: 0.7;
+        }
 
-.match-player.loser .player-label {
-    color: var(--danger) !important;
-    text-decoration: line-through;
-}
+        .match-player.loser .player-label {
+            color: var(--danger) !important;
+            text-decoration: line-through;
+        }
 
-.match-player.loser .player-subtext {
-    color: #e74c3c !important;
-}
+        .match-player.loser .player-subtext {
+            color: #e74c3c !important;
+        }
 
-.match-player.loser .stone-display {
-    opacity: 0.5;
-    filter: grayscale(70%);
-}
+        .match-player.loser .stone-display {
+            opacity: 0.5;
+            filter: grayscale(70%);
+        }
 
-/* Style pour les invités (cacher les boutons) */
-.guest-mode .win-btn,
-.guest-mode .swap-colors-btn,
-.guest-mode .quick-actions,
-.guest-mode .advanced-match-controls,
-.guest-mode .manual-control-indicator {
-    display: none !important;
-}
+        .guest-mode .win-btn,
+        .guest-mode .swap-colors-btn,
+        .guest-mode .quick-actions,
+        .guest-mode .advanced-match-controls,
+        .guest-mode .manual-control-indicator {
+            display: none !important;
+        }
 
-.guest-mode .match-status-badge {
-    display: inline-flex !important;
-}
+        .guest-mode .match-status-badge {
+            display: inline-flex !important;
+        }
 
-/* Badge pour les invités */
-.guest-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 4px 10px;
-    background: var(--secondary);
-    color: white;
-    border-radius: 20px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    margin-left: 10px;
-}
+        .guest-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            background: var(--secondary);
+            color: white;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-left: 10px;
+        }
 
         .admin-hidden {
             display: none !important;
@@ -255,7 +251,6 @@ repars de ce code : <!DOCTYPE html>
             color: white;
         }
 
-        /* Game Format Banner */
         .format-banner {
             background: var(--bg-card);
             border-radius: var(--radius-lg);
@@ -295,7 +290,6 @@ repars de ce code : <!DOCTYPE html>
             font-weight: bold;
         }
 
-        /* Champion Section */
         .champion-section {
             background: linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(228, 63, 90, 0.1) 100%);
             border-radius: var(--radius-lg);
@@ -308,15 +302,15 @@ repars de ce code : <!DOCTYPE html>
         }
 
         .badge-danger {
-    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-    color: white;
-    padding: 8px 16px;
-    border-radius: 20px;
-    font-weight: 600;
-    font-size: 0.9rem;
-    display: inline-block;
-    margin-top: 15px;
-}
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: inline-block;
+            margin-top: 15px;
+        }
 
         .champion-section::before {
             content: "";
@@ -379,7 +373,6 @@ repars de ce code : <!DOCTYPE html>
             letter-spacing: 1px;
         }
 
-        /* Main Grid */
         .main-grid {
             display: grid;
             grid-template-columns: 400px 1fr 400px;
@@ -399,7 +392,6 @@ repars de ce code : <!DOCTYPE html>
             }
         }
 
-        /* Cards */
         .card {
             background: var(--bg-card);
             border-radius: var(--radius-lg);
@@ -416,38 +408,38 @@ repars de ce code : <!DOCTYPE html>
         }
 
         .game-link {
-    display: block;
-    margin-top: 10px;
-    padding: 6px 12px;
-    background: var(--secondary);
-    color: white;
-    border-radius: 8px;
-    text-decoration: none;
-    font-size: 0.85rem;
-    text-align: center;
-}
+            display: block;
+            margin-top: 10px;
+            padding: 6px 12px;
+            background: var(--secondary);
+            color: white;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.85rem;
+            text-align: center;
+        }
 
-.add-link-btn {
-    display: block;
-    margin-top: 10px;
-    width: 100%;
-    padding: 6px 12px;
-    background: transparent;
-    border: 1px dashed var(--border);
-    color: var(--text-secondary);
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 0.85rem;
-}
+        .add-link-btn {
+            display: block;
+            margin-top: 10px;
+            width: 100%;
+            padding: 6px 12px;
+            background: transparent;
+            border: 1px dashed var(--border);
+            color: var(--text-secondary);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
 
-.game-link:hover {
-    background: var(--primary);
-}
+        .game-link:hover {
+            background: var(--primary);
+        }
 
-.add-link-btn:hover {
-    border-color: var(--accent);
-    color: var(--accent);
-}
+        .add-link-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
 
         .card-header {
             display: flex;
@@ -467,7 +459,6 @@ repars de ce code : <!DOCTYPE html>
             gap: 10px;
         }
 
-        /* Player Management */
         .add-player-form {
             background: rgba(255, 255, 255, 0.03);
             border-radius: var(--radius-md);
@@ -511,7 +502,6 @@ repars de ce code : <!DOCTYPE html>
             box-shadow: 0 0 0 3px rgba(228, 63, 90, 0.1);
         }
 
-        /* Rankings List */
         .rankings-header {
             display: flex;
             justify-content: space-between;
@@ -525,53 +515,50 @@ repars de ce code : <!DOCTYPE html>
             max-width: 300px;
         }
 
-        /* AJOUTE CE CSS DANS TA SECTION <style> */
-.win-btn {
-    display: block;
-    width: 100%;
-    background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
-    color: white;
-    border: none;
-    padding: 12px 16px;
-    border-radius: 8px;
-    font-weight: 600;
-    font-size: 14px;
-    cursor: pointer;
-    margin-top: 15px;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
-}
+        .win-btn {
+            display: block;
+            width: 100%;
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            color: white;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
+        }
 
-.win-btn:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 20px rgba(46, 204, 113, 0.4);
-}
+        .win-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(46, 204, 113, 0.4);
+        }
 
-.win-btn:active {
-    transform: translateY(-1px);
-}
+        .win-btn:active {
+            transform: translateY(-1px);
+        }
 
-/* Style pour les boutons quand le joueur est déjà le vainqueur */
-.win-btn[style*="background: #f39c12"] {
-    background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%) !important;
-    box-shadow: 0 4px 12px rgba(243, 156, 18, 0.3);
-}
+        .win-btn[style*="background: #f39c12"] {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%) !important;
+            box-shadow: 0 4px 12px rgba(243, 156, 18, 0.3);
+        }
 
-.win-btn[style*="background: #f39c12"]:hover {
-    box-shadow: 0 6px 20px rgba(243, 156, 18, 0.4);
-}
+        .win-btn[style*="background: #f39c12"]:hover {
+            box-shadow: 0 6px 20px rgba(243, 156, 18, 0.4);
+        }
 
-/* Style des badges */
-.badge-success {
-    background: #2ecc71;
-    color: white;
-    padding: 8px 16px;
-    border-radius: 20px;
-    font-weight: 600;
-    font-size: 0.9rem;
-    margin-top: 15px;
-    display: inline-block;
-}
+        .badge-success {
+            background: #2ecc71;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-top: 15px;
+            display: inline-block;
+        }
 
         .search-input {
             width: 100%;
@@ -696,27 +683,6 @@ repars de ce code : <!DOCTYPE html>
             font-weight: 500;
         }
 
-        .win-btn {
-            padding: 8px 16px;
-            background: linear-gradient(135deg, var(--success) 0%, var(--success-light) 100%);
-            color: white;
-            border: none;
-            border-radius: var(--radius-md);
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            min-width: 140px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 5px;
-        }
-
-        .win-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
-        }
-
         .match-player.winner {
             background: linear-gradient(135deg, rgba(46, 204, 113, 0.1) 0%, transparent 100%);
             border: 2px solid var(--success);
@@ -729,18 +695,6 @@ repars de ce code : <!DOCTYPE html>
             top: 10px;
             right: 10px;
             font-size: 1.5rem;
-        }
-
-        .badge-success {
-            background: var(--success);
-            color: white;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
         }
 
         .player-stats {
@@ -761,7 +715,6 @@ repars de ce code : <!DOCTYPE html>
             color: var(--text-secondary);
         }
 
-        /* Statistics */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -790,7 +743,6 @@ repars de ce code : <!DOCTYPE html>
             letter-spacing: 1px;
         }
 
-        /* Chart Container */
         .chart-container {
             position: relative;
             height: 320px;
@@ -801,7 +753,6 @@ repars de ce code : <!DOCTYPE html>
             margin-top: 15px;
         }
 
-        /* Tournament Section */
         .tournament-header {
             display: flex;
             justify-content: space-between;
@@ -832,7 +783,6 @@ repars de ce code : <!DOCTYPE html>
             flex-wrap: wrap;
         }
 
-        /* Tournament Settings */
         .tournament-settings {
             background: rgba(255, 255, 255, 0.03);
             border-radius: var(--radius-md);
@@ -859,7 +809,6 @@ repars de ce code : <!DOCTYPE html>
             color: var(--text-primary);
         }
 
-        /* Manual Pairing */
         .pairing-section {
             background: linear-gradient(135deg, rgba(31, 64, 104, 0.1) 0%, transparent 100%);
             border-radius: var(--radius-md);
@@ -892,7 +841,6 @@ repars de ce code : <!DOCTYPE html>
             text-align: center;
         }
 
-        /* Matches Zone */
         .matches-grid {
             display: grid;
             gap: 15px;
@@ -1003,7 +951,6 @@ repars de ce code : <!DOCTYPE html>
             padding: 0 20px;
         }
 
-        /* Tournament Setup */
         .enrollment-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -1043,7 +990,6 @@ repars de ce code : <!DOCTYPE html>
             margin-top: 25px;
         }
 
-        /* Progress Bar */
         .progress-container {
             margin-top: 25px;
             padding-top: 20px;
@@ -1070,7 +1016,6 @@ repars de ce code : <!DOCTYPE html>
             transition: width 0.5s ease;
         }
 
-        /* Tournament History */
         .history-grid {
             display: grid;
             gap: 15px;
@@ -1119,7 +1064,6 @@ repars de ce code : <!DOCTYPE html>
             gap: 5px;
         }
 
-        /* Notifications */
         .notification-container {
             position: fixed;
             top: 20px;
@@ -1171,7 +1115,6 @@ repars de ce code : <!DOCTYPE html>
             }
         }
 
-        /* Responsive Design */
         @media (max-width: 768px) {
             .header {
                 flex-direction: column;
@@ -1214,7 +1157,6 @@ repars de ce code : <!DOCTYPE html>
             }
         }
 
-        /* Animations */
         .pulse {
             animation: pulse 2s infinite;
         }
@@ -1231,7 +1173,6 @@ repars de ce code : <!DOCTYPE html>
             }
         }
 
-        /* Loading States */
         .loading {
             display: inline-block;
             width: 20px;
@@ -1248,7 +1189,6 @@ repars de ce code : <!DOCTYPE html>
             }
         }
 
-        /* Badges */
         .badge {
             display: inline-flex;
             align-items: center;
@@ -1274,7 +1214,6 @@ repars de ce code : <!DOCTYPE html>
             color: white;
         }
 
-        /* Tournament Type Indicator */
         .tournament-type {
             display: inline-flex;
             align-items: center;
@@ -1287,7 +1226,6 @@ repars de ce code : <!DOCTYPE html>
             font-weight: 500;
         }
 
-        /* Empty States */
         .empty-state {
             text-align: center;
             padding: 60px 20px;
@@ -1300,7 +1238,6 @@ repars de ce code : <!DOCTYPE html>
             opacity: 0.3;
         }
 
-        /* Scrollbar Styling */
         ::-webkit-scrollbar {
             width: 8px;
             height: 8px;
@@ -1320,7 +1257,6 @@ repars de ce code : <!DOCTYPE html>
             background: var(--text-secondary);
         }
 
-        /* Tabs */
         .tabs {
             display: flex;
             border-bottom: 2px solid var(--border);
@@ -1364,7 +1300,6 @@ repars de ce code : <!DOCTYPE html>
             display: block;
         }
 
-        /* Round Progress */
         .round-progress {
             display: flex;
             flex-direction: column;
@@ -1410,9 +1345,6 @@ repars de ce code : <!DOCTYPE html>
             color: var(--text-secondary);
         }
 
-        /* NOUVEAUX STYLES POUR LES AMÉLIORATIONS */
-
-        /* Bouton d'inversion des couleurs */
         .color-controls {
             display: flex;
             justify-content: center;
@@ -1439,7 +1371,6 @@ repars de ce code : <!DOCTYPE html>
             transform: rotate(5deg);
         }
 
-        /* Gestion manuelle avancée */
         .advanced-match-controls {
             background: linear-gradient(135deg, rgba(31, 64, 104, 0.1) 0%, transparent 100%);
             border-radius: var(--radius-md);
@@ -1470,7 +1401,6 @@ repars de ce code : <!DOCTYPE html>
             gap: 5px;
         }
 
-        /* Historique détaillé */
         .history-details {
             max-height: 0;
             overflow: hidden;
@@ -1511,42 +1441,6 @@ repars de ce code : <!DOCTYPE html>
             background: rgba(228, 63, 90, 0.05);
         }
 
-        /* Dans la section <style>, ajoutez : */
-.game-link {
-    display: block;
-    margin-top: 10px;
-    padding: 6px 12px;
-    background: var(--secondary);
-    color: white;
-    border-radius: 8px;
-    text-decoration: none;
-    font-size: 0.85rem;
-    text-align: center;
-}
-
-.add-link-btn {
-    display: block;
-    margin-top: 10px;
-    width: 100%;
-    padding: 6px 12px;
-    background: transparent;
-    border: 1px dashed var(--border);
-    color: var(--text-secondary);
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 0.85rem;
-}
-
-.game-link:hover {
-    background: var(--primary);
-}
-
-.add-link-btn:hover {
-    border-color: var(--accent);
-    color: var(--accent);
-}
-   
-        /* Gestion manuelle des joueurs dans les matchs */
         .player-select-controls {
             display: flex;
             flex-direction: column;
@@ -1580,7 +1474,6 @@ repars de ce code : <!DOCTYPE html>
             background: var(--primary);
         }
 
-        /* Boutons d'action rapide */
         .quick-actions {
             display: flex;
             gap: 10px;
@@ -1609,7 +1502,6 @@ repars de ce code : <!DOCTYPE html>
             transform: translateY(-2px);
         }
 
-        /* Statut des matchs */
         .match-status-badge {
             display: inline-flex;
             align-items: center;
@@ -1636,7 +1528,6 @@ repars de ce code : <!DOCTYPE html>
             color: white;
         }
 
-        /* Contrôles de couleur améliorés */
         .stone-display.swappable {
             cursor: pointer;
             position: relative;
@@ -1659,7 +1550,6 @@ repars de ce code : <!DOCTYPE html>
             text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
         }
 
-        /* Améliorations de l'historique */
         .history-expand-btn {
             background: none;
             border: none;
@@ -1678,14 +1568,12 @@ repars de ce code : <!DOCTYPE html>
             background: rgba(228, 63, 90, 0.1);
         }
 
-        /* Boutons d'action dans l'historique */
         .history-actions {
             display: flex;
             gap: 8px;
             margin-top: 15px;
         }
 
-        /* Filtres pour l'historique */
         .history-filters {
             display: flex;
             gap: 10px;
@@ -1711,7 +1599,6 @@ repars de ce code : <!DOCTYPE html>
             border-color: var(--accent);
         }
 
-        /* Styles pour les matchs individuels */
         .match-controls {
             display: flex;
             flex-direction: column;
@@ -1728,7 +1615,6 @@ repars de ce code : <!DOCTYPE html>
             color: var(--text-primary);
         }
 
-        /* Statistiques détaillées de l'historique */
         .history-stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -1758,7 +1644,6 @@ repars de ce code : <!DOCTYPE html>
             letter-spacing: 1px;
         }
 
-        /* Indicateur de gestion manuelle */
         .manual-control-indicator {
             display: inline-flex;
             align-items: center;
@@ -1772,7 +1657,6 @@ repars de ce code : <!DOCTYPE html>
             margin-left: 10px;
         }
 
-        /* Animation pour les changements de couleur */
         @keyframes colorSwap {
             0% { transform: scale(1); }
             50% { transform: scale(1.1); }
@@ -1783,7 +1667,6 @@ repars de ce code : <!DOCTYPE html>
             animation: colorSwap 0.5s ease;
         }
 
-        /* Media queries pour la responsivité */
         @media (max-width: 768px) {
             .advanced-controls-grid {
                 grid-template-columns: 1fr;
@@ -2002,7 +1885,7 @@ repars de ce code : <!DOCTYPE html>
                         </div>
                     </div>
 
-                    <!-- NOUVEAU: Bouton d'inversion des couleurs global -->
+                    <!-- Bouton d'inversion des couleurs global -->
                     <div class="color-controls admin-hidden" id="globalColorControls">
                         <button onclick="swapAllMatchColors()" class="swap-colors-global-btn">
                             <span>🎨</span> Swap All Colors
@@ -2071,7 +1954,7 @@ repars de ce code : <!DOCTYPE html>
                         </div>
                     </div>
 
-                    <!-- Gestion manuelle avancée (NOUVEAU) -->
+                    <!-- Gestion manuelle avancée -->
                     <div class="advanced-match-controls admin-hidden">
                         <div class="pairing-title">🛠️ Advanced Match Management</div>
                         <div class="advanced-controls-grid">
@@ -2174,7 +2057,7 @@ repars de ce code : <!DOCTYPE html>
                 </div>
             </div>
 
-            <!-- NOUVEAU: Onglet de gestion manuelle -->
+            <!-- Onglet de gestion manuelle -->
             <div id="manualManagementCard" class="tab-content">
                 <div class="card">
                     <div class="card-header">
@@ -2429,27 +2312,28 @@ repars de ce code : <!DOCTYPE html>
 
     // Admin Authentication
     function loginAdmin() {
-    const pin = document.getElementById('adminPin').value;
-    if (pin === "159753") {
-        isAdmin = true;
-        document.getElementById('authSection').style.display = 'none';
-        document.getElementById('adminControls').style.display = 'flex';
-        toggleAdminElements(true);
-        updateModeIndicator();
-        showNotification('Admin login successful - Advanced controls enabled', 'success');
-    } else {
-        showNotification('Incorrect PIN', 'error');
+        const pin = document.getElementById('adminPin').value;
+        if (pin === "159753") {
+            isAdmin = true;
+            document.getElementById('authSection').style.display = 'none';
+            document.getElementById('adminControls').style.display = 'flex';
+            toggleAdminElements(true);
+            updateModeIndicator();
+            showNotification('Admin login successful - Advanced controls enabled', 'success');
+        } else {
+            showNotification('Incorrect PIN', 'error');
+        }
     }
-}
 
-function logoutAdmin() {
-    isAdmin = false;
-    document.getElementById('authSection').style.display = 'flex';
-    document.getElementById('adminControls').style.display = 'none';
-    toggleAdminElements(false);
-    updateModeIndicator();
-    showNotification('Logged out successfully', 'info');
-}
+    function logoutAdmin() {
+        isAdmin = false;
+        document.getElementById('authSection').style.display = 'flex';
+        document.getElementById('adminControls').style.display = 'none';
+        toggleAdminElements(false);
+        updateModeIndicator();
+        showNotification('Logged out successfully', 'info');
+    }
+
     // Notification System
     function showNotification(message, type = 'info') {
         const container = document.getElementById('notificationContainer');
@@ -2518,7 +2402,7 @@ function logoutAdmin() {
     }
 
     // =================================================================
-    // NOUVELLES FONCTIONNALITÉS AJOUTÉES
+    // NOUVELLES FONCTIONNALITÉS
     // =================================================================
 
     // 1. Inversion des couleurs pour tous les matchs
@@ -2635,7 +2519,8 @@ function logoutAdmin() {
                 winner: null,
                 round: currentRound,
                 player1IsBlack: Math.random() > 0.5,
-                createdAt: new Date().toISOString()
+                createdAt: new Date().toISOString(),
+                gameUrl: null
             };
             newMatches.push(newMatch);
         }
@@ -2657,7 +2542,6 @@ function logoutAdmin() {
         document.querySelectorAll('.history-filter').forEach(btn => btn.classList.remove('active'));
         event.target.classList.add('active');
         
-        // Cette fonction sera complétée avec la logique de filtrage
         showNotification(`Filtering history: ${filterType}`, 'info');
     }
 
@@ -2706,7 +2590,7 @@ function logoutAdmin() {
 
         const updatedMatches = state.activeTournament.matches.map(match => ({
             ...match,
-            player1IsBlack: true // Par défaut, le joueur 1 a les noirs
+            player1IsBlack: true
         }));
 
         await updateDoc(systemRef, { 
@@ -2749,7 +2633,8 @@ function logoutAdmin() {
                 winner: null,
                 round: currentRound,
                 player1IsBlack: Math.random() > 0.5,
-                createdAt: new Date().toISOString()
+                createdAt: new Date().toISOString(),
+                gameUrl: null
             });
         }
 
@@ -2791,9 +2676,7 @@ function logoutAdmin() {
         
         const match = state.activeTournament.matches.find(m => m.id === matchId);
         if (match) {
-            // Pré-remplir les champs d'édition
             document.getElementById('editMatchResult').value = match.winner || '';
-            
             showNotification(`Loaded match: ${match.player1.name} vs ${match.player2.name}`, 'info');
         }
     }
@@ -2862,7 +2745,6 @@ function logoutAdmin() {
             }
             
             if (result !== 'cancelled' && result !== 'draw') {
-                // Calculer les changements Elo
                 const winnerId = result === 'player1' ? match.player1.id : match.player2.id;
                 const loserId = result === 'player1' ? match.player2.id : match.player1.id;
                 
@@ -2888,7 +2770,6 @@ function logoutAdmin() {
         showNotification('Match updated successfully', 'success');
     }
 
-
     // 12. Suppression d'un match
     async function deleteSelectedMatch() {
         const matchId = document.getElementById('editMatchSelect').value;
@@ -2902,7 +2783,6 @@ function logoutAdmin() {
             "activeTournament.matches": updatedMatches
         });
         
-        // Réinitialiser les sélections
         document.getElementById('editMatchSelect').value = '';
         document.getElementById('editMatchResult').value = '';
         
@@ -2939,7 +2819,7 @@ function logoutAdmin() {
     }
 
     // =================================================================
-    // FONCTIONS EXISTANTES (modifiées si nécessaire)
+    // FONCTIONS EXISTANTES
     // =================================================================
 
     // Elo Rating System
@@ -2963,14 +2843,12 @@ function logoutAdmin() {
         const tournamentInSeason = (state.tournamentCount % 4) + 1;
         document.getElementById('tournamentInSeason').textContent = `${tournamentInSeason}/4`;
         
-        // Show auto qualifiers only after 3 tournaments in a season
         if (tournamentInSeason >= 3) {
             const qualifiers = sortedPlayers.slice(0, 2).map(p => p.name);
             
             document.getElementById('nextQualifiers').textContent = qualifiers[0] && qualifiers[1] ? 
                 `${qualifiers[0].substring(0, 10)} & ${qualifiers[1].substring(0, 10)}` : '--';
             
-            // Update state with auto qualifiers
             if (JSON.stringify(state.autoQualifiers) !== JSON.stringify(qualifiers)) {
                 state.autoQualifiers = qualifiers;
                 updateDoc(systemRef, { autoQualifiers: qualifiers });
@@ -3047,11 +2925,9 @@ function logoutAdmin() {
 
         const participants = state.players.filter(p => enrolled.includes(p.id));
         
-        // Determine tournament type based on position in season
         const tournamentInSeason = (state.tournamentCount % 4) + 1;
         const tournamentType = tournamentInSeason === 4 ? 'single-elimination' : 'swiss';
         
-        // Get rounds count from settings
         const roundsCount = parseInt(document.getElementById('roundsCount').value) || 3;
         
         const tournament = {
@@ -3069,17 +2945,16 @@ function logoutAdmin() {
                 pointsPerLoss: parseInt(document.getElementById('pointsPerLoss').value) || -5
             },
             roundProgress: Array(roundsCount).fill(0).map((_, i) => ({
-    round: i + 1,
-    completedMatches: 0,
-    totalMatches: Math.floor(participants.length / 2)
-})),
+                round: i + 1,
+                completedMatches: 0,
+                totalMatches: Math.floor(participants.length / 2)
+            })),
             seedings: participants.map(p => ({ 
                 id: p.id, 
                 seed: (state.eloRatings[p.id] || state.systemSettings.initialElo) + Math.random() 
             })).sort((a, b) => b.seed - a.seed)
         };
 
-        // Calculate estimated matches per round
         tournament.roundProgress.forEach(round => {
             round.totalMatches = Math.floor(participants.length / 2);
         });
@@ -3092,194 +2967,122 @@ function logoutAdmin() {
         showNotification(`Tournament "${name}" started!`, 'success');
     }
 
-async function promptGameLink(matchId) {
-    console.log("🎮 promptGameLink EXÉCUTÉ pour:", matchId);
-    
-    // TEST FORCÉ - Enlever après vérification
-    alert("DEBUG: Fonction appelée ! Match ID: " + matchId);
-    
-    // Forcer le mode admin pour test
-    const wasAdmin = isAdmin;
-    isAdmin = true;
-    
-    if (!state.activeTournament) {
-        alert("Aucun tournoi actif");
-        isAdmin = wasAdmin;
-        return;
-    }
-    
-    const match = state.activeTournament.matches.find(m => m.id === matchId);
-    if (!match) {
-        alert("Match non trouvé: " + matchId);
-        console.log("Matches disponibles:", state.activeTournament.matches.map(m => m.id));
-        isAdmin = wasAdmin;
-        return;
-    }
-    
-    const testLink = "https://online-go.com/game/test-" + Date.now();
-    const response = confirm(`Ajouter un lien de test pour:\n${match.player1.name} vs ${match.player2.name} ?\n\nLien: ${testLink}`);
-    
-    if (response) {
-        // Mettre à jour localement
-        state.activeTournament.matches = state.activeTournament.matches.map(m => {
+    // Fonction pour ajouter/modifier un lien de jeu
+    async function promptGameLink(matchId) {
+        if (!isAdmin) {
+            showNotification('❌ Admin access required', 'error');
+            return;
+        }
+        
+        if (!state.activeTournament) {
+            showNotification('❌ No active tournament', 'error');
+            return;
+        }
+        
+        const match = state.activeTournament.matches.find(m => m.id === matchId);
+        if (!match) {
+            showNotification('❌ Match not found', 'error');
+            return;
+        }
+        
+        const currentLink = match.gameUrl || "";
+        const player1Name = match.player1.name.split(" ")[0];
+        const player2Name = match.player2.name.split(" ")[0];
+        
+        const newLink = prompt(
+            `🔗 Game link for:\n${player1Name} vs ${player2Name}\n\nPaste OGS or KGS link:`,
+            currentLink
+        );
+        
+        if (newLink === null) {
+            return;
+        }
+        
+        const updatedMatches = state.activeTournament.matches.map(m => {
             if (m.id === matchId) {
-                return { ...m, gameUrl: testLink };
+                return {
+                    ...m,
+                    gameUrl: newLink.trim() || null
+                };
             }
             return m;
         });
         
-        // Rafraîchir
-        updateMatchesDisplay();
-        
-        // Essayer Firebase
         try {
             await updateDoc(systemRef, {
-                "activeTournament.matches": state.activeTournament.matches
+                "activeTournament.matches": updatedMatches
             });
-            console.log("✅ Sauvegardé dans Firebase");
-        } catch (err) {
-            console.log("⚠️ Sauvegarde Firebase échouée, mais local OK");
+            
+            if (newLink.trim()) {
+                showNotification(`✅ Link added for ${player1Name} vs ${player2Name}`, "success");
+            } else {
+                showNotification(`✅ Link removed`, "success");
+            }
+            
+            updateMatchesDisplay();
+            
+        } catch (error) {
+            console.error("Firebase error:", error);
+            showNotification("❌ Save error: " + error.message, "error");
         }
-        
-        alert("✅ Lien ajouté !");
     }
-    
-    isAdmin = wasAdmin;
-}
-    console.log("=== promptGameLink appelée ===");
-    console.log("Match ID:", matchId);
-    console.log("Admin mode:", isAdmin);
-    
-    // 1. Vérifier le mode admin
-    if (!isAdmin) {
-        alert("❌ Mode admin requis pour ajouter un lien");
-        return;
-    }
-    
-    // 2. Vérifier qu'il y a un tournoi actif
-    if (!state.activeTournament) {
-        alert("❌ Aucun tournoi actif");
-        return;
-    }
-    
-    // 3. Trouver le match
-    const match = state.activeTournament.matches.find(m => m.id === matchId);
-    if (!match) {
-        alert("❌ Match non trouvé");
-        return;
-    }
-    
-    console.log("Match trouvé:", match);
-    
-    // 4. Demander le lien
-    const currentLink = match.gameUrl || "";
-    const player1Name = match.player1.name.split(" ")[0];
-    const player2Name = match.player2.name.split(" ")[0];
-    
-    const newLink = prompt(
-        `🔗 Lien pour la partie :\n${player1Name} vs ${player2Name}\n\nCollez le lien OGS ou KGS :`,
-        currentLink
-    );
-    
-    // Si l'utilisateur annule
-    if (newLink === null) {
-        console.log("Annulé par l'utilisateur");
-        return;
-    }
-    
-    // 5. Mettre à jour les matches
-    const updatedMatches = state.activeTournament.matches.map(m => {
-        if (m.id === matchId) {
-            const updatedMatch = {
-                ...m,
-                gameUrl: newLink.trim() || null
-            };
-            console.log("Match mis à jour:", updatedMatch);
-            return updatedMatch;
+
+    async function createManualMatch() {
+        if (!isAdmin) {
+            showNotification('Admin access required', 'error');
+            return;
         }
-        return m;
-    });
-    
-    // 6. Sauvegarder dans Firebase
-    try {
-        console.log("Sauvegarde Firebase...");
-        await updateDoc(systemRef, {
-            "activeTournament.matches": updatedMatches
+
+        const p1Id = document.getElementById('player1Select').value;
+        const p2Id = document.getElementById('player2Select').value;
+
+        if (!p1Id || !p2Id) {
+            showNotification('Select two players', 'error');
+            return;
+        }
+
+        if (p1Id === p2Id) {
+            showNotification('Player cannot play against themselves', 'error');
+            return;
+        }
+
+        const p1 = state.activeTournament.participants.find(p => p.id === p1Id);
+        const p2 = state.activeTournament.participants.find(p => p.id === p2Id);
+
+        const existingMatch = state.activeTournament.matches.find(m => 
+            ((m.player1.id === p1Id && m.player2.id === p2Id) ||
+            (m.player1.id === p2Id && m.player2.id === p1Id)) &&
+            m.round === state.activeTournament.round
+        );
+
+        if (existingMatch) {
+            showNotification('Match already exists in this round', 'error');
+            return;
+        }
+
+        const player1IsBlack = document.getElementById('manualBlack1').checked;
+
+        const newMatch = {
+            id: Date.now().toString(),
+            player1: p1,
+            player2: p2,
+            winner: null,
+            round: state.activeTournament.round,
+            player1IsBlack: player1IsBlack,
+            createdAt: new Date().toISOString(),
+            gameUrl: null
+        };
+
+        const updatedMatches = [...state.activeTournament.matches, newMatch];
+        await updateDoc(systemRef, { 
+            "activeTournament.matches": updatedMatches,
+            lastAction: `⚔️ New match: ${p1.name} (${player1IsBlack ? 'Black' : 'White'}) vs ${p2.name} (${!player1IsBlack ? 'Black' : 'White'})`
         });
         
-        // Message de succès
-        if (newLink.trim()) {
-            showNotification(`✅ Lien ajouté pour ${player1Name} vs ${player2Name}`, "success");
-        } else {
-            showNotification(`✅ Lien supprimé`, "success");
-        }
-        
-        // 7. Rafraîchir l'affichage IMMÉDIATEMENT
-        updateMatchesDisplay();
-        
-    } catch (error) {
-        console.error("Erreur Firebase:", error);
-        showNotification("❌ Erreur de sauvegarde : " + error.message, "error");
-    }
-}
-    async function createManualMatch() {
-    if (!isAdmin) {
-        showNotification('Admin access required', 'error');
-        return;
+        showNotification('Match created successfully', 'success');
     }
 
-    const p1Id = document.getElementById('player1Select').value;
-    const p2Id = document.getElementById('player2Select').value;
-
-    if (!p1Id || !p2Id) {
-        showNotification('Select two players', 'error');
-        return;
-    }
-
-    if (p1Id === p2Id) {
-        showNotification('Player cannot play against themselves', 'error');
-        return;
-    }
-
-    const p1 = state.activeTournament.participants.find(p => p.id === p1Id);
-    const p2 = state.activeTournament.participants.find(p => p.id === p2Id);
-
-    // Check for duplicate match in current round
-    const existingMatch = state.activeTournament.matches.find(m => 
-        ((m.player1.id === p1Id && m.player2.id === p2Id) ||
-        (m.player1.id === p2Id && m.player2.id === p1Id)) &&
-        m.round === state.activeTournament.round
-    );
-
-    if (existingMatch) {
-        showNotification('Match already exists in this round', 'error');
-        return;
-    }
-
-    // Déterminer qui a les noirs
-    const player1IsBlack = document.getElementById('manualBlack1').checked;
-
-    const newMatch = {
-        id: Date.now().toString(),
-        player1: p1,
-        player2: p2,
-        winner: null,
-        round: state.activeTournament.round,
-        player1IsBlack: player1IsBlack,
-        createdAt: new Date().toISOString(),
-        gameUrl: null // ← IMPORTANT : ajoutez cette ligne
-    };
-
-    const updatedMatches = [...state.activeTournament.matches, newMatch];
-    await updateDoc(systemRef, { 
-        "activeTournament.matches": updatedMatches,
-        lastAction: `⚔️ New match: ${p1.name} (${player1IsBlack ? 'Black' : 'White'}) vs ${p2.name} (${!player1IsBlack ? 'Black' : 'White'})`
-    });
-    
-    showNotification('Match created successfully', 'success');
-}
-
-    // CORRIGÉ : Fonction pour échanger les couleurs d'un match
+    // Fonction pour échanger les couleurs d'un match
     async function swapMatchColors(matchId) {
         if (!isAdmin) {
             showNotification('Admin access required', 'error');
@@ -3300,7 +3103,6 @@ async function promptGameLink(matchId) {
             "activeTournament.matches": updatedMatches
         });
         
-        // Animation visuelle
         const stoneDisplay = document.querySelector(`[data-match-id="${matchId}"] .stone-display`);
         if (stoneDisplay) {
             stoneDisplay.classList.add('color-swap-animation');
@@ -3310,155 +3112,124 @@ async function promptGameLink(matchId) {
         showNotification('Colors swapped', 'info');
     }
 
-    // CORRIGÉ : Fonction pour déclarer un vainqueur
-   async function setMatchWinner(matchId, winnerId) {
-    if (!isAdmin) {
-        showNotification('Admin access required', 'error');
-        return;
-    }
+    // Fonction pour déclarer un vainqueur
+    async function setMatchWinner(matchId, winnerId) {
+        if (!isAdmin) {
+            showNotification('Admin access required', 'error');
+            return;
+        }
 
-    // VÉRIFICATION RENFORCÉE
-    if (!state || !state.activeTournament || !state.activeTournament.matches) {
-        showNotification('No active tournament found', 'error');
-        return;
-    }
+        if (!state || !state.activeTournament || !state.activeTournament.matches) {
+            showNotification('No active tournament found', 'error');
+            return;
+        }
 
-    const match = state.activeTournament.matches.find(m => m.id === matchId);
-    if (!match) {
-        showNotification('Match not found', 'error');
-        return;
-    }
+        const match = state.activeTournament.matches.find(m => m.id === matchId);
+        if (!match) {
+            showNotification('Match not found', 'error');
+            return;
+        }
 
-    const loserId = winnerId === match.player1.id ? match.player2.id : match.player1.id;
-    
-    const winner = state.players.find(p => p.id === winnerId);
-    const loser = state.players.find(p => p.id === loserId);
+        const loserId = winnerId === match.player1.id ? match.player2.id : match.player1.id;
+        
+        const winner = state.players.find(p => p.id === winnerId);
+        const loser = state.players.find(p => p.id === loserId);
 
-    if (!winner || !loser) {
-        showNotification('Players not found', 'error');
-        return;
-    }
+        if (!winner || !loser) {
+            showNotification('Players not found', 'error');
+            return;
+        }
 
-    // Calculate Elo changes
-    const winnerElo = state.eloRatings[winnerId] || state.systemSettings.initialElo;
-    const loserElo = state.eloRatings[loserId] || state.systemSettings.initialElo;
-    const eloChanges = calculateElo(winnerElo, loserElo, state.systemSettings.eloKFactor);
-    
-    // Update Elo ratings
-    const updatedEloRatings = {
-        ...state.eloRatings,
-        [winnerId]: eloChanges.newWinnerElo,
-        [loserId]: eloChanges.newLoserElo
-    };
+        // Calculate Elo changes
+        const winnerElo = state.eloRatings[winnerId] || state.systemSettings.initialElo;
+        const loserElo = state.eloRatings[loserId] || state.systemSettings.initialElo;
+        const eloChanges = calculateElo(winnerElo, loserElo, state.systemSettings.eloKFactor);
+        
+        // Update Elo ratings
+        const updatedEloRatings = {
+            ...state.eloRatings,
+            [winnerId]: eloChanges.newWinnerElo,
+            [loserId]: eloChanges.newLoserElo
+        };
 
-    // Update players
-    const pointsPerWin = state.activeTournament?.settings?.pointsPerWin || 10;
-    const pointsPerLoss = state.activeTournament?.settings?.pointsPerLoss || -5;
+        // Update players
+        const pointsPerWin = state.activeTournament?.settings?.pointsPerWin || 10;
+        const pointsPerLoss = state.activeTournament?.settings?.pointsPerLoss || -5;
 
-    const updatedPlayers = state.players.map(p => {
-        if (p.id === winnerId) {
-            return {
-                ...p,
-                points: (p.points || 0) + pointsPerWin,
-                wins: (p.wins || 0) + 1,
-                elo: eloChanges.newWinnerElo,
-                history: [...(p.history || [0]), (p.points || 0) + pointsPerWin],
-                tournamentsPlayed: (p.tournamentsPlayed || 0) + 1
+        const updatedPlayers = state.players.map(p => {
+            if (p.id === winnerId) {
+                return {
+                    ...p,
+                    points: (p.points || 0) + pointsPerWin,
+                    wins: (p.wins || 0) + 1,
+                    elo: eloChanges.newWinnerElo,
+                    history: [...(p.history || [0]), (p.points || 0) + pointsPerWin],
+                    tournamentsPlayed: (p.tournamentsPlayed || 0) + 1
+                };
+            }
+            if (p.id === loserId) {
+                return {
+                    ...p,
+                    points: Math.max(0, (p.points || 0) + pointsPerLoss),
+                    losses: (p.losses || 0) + 1,
+                    elo: eloChanges.newLoserElo,
+                    history: [...(p.history || [0]), Math.max(0, (p.points || 0) + pointsPerLoss)],
+                    tournamentsPlayed: (p.tournamentsPlayed || 0) + 1
+                };
+            }
+            return p;
+        });
+
+        // Update match
+        const updatedMatches = state.activeTournament.matches.map(m => 
+            m.id === matchId ? { 
+                ...m, 
+                winner: winnerId,
+                eloChanges: {
+                    winner: { from: winnerElo, to: eloChanges.newWinnerElo },
+                    loser: { from: loserElo, to: eloChanges.newLoserElo }
+                },
+                endedAt: new Date().toISOString()
+            } : m
+        );
+
+        // Update round progress
+        const currentRound = state.activeTournament.round;
+        let roundProgress = state.activeTournament.roundProgress || [];
+        
+        if (!Array.isArray(roundProgress)) {
+            const participants = state.activeTournament.participants || [];
+            const totalRounds = state.activeTournament.totalRounds || 3;
+            roundProgress = Array(totalRounds).fill(0).map((_, i) => ({
+                round: i + 1,
+                completedMatches: 0,
+                totalMatches: Math.floor(participants.length / 2)
+            }));
+        }
+
+        const roundIndex = currentRound - 1;
+        
+        if (roundIndex >= 0 && roundIndex < roundProgress.length) {
+            const completedMatches = updatedMatches.filter(m => 
+                m.round === currentRound && m.winner
+            ).length;
+            
+            roundProgress[roundIndex] = {
+                ...roundProgress[roundIndex],
+                completedMatches: completedMatches
             };
         }
-        if (p.id === loserId) {
-            return {
-                ...p,
-                points: Math.max(0, (p.points || 0) + pointsPerLoss),
-                losses: (p.losses || 0) + 1,
-                elo: eloChanges.newLoserElo,
-                history: [...(p.history || [0]), Math.max(0, (p.points || 0) + pointsPerLoss)],
-                tournamentsPlayed: (p.tournamentsPlayed || 0) + 1
-            };
-        }
-        return p;
-    });
 
-    // Update match
-    const updatedMatches = state.activeTournament.matches.map(m => 
-        m.id === matchId ? { 
-            ...m, 
-            winner: winnerId,
-            eloChanges: {
-                winner: { from: winnerElo, to: eloChanges.newWinnerElo },
-                loser: { from: loserElo, to: eloChanges.newLoserElo }
-            },
-            endedAt: new Date().toISOString()
-        } : m
-    );
+        await updateDoc(systemRef, {
+            players: updatedPlayers,
+            eloRatings: updatedEloRatings,
+            "activeTournament.matches": updatedMatches,
+            "activeTournament.roundProgress": roundProgress,
+            lastAction: `🏆 ${winner.name} defeated ${loser.name}! (+${eloChanges.newWinnerElo - winnerElo} Elo)`
+        });
 
-    // Update round progress (CORRIGÉ)
-    const currentRound = state.activeTournament.round;
-    let roundProgress = state.activeTournament.roundProgress || [];
-    
-    // S'assurer que roundProgress est un tableau
-    if (!Array.isArray(roundProgress)) {
-        const participants = state.activeTournament.participants || [];
-        const totalRounds = state.activeTournament.totalRounds || 3;
-        roundProgress = Array(totalRounds).fill(0).map((_, i) => ({
-            round: i + 1,
-            completedMatches: 0,
-            totalMatches: Math.floor(participants.length / 2)
-        }));
+        showNotification(`${winner.name} wins! Elo: +${eloChanges.newWinnerElo - winnerElo}`, 'success');
     }
-
-    const roundIndex = currentRound - 1;
-    
-    if (roundIndex >= 0 && roundIndex < roundProgress.length) {
-        const completedMatches = updatedMatches.filter(m => 
-            m.round === currentRound && m.winner
-        ).length;
-        
-        roundProgress[roundIndex] = {
-            ...roundProgress[roundIndex],
-            completedMatches: completedMatches
-        };
-    }
-
-    await updateDoc(systemRef, {
-        players: updatedPlayers,
-        eloRatings: updatedEloRatings,
-        "activeTournament.matches": updatedMatches,
-        "activeTournament.roundProgress": roundProgress,
-        lastAction: `🏆 ${winner.name} defeated ${loser.name}! (+${eloChanges.newWinnerElo - winnerElo} Elo)`
-    });
-
-    showNotification(`${winner.name} wins! Elo: +${eloChanges.newWinnerElo - winnerElo}`, 'success');
-}
- // Fonction de test pour vérifier les boutons
-function testButtons() {
-    console.log("=== TEST DES BOUTONS ===");
-    
-    // Créer un match de test
-    if (state.activeTournament && state.activeTournament.participants.length >= 2) {
-        const testMatch = {
-            id: "test-match-" + Date.now(),
-            player1: state.activeTournament.participants[0],
-            player2: state.activeTournament.participants[1],
-            winner: null,
-            round: 1,
-            player1IsBlack: true,
-            gameUrl: null
-        };
-        
-        // Ajouter le match de test
-        state.activeTournament.matches.push(testMatch);
-        
-        // Rafraîchir l'affichage
-        updateMatchesDisplay();
-        
-        console.log("✅ Match de test ajouté !");
-        console.log("ID du match de test:", testMatch.id);
-    }
-}
-
-// Exposez la fonction
-window.testButtons = testButtons;   
 
     async function endTournament() {
         if (!isAdmin) {
@@ -3510,12 +3281,10 @@ window.testButtons = testButtons;
         if (updatedTournamentCount % 4 === 0) {
             updatedSeason += 1;
             
-            // Determine season champion (winner of tournament 4)
             if (tournamentResults.length > 0 && tournamentResults[0].tournamentWins > 0) {
                 updatedChampion = tournamentResults[0].name;
             }
             
-            // Add season to history
             const seasonRecord = {
                 season: state.season,
                 tournaments: state.tournamentHistory.slice(-3).concat([tournamentRecord]),
@@ -3552,151 +3321,120 @@ window.testButtons = testButtons;
 
     // Generate Swiss Pairs
     async function generateSwissPairs() {
-    if (!isAdmin || !state.activeTournament) {
-        showNotification('Admin access required', 'error');
-        return;
-    }
-
-    const participants = [...state.activeTournament.participants];
-    const currentRound = state.activeTournament.round;
-    const existingMatches = state.activeTournament.matches.filter(m => m.round === currentRound);
-    
-    if (existingMatches.length > 0) {
-        if (!confirm('Matches already exist for this round. Generate new pairs anyway?')) {
+        if (!isAdmin || !state.activeTournament) {
+            showNotification('Admin access required', 'error');
             return;
         }
-    }
 
-    // Calculate current scores for this tournament
-    const scores = participants.map(player => {
-        const wins = state.activeTournament.matches.filter(m => m.winner === player.id).length;
-        const losses = state.activeTournament.matches.filter(m => 
-            (m.player1.id === player.id || m.player2.id === player.id) && 
-            m.winner && 
-            m.winner !== player.id
-        ).length;
+        const participants = [...state.activeTournament.participants];
+        const currentRound = state.activeTournament.round;
+        const existingMatches = state.activeTournament.matches.filter(m => m.round === currentRound);
         
-        // Get opponents from previous rounds
-        const opponents = state.activeTournament.matches
-            .filter(m => (m.player1.id === player.id || m.player2.id === player.id) && m.round < currentRound)
-            .map(m => m.player1.id === player.id ? m.player2.id : m.player1.id);
-        
-        return {
-            ...player,
-            score: wins,
-            losses: losses,
-            opponents: new Set(opponents),
-            played: opponents.length,
-            elo: state.eloRatings[player.id] || state.systemSettings.initialElo
-        };
-    });
-
-    // Sort by score (wins), then by opponent's strength, then by Elo
-    scores.sort((a, b) => {
-        if (b.score !== a.score) return b.score - a.score;
-        if (b.elo !== a.elo) return b.elo - a.elo;
-        return a.played - b.played;
-    });
-
-    // Generate pairs
-    const newMatches = [];
-    const paired = new Set();
-
-    for (let i = 0; i < scores.length; i++) {
-        if (paired.has(scores[i].id)) continue;
-
-        let bestOpponent = null;
-        let bestScoreDiff = Infinity;
-
-        // Find suitable opponent
-        for (let j = i + 1; j < scores.length; j++) {
-            if (!paired.has(scores[j].id) && !scores[i].opponents.has(scores[j].id)) {
-                const scoreDiff = Math.abs(scores[i].score - scores[j].score);
-                if (scoreDiff < bestScoreDiff) {
-                    bestScoreDiff = scoreDiff;
-                    bestOpponent = j;
-                }
+        if (existingMatches.length > 0) {
+            if (!confirm('Matches already exist for this round. Generate new pairs anyway?')) {
+                return;
             }
         }
 
-        // If found suitable opponent
-        if (bestOpponent !== null) {
-            newMatches.push({
-                id: Date.now() + Math.random(),
-                player1: scores[i],
-                player2: scores[bestOpponent],
-                winner: null,
-                round: currentRound,
-                player1IsBlack: Math.random() > 0.5,
-                gameUrl: null // ← IMPORTANT : ajoutez cette ligne
-            });
+        // Calculate current scores for this tournament
+        const scores = participants.map(player => {
+            const wins = state.activeTournament.matches.filter(m => m.winner === player.id).length;
+            const losses = state.activeTournament.matches.filter(m => 
+                (m.player1.id === player.id || m.player2.id === player.id) && 
+                m.winner && 
+                m.winner !== player.id
+            ).length;
             
-            paired.add(scores[i].id);
-            paired.add(scores[bestOpponent].id);
-        } else {
-            // If no suitable opponent, pair with closest available
+            const opponents = state.activeTournament.matches
+                .filter(m => (m.player1.id === player.id || m.player2.id === player.id) && m.round < currentRound)
+                .map(m => m.player1.id === player.id ? m.player2.id : m.player1.id);
+            
+            return {
+                ...player,
+                score: wins,
+                losses: losses,
+                opponents: new Set(opponents),
+                played: opponents.length,
+                elo: state.eloRatings[player.id] || state.systemSettings.initialElo
+            };
+        });
+
+        // Sort by score (wins), then by opponent's strength, then by Elo
+        scores.sort((a, b) => {
+            if (b.score !== a.score) return b.score - a.score;
+            if (b.elo !== a.elo) return b.elo - a.elo;
+            return a.played - b.played;
+        });
+
+        // Generate pairs
+        const newMatches = [];
+        const paired = new Set();
+
+        for (let i = 0; i < scores.length; i++) {
+            if (paired.has(scores[i].id)) continue;
+
+            let bestOpponent = null;
+            let bestScoreDiff = Infinity;
+
+            // Find suitable opponent
             for (let j = i + 1; j < scores.length; j++) {
-                if (!paired.has(scores[j].id)) {
-                    newMatches.push({
-                        id: Date.now() + Math.random(),
-                        player1: scores[i],
-                        player2: scores[j],
-                        winner: null,
-                        round: currentRound,
-                        player1IsBlack: Math.random() > 0.5,
-                        gameUrl: null // ← IMPORTANT : ajoutez cette ligne
-                    });
-                    
-                    paired.add(scores[i].id);
-                    paired.add(scores[j].id);
-                    break;
+                if (!paired.has(scores[j].id) && !scores[i].opponents.has(scores[j].id)) {
+                    const scoreDiff = Math.abs(scores[i].score - scores[j].score);
+                    if (scoreDiff < bestScoreDiff) {
+                        bestScoreDiff = scoreDiff;
+                        bestOpponent = j;
+                    }
+                }
+            }
+
+            // If found suitable opponent
+            if (bestOpponent !== null) {
+                newMatches.push({
+                    id: Date.now() + Math.random(),
+                    player1: scores[i],
+                    player2: scores[bestOpponent],
+                    winner: null,
+                    round: currentRound,
+                    player1IsBlack: Math.random() > 0.5,
+                    gameUrl: null
+                });
+                
+                paired.add(scores[i].id);
+                paired.add(scores[bestOpponent].id);
+            } else {
+                // If no suitable opponent, pair with closest available
+                for (let j = i + 1; j < scores.length; j++) {
+                    if (!paired.has(scores[j].id)) {
+                        newMatches.push({
+                            id: Date.now() + Math.random(),
+                            player1: scores[i],
+                            player2: scores[j],
+                            winner: null,
+                            round: currentRound,
+                            player1IsBlack: Math.random() > 0.5,
+                            gameUrl: null
+                        });
+                        
+                        paired.add(scores[i].id);
+                        paired.add(scores[j].id);
+                        break;
+                    }
                 }
             }
         }
-    }
 
-    // Filter out existing matches for this round
-    const filteredExistingMatches = state.activeTournament.matches.filter(m => m.round !== currentRound);
-    const updatedMatches = [...filteredExistingMatches, ...newMatches];
-    
-    await updateDoc(systemRef, {
-        "activeTournament.matches": updatedMatches,
-        lastAction: `🎲 Swiss pairs generated for round ${currentRound}: ${newMatches.length} matches`
-    });
-
-    showNotification(`Generated ${newMatches.length} pairs for round ${currentRound}`, 'success');
-}
-
-// Ajoutez cette fonction après les autres fonctions
-function testGameLinkSystem() {
-    console.log("=== TEST DU SYSTÈME DE LIENS ===");
-    
-    // 1. Vérifier si on est admin
-    console.log("Admin mode:", isAdmin);
-    
-    // 2. Vérifier s'il y a des matches
-    if (!state.activeTournament || !state.activeTournament.matches) {
-        console.log("Aucun tournoi actif ou pas de matches");
-        return;
-    }
-    
-    console.log("Nombre de matches:", state.activeTournament.matches.length);
-    
-    // 3. Tester le premier match
-    if (state.activeTournament.matches.length > 0) {
-        const firstMatch = state.activeTournament.matches[0];
-        console.log("Premier match:", firstMatch);
-        console.log("ID du match:", firstMatch.id);
-        console.log("URL actuelle:", firstMatch.gameUrl || "Aucune");
+        // Filter out existing matches for this round
+        const filteredExistingMatches = state.activeTournament.matches.filter(m => m.round !== currentRound);
+        const updatedMatches = [...filteredExistingMatches, ...newMatches];
         
-        // 4. Tester la fonction promptGameLink
-        console.log("Test de promptGameLink...");
-        promptGameLink(firstMatch.id);
-    }
-}
+        await updateDoc(systemRef, {
+            "activeTournament.matches": updatedMatches,
+            lastAction: `🎲 Swiss pairs generated for round ${currentRound}: ${newMatches.length} matches`
+        });
 
-// Exposez la fonction pour tester
-window.testGameLinkSystem = testGameLinkSystem;
+        showNotification(`Generated ${newMatches.length} pairs for round ${currentRound}`, 'success');
+    }
+
     async function clearCurrentMatches() {
         if (!isAdmin) {
             showNotification('Admin access required', 'error');
@@ -3720,7 +3458,7 @@ window.testGameLinkSystem = testGameLinkSystem;
         }
     }
 
-    // CORRIGÉ : Mise à jour de l'interface utilisateur
+    // Mise à jour de l'interface utilisateur
     function updateUI() {
         updateRankings();
         updateTournamentView();
@@ -3754,182 +3492,179 @@ window.testGameLinkSystem = testGameLinkSystem;
         });
     }
 
-function updateRoundProgress() {
-    const progressSection = document.getElementById('round-progress');
-    if (!progressSection) return;
-    
-    // Protection complète
-    if (!tournament || !tournament.roundProgress || !Array.isArray(tournament.roundProgress)) {
-        progressSection.innerHTML = '<div class="no-progress">Progression non disponible</div>';
-        return;
-    }
-    
-    const html = tournament.roundProgress.map((round, index) => {
-        const isCurrent = index + 1 === tournament.round;
-        const progress = round.totalMatches > 0 ? (round.completedMatches / round.totalMatches) * 100 : 0;
+    function updateRoundProgress() {
+        const progressSection = document.getElementById('roundProgressSection');
+        if (!progressSection) return;
         
-        return `
-            <div class="round-item ${isCurrent ? 'pulse' : ''}">
-                <div class="round-number" style="${isCurrent ? 'background: var(--accent);' : ''}">
-                    ${index + 1}
-                </div>
-                <div class="round-info">
-                    <div class="round-title">Round ${index + 1} ${isCurrent ? '(Current)' : ''}</div>
-                    <div class="round-stats">
-                        <span>${round.completedMatches || 0}/${round.totalMatches || 0} matches</span>
-                        <span>${Math.round(progress)}% complete</span>
+        if (!state.activeTournament || !state.activeTournament.roundProgress || 
+            !Array.isArray(state.activeTournament.roundProgress)) {
+            progressSection.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text-secondary);">No progress available</div>';
+            return;
+        }
+        
+        const tournament = state.activeTournament;
+        const html = tournament.roundProgress.map((round, index) => {
+            const isCurrent = index + 1 === tournament.round;
+            const progress = round.totalMatches > 0 ? (round.completedMatches / round.totalMatches) * 100 : 0;
+            
+            return `
+                <div class="round-item ${isCurrent ? 'pulse' : ''}">
+                    <div class="round-number" style="${isCurrent ? 'background: var(--accent);' : ''}">
+                        ${index + 1}
+                    </div>
+                    <div class="round-info">
+                        <div class="round-title">Round ${index + 1} ${isCurrent ? '(Current)' : ''}</div>
+                        <div class="round-stats">
+                            <span>${round.completedMatches || 0}/${round.totalMatches || 0} matches</span>
+                            <span>${Math.round(progress)}% complete</span>
+                        </div>
                     </div>
                 </div>
-            </div>
-        `;
-    }).join('');
-    
-    progressSection.innerHTML = html;
-}
+            `;
+        }).join('');
+        
+        progressSection.innerHTML = html;
+    }
 
-  function updateMatchesDisplay() {
-    console.log("=== updateMatchesDisplay appelée ===");
-    
-    if (!state.activeTournament) {
-        document.getElementById('matchesZone').innerHTML = '<div class="empty-state">No matches for this round yet</div>';
-        return;
-    }
-    
-    const currentRound = state.activeTournament.round;
-    const matchesThisRound = state.activeTournament.matches.filter(m => m.round === currentRound);
-    
-    console.log("Matches ce round:", matchesThisRound.length);
-    
-    // Mode admin/guest
-    const container = document.querySelector('.container');
-    if (isAdmin) {
-        container.classList.remove('guest-mode');
-    } else {
-        container.classList.add('guest-mode');
-    }
-    
-    const matchesHTML = matchesThisRound.map(match => {
-        const isCompleted = !!match.winner;
-        const winnerIsPlayer1 = match.winner === match.player1.id;
+    function updateMatchesDisplay() {
+        if (!state.activeTournament) {
+            document.getElementById('matchesZone').innerHTML = '<div class="empty-state">No matches for this round yet</div>';
+            return;
+        }
         
-        return `
-            <div class="match-card ${isCompleted ? 'completed' : ''}" data-match-id="${match.id}">
-                <!-- JOUEUR 1 -->
-                <div class="match-player ${winnerIsPlayer1 && isCompleted ? 'winner' : ''} ${!winnerIsPlayer1 && isCompleted ? 'loser' : ''}">
-                    ${isAdmin ? `
-                        <button onclick="swapMatchColors('${match.id}')" class="swap-colors-btn" title="Swap colors">
-                            ↻
-                        </button>
-                    ` : ''}
-                    
-                    <div class="stone-display ${match.player1IsBlack ? 'black' : 'white'}"></div>
-                    
-                    <div class="player-label">${match.player1.name}</div>
-                    <div class="player-subtext">${match.player1.rank} • ${state.eloRatings[match.player1.id] || 1500} Elo</div>
-                    
-                    <!-- BOUTON VICTOIRE JOUEUR 1 -->
-                    ${!isCompleted && isAdmin ? `
-                        <button onclick="setMatchWinner('${match.id}', '${match.player1.id}')" 
-                                class="win-btn" style="margin-top: 15px;">
-                            🏆 ${match.player1.name.split(' ')[0]} Wins
-                        </button>
-                    ` : ''}
-                    
-                    ${isCompleted ? (winnerIsPlayer1 ? 
-                        '<div class="badge badge-success" style="margin-top: 15px;">🏆 WINNER</div>' : 
-                        '<div class="badge badge-danger" style="margin-top: 15px;">❌ DEFEATED</div>'
-                    ) : ''}
-                </div>
-                
-                <!-- CENTRE DU MATCH -->
-                <div class="match-status">
-                    <div style="font-size: 1.5rem; font-weight: bold; color: var(--accent);">VS</div>
-                    
-                    <!-- LIEN DE LA PARTIE -->
-                    <div style="margin-top: 20px; text-align: center;">
-                        ${match.gameUrl ? `
-                            <a href="${match.gameUrl}" target="_blank" 
-                               style="display: inline-block; padding: 10px 20px; background: var(--success); color: white; border-radius: 8px; text-decoration: none; font-weight: 600; margin-bottom: 10px;">
-                                🔗 GAME
-                            </a>
-                            ${isAdmin ? `
-                                <div>
-                                    <button onclick="promptGameLink('${match.id}')" 
-                                            style="padding: 6px 12px; background: var(--warning); color: white; border: none; border-radius: 6px; cursor: pointer;">
-                                        ✏️ Modifier
-                                    </button>
-                                </div>
-                            ` : ''}
-                        ` : isAdmin ? `
-                            <button onclick="promptGameLink('${match.id}')" 
-                                    style="padding: 12px 24px; background: var(--secondary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
-                                + Ajouter lien
+        const currentRound = state.activeTournament.round;
+        const matchesThisRound = state.activeTournament.matches.filter(m => m.round === currentRound);
+        
+        // Mode admin/guest
+        const container = document.querySelector('.container');
+        if (isAdmin) {
+            container.classList.remove('guest-mode');
+        } else {
+            container.classList.add('guest-mode');
+        }
+        
+        const matchesHTML = matchesThisRound.map(match => {
+            const isCompleted = !!match.winner;
+            const winnerIsPlayer1 = match.winner === match.player1.id;
+            
+            return `
+                <div class="match-card ${isCompleted ? 'completed' : ''}" data-match-id="${match.id}">
+                    <!-- JOUEUR 1 -->
+                    <div class="match-player ${winnerIsPlayer1 && isCompleted ? 'winner' : ''} ${!winnerIsPlayer1 && isCompleted ? 'loser' : ''}">
+                        ${isAdmin ? `
+                            <button onclick="swapMatchColors('${match.id}')" class="swap-colors-btn" title="Swap colors">
+                                ↻
                             </button>
-                        ` : `
-                            <div style="color: var(--text-secondary);">Pas de lien</div>
-                        `}
+                        ` : ''}
+                        
+                        <div class="stone-display ${match.player1IsBlack ? 'black' : 'white'}"></div>
+                        
+                        <div class="player-label">${match.player1.name}</div>
+                        <div class="player-subtext">${match.player1.rank} • ${state.eloRatings[match.player1.id] || 1500} Elo</div>
+                        
+                        <!-- BOUTON VICTOIRE JOUEUR 1 -->
+                        ${!isCompleted && isAdmin ? `
+                            <button onclick="setMatchWinner('${match.id}', '${match.player1.id}')" 
+                                    class="win-btn" style="margin-top: 15px;">
+                                🏆 ${match.player1.name.split(' ')[0]} Wins
+                            </button>
+                        ` : ''}
+                        
+                        ${isCompleted ? (winnerIsPlayer1 ? 
+                            '<div class="badge badge-success" style="margin-top: 15px;">🏆 WINNER</div>' : 
+                            '<div class="badge badge-danger" style="margin-top: 15px;">❌ DEFEATED</div>'
+                        ) : ''}
+                    </div>
+                    
+                    <!-- CENTRE DU MATCH -->
+                    <div class="match-status">
+                        <div style="font-size: 1.5rem; font-weight: bold; color: var(--accent);">VS</div>
+                        
+                        <!-- LIEN DE LA PARTIE -->
+                        <div style="margin-top: 20px; text-align: center;">
+                            ${match.gameUrl ? `
+                                <a href="${match.gameUrl}" target="_blank" 
+                                   style="display: inline-block; padding: 10px 20px; background: var(--success); color: white; border-radius: 8px; text-decoration: none; font-weight: 600; margin-bottom: 10px;">
+                                    🔗 GAME
+                                </a>
+                                ${isAdmin ? `
+                                    <div>
+                                        <button onclick="promptGameLink('${match.id}')" 
+                                                style="padding: 6px 12px; background: var(--warning); color: white; border: none; border-radius: 6px; cursor: pointer;">
+                                            ✏️ Edit
+                                        </button>
+                                    </div>
+                                ` : ''}
+                            ` : isAdmin ? `
+                                <button onclick="promptGameLink('${match.id}')" 
+                                        style="padding: 12px 24px; background: var(--secondary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                                    + Add link
+                                </button>
+                            ` : `
+                                <div style="color: var(--text-secondary);">No link</div>
+                            `}
+                        </div>
+                    </div>
+                    
+                    <!-- JOUEUR 2 -->
+                    <div class="match-player ${!winnerIsPlayer1 && isCompleted ? 'winner' : ''} ${winnerIsPlayer1 && isCompleted ? 'loser' : ''}">
+                        ${isAdmin ? `
+                            <button onclick="swapMatchColors('${match.id}')" class="swap-colors-btn" title="Swap colors">
+                                ↻
+                            </button>
+                        ` : ''}
+                        
+                        <div class="stone-display ${!match.player1IsBlack ? 'black' : 'white'}"></div>
+                        
+                        <div class="player-label">${match.player2.name}</div>
+                        <div class="player-subtext">${match.player2.rank} • ${state.eloRatings[match.player2.id] || 1500} Elo</div>
+                        
+                        <!-- BOUTON VICTOURE JOUEUR 2 -->
+                        ${!isCompleted && isAdmin ? `
+                            <button onclick="setMatchWinner('${match.id}', '${match.player2.id}')" 
+                                    class="win-btn" style="margin-top: 15px;">
+                                🏆 ${match.player2.name.split(' ')[0]} Wins
+                            </button>
+                        ` : ''}
+                        
+                        ${isCompleted ? (!winnerIsPlayer1 ? 
+                            '<div class="badge badge-success" style="margin-top: 15px;">🏆 WINNER</div>' : 
+                            '<div class="badge badge-danger" style="margin-top: 15px;">❌ DEFEATED</div>'
+                        ) : ''}
                     </div>
                 </div>
-                
-                <!-- JOUEUR 2 -->
-                <div class="match-player ${!winnerIsPlayer1 && isCompleted ? 'winner' : ''} ${winnerIsPlayer1 && isCompleted ? 'loser' : ''}">
-                    ${isAdmin ? `
-                        <button onclick="swapMatchColors('${match.id}')" class="swap-colors-btn" title="Swap colors">
-                            ↻
-                        </button>
-                    ` : ''}
-                    
-                    <div class="stone-display ${!match.player1IsBlack ? 'black' : 'white'}"></div>
-                    
-                    <div class="player-label">${match.player2.name}</div>
-                    <div class="player-subtext">${match.player2.rank} • ${state.eloRatings[match.player2.id] || 1500} Elo</div>
-                    
-                    <!-- BOUTON VICTOIRE JOUEUR 2 -->
-                    ${!isCompleted && isAdmin ? `
-                        <button onclick="setMatchWinner('${match.id}', '${match.player2.id}')" 
-                                class="win-btn" style="margin-top: 15px;">
-                            🏆 ${match.player2.name.split(' ')[0]} Wins
-                        </button>
-                    ` : ''}
-                    
-                    ${isCompleted ? (!winnerIsPlayer1 ? 
-                        '<div class="badge badge-success" style="margin-top: 15px;">🏆 WINNER</div>' : 
-                        '<div class="badge badge-danger" style="margin-top: 15px;">❌ DEFEATED</div>'
-                    ) : ''}
-                </div>
-            </div>
-        `;
-    }).join('');
-    
-    document.getElementById('matchesZone').innerHTML = matchesHTML || 
-        '<div class="empty-state">No matches for this round yet</div>';
-}
+            `;
+        }).join('');
+        
+        document.getElementById('matchesZone').innerHTML = matchesHTML || 
+            '<div class="empty-state">No matches for this round yet</div>';
+    }
 
     function updateModeIndicator() {
-    const headerControls = document.querySelector('.header-controls');
-    
-    // Chercher ou créer l'indicateur de mode
-    let modeIndicator = document.getElementById('modeIndicator');
-    
-    if (!modeIndicator) {
-        modeIndicator = document.createElement('div');
-        modeIndicator.id = 'modeIndicator';
-        modeIndicator.style.marginRight = '15px';
-        headerControls.insertBefore(modeIndicator, headerControls.firstChild);
+        const headerControls = document.querySelector('.header-controls');
+        
+        let modeIndicator = document.getElementById('modeIndicator');
+        
+        if (!modeIndicator) {
+            modeIndicator = document.createElement('div');
+            modeIndicator.id = 'modeIndicator';
+            modeIndicator.style.marginRight = '15px';
+            headerControls.insertBefore(modeIndicator, headerControls.firstChild);
+        }
+        
+        if (isAdmin) {
+            modeIndicator.innerHTML = `
+                <span style="font-weight: 600; color: var(--accent);">🔧 Admin Mode</span>
+                <span class="guest-badge" style="background: var(--accent);">Full Control</span>
+            `;
+        } else {
+            modeIndicator.innerHTML = `
+                <span style="font-weight: 600; color: var(--text-secondary);">👁️ Guest Mode</span>
+                <span class="guest-badge" style="background: var(--secondary);">View Only</span>
+            `;
+        }
     }
-    
-    if (isAdmin) {
-        modeIndicator.innerHTML = `
-            <span style="font-weight: 600; color: var(--accent);">🔧 Admin Mode</span>
-            <span class="guest-badge" style="background: var(--accent);">Full Control</span>
-        `;
-    } else {
-        modeIndicator.innerHTML = `
-            <span style="font-weight: 600; color: var(--text-secondary);">👁️ Guest Mode</span>
-            <span class="guest-badge" style="background: var(--secondary);">View Only</span>
-        `;
-    }
-}
+
     function updateRankings() {
         const sortedPlayers = [...state.players].sort((a, b) => {
             if (a.elo !== undefined && b.elo !== undefined) {
@@ -3985,7 +3720,6 @@ function updateRoundProgress() {
             document.getElementById('totalRounds').textContent = state.activeTournament.totalRounds;
             document.getElementById('tournamentPlayerCount').textContent = state.activeTournament.participants.length;
             
-            // Set tournament type display
             if (state.activeTournament.type === 'single-elimination') {
                 tournamentTypeIcon.textContent = '🏆';
                 tournamentTypeText.textContent = 'Single Elimination';
@@ -3994,14 +3728,12 @@ function updateRoundProgress() {
                 tournamentTypeText.textContent = 'Swiss System';
             }
             
-            // Update tournament settings inputs
-if (isAdmin && state.activeTournament) {
-    document.getElementById('roundsCount').value = state.activeTournament.totalRounds || 3;
-    document.getElementById('pointsPerWin').value = state.activeTournament.settings?.pointsPerWin || 10;
-    document.getElementById('pointsPerLoss').value = state.activeTournament.settings?.pointsPerLoss || -5;
-}
+            if (isAdmin && state.activeTournament) {
+                document.getElementById('roundsCount').value = state.activeTournament.totalRounds || 3;
+                document.getElementById('pointsPerWin').value = state.activeTournament.settings?.pointsPerWin || 10;
+                document.getElementById('pointsPerLoss').value = state.activeTournament.settings?.pointsPerLoss || -5;
+            }
             
-            // Update player selects
             const participants = state.activeTournament.participants || [];
             const playerOptions = participants.map(p => 
                 `<option value="${p.id}">${p.name} (${p.rank}) - ${state.eloRatings[p.id] || state.systemSettings.initialElo} Elo</option>`
@@ -4010,19 +3742,15 @@ if (isAdmin && state.activeTournament) {
             document.getElementById('player1Select').innerHTML = `<option value="">Select player 1</option>${playerOptions}`;
             document.getElementById('player2Select').innerHTML = `<option value="">Select player 2</option>${playerOptions}`;
             
-            // Mettre à jour le sélecteur de forceWinner
             document.getElementById('forceWinnerSelect').innerHTML = `<option value="">Select winner (optional)</option>${playerOptions}`;
             
-            // Update matches
             updateMatchesDisplay();
         } else {
             document.getElementById('activeTournamentCard').style.display = 'none';
             document.getElementById('tournamentSetupCard').style.display = 'block';
             
-            // Update enrollment zone
             updateEnrollmentZone();
             
-            // Update next tournament number
             const nextTournamentNum = (state.tournamentCount % 4) + 1;
             document.getElementById('nextTournamentNumber').textContent = nextTournamentNum;
         }
@@ -4050,7 +3778,7 @@ if (isAdmin && state.activeTournament) {
                 month: 'short', 
                 day: 'numeric',
                 year: 'numeric'
-        });
+            });
             
             const winner = tournament.results?.[0]?.playerName || 'N/A';
             const participants = tournament.participants?.length || 0;
@@ -4084,11 +3812,11 @@ if (isAdmin && state.activeTournament) {
                         </div>
                     </div>
                     
-                    <button class="history-expand-btn" onclick="toggleHistoryDetails(${index})">
+                    <button class="history-expand-btn" onclick="toggleHistoryDetails(${state.tournamentHistory.length - 1 - index})">
                         📊 View Details
                     </button>
                     
-                    <div class="history-details" id="historyDetails${index}">
+                    <div class="history-details" id="historyDetails${state.tournamentHistory.length - 1 - index}">
                         ${tournament.results ? `
                             <h4 style="margin: 15px 0 10px 0; color: var(--text-primary);">Final Rankings:</h4>
                             <table class="history-details-table">
@@ -4124,7 +3852,6 @@ if (isAdmin && state.activeTournament) {
         
         document.getElementById('totalTournaments').textContent = state.tournamentHistory.length;
     }
-    
 
     function toggleHistoryDetails(index) {
         const detailsDiv = document.getElementById(`historyDetails${index}`);
@@ -4453,71 +4180,60 @@ if (isAdmin && state.activeTournament) {
     }
 
     // Initialize
-document.addEventListener('DOMContentLoaded', () => {
-    const savedTheme = localStorage.getItem('meijin-theme') || 'dark';
-    document.body.setAttribute('data-theme', savedTheme);
-    document.getElementById('themeIcon').textContent = savedTheme === 'dark' ? '☀️' : '🌙';
-    
-    document.getElementById('searchPlayers').addEventListener('input', () => filterPlayers('all'));
-    
-    // MODIFICATION IMPORTANTE : Ne pas être admin par défaut
-    isAdmin = false; // ← DÉFINIR À false PAR DÉFAUT
-    document.getElementById('adminControls').style.display = 'none';
-    document.getElementById('authSection').style.display = 'flex';
-    
-    // Masquer les éléments admin au chargement
-    toggleAdminElements(false);
-    
-    // Mettre à jour l'indicateur de mode
-    updateModeIndicator();
-    
-    // Exposer les fonctions au niveau global pour les onclick HTML
-     window.toggleTheme = toggleTheme;
-    window.loginAdmin = loginAdmin;
-    window.logoutAdmin = logoutAdmin;
-    window.addNewPlayer = addNewPlayer;
-    window.startNewTournament = startNewTournament;
-    window.createManualMatch = createManualMatch;
-    window.swapMatchColors = swapMatchColors;
-    window.setMatchWinner = setMatchWinner;
-    window.endTournament = endTournament;
-    window.generateSwissPairs = generateSwissPairs;
-    window.clearCurrentMatches = clearCurrentMatches;
-    window.selectAllPlayers = selectAllPlayers;
-    window.deselectAllPlayers = deselectAllPlayers;
-    window.filterPlayers = filterPlayers;
-    window.switchTab = switchTab;
-    
-    // FONCTIONS POUR LES LIENS (CRITIQUE)
-    window.promptGameLink = promptGameLink;
-    
-    // Nouvelles fonctions
-    window.swapAllMatchColors = swapAllMatchColors;
-    window.randomizeAllColors = randomizeAllColors;
-    window.swapSelectedPlayers = swapSelectedPlayers;
-    window.toggleManualColor = toggleManualColor;
-    window.createMultipleMatches = createMultipleMatches;
-    window.filterHistory = filterHistory;
-    window.toggleHistoryDetails = toggleHistoryDetails;
-    window.resetAllMatchColors = resetAllMatchColors;
-    window.clearAllMatches = clearAllMatches;
-    window.randomizeAllMatches = randomizeAllMatches;
-    window.exportTournamentData = exportTournamentData;
-    window.loadMatchForEditing = loadMatchForEditing;
-    window.swapMatchPlayers = swapMatchPlayers;
-    window.saveMatchChanges = saveMatchChanges;
-    window.deleteSelectedMatch = deleteSelectedMatch;
-    window.setBulkWinner = setBulkWinner;
-    window.testGameLinkSystem = testGameLinkSystem;
-    
-    // Fonctions utilitaires
-    window.updateMatchesDisplay = updateMatchesDisplay;
-    
-    console.log("✅ Toutes les fonctions exposées !");
-    // Exposer pour le debug
-    window.appState = state;
-    window.appIsAdmin = isAdmin;
-}); // ← CETTE ACCOLADE FERMANTE EST CRITIQUE
+    document.addEventListener('DOMContentLoaded', () => {
+        const savedTheme = localStorage.getItem('meijin-theme') || 'dark';
+        document.body.setAttribute('data-theme', savedTheme);
+        document.getElementById('themeIcon').textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+        
+        document.getElementById('searchPlayers').addEventListener('input', () => filterPlayers('all'));
+        
+        // Mode admin désactivé par défaut
+        isAdmin = false;
+        document.getElementById('adminControls').style.display = 'none';
+        document.getElementById('authSection').style.display = 'flex';
+        
+        // Masquer les éléments admin au chargement
+        toggleAdminElements(false);
+        
+        // Mettre à jour l'indicateur de mode
+        updateModeIndicator();
+        
+        // Exposer les fonctions au niveau global
+        window.toggleTheme = toggleTheme;
+        window.loginAdmin = loginAdmin;
+        window.logoutAdmin = logoutAdmin;
+        window.addNewPlayer = addNewPlayer;
+        window.startNewTournament = startNewTournament;
+        window.createManualMatch = createManualMatch;
+        window.swapMatchColors = swapMatchColors;
+        window.setMatchWinner = setMatchWinner;
+        window.endTournament = endTournament;
+        window.generateSwissPairs = generateSwissPairs;
+        window.clearCurrentMatches = clearCurrentMatches;
+        window.selectAllPlayers = selectAllPlayers;
+        window.deselectAllPlayers = deselectAllPlayers;
+        window.filterPlayers = filterPlayers;
+        window.switchTab = switchTab;
+        window.promptGameLink = promptGameLink;
+        window.swapAllMatchColors = swapAllMatchColors;
+        window.randomizeAllColors = randomizeAllColors;
+        window.swapSelectedPlayers = swapSelectedPlayers;
+        window.toggleManualColor = toggleManualColor;
+        window.createMultipleMatches = createMultipleMatches;
+        window.filterHistory = filterHistory;
+        window.toggleHistoryDetails = toggleHistoryDetails;
+        window.resetAllMatchColors = resetAllMatchColors;
+        window.clearAllMatches = clearAllMatches;
+        window.randomizeAllMatches = randomizeAllMatches;
+        window.exportTournamentData = exportTournamentData;
+        window.loadMatchForEditing = loadMatchForEditing;
+        window.swapMatchPlayers = swapMatchPlayers;
+        window.saveMatchChanges = saveMatchChanges;
+        window.deleteSelectedMatch = deleteSelectedMatch;
+        window.setBulkWinner = setBulkWinner;
+        
+        console.log("✅ Application initialisée sans erreurs");
+    });
 
 </script>
 </body>
