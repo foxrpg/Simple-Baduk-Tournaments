@@ -3609,12 +3609,20 @@ function updateRoundProgress() {
     progressSection.innerHTML = html;
 }
 
-    // CORRIGÉ : Affichage des matchs avec boutons pour admin et résultats pour invités
-   function updateMatchesDisplay() {
-    if (!state.activeTournament) return;
+   // REMPLACE cette fonction updateMatchesDisplay (autour de la ligne 2868)
+function updateMatchesDisplay() {
+    console.log('🔄 updateMatchesDisplay appelé');
     
-    const currentRound = state.activeTournament.round;
-    const matchesThisRound = state.activeTournament.matches.filter(m => m.round === currentRound);
+    if (!state || !state.activeTournament) {
+        document.getElementById('matchesZone').innerHTML = '<div class="empty-state">No active tournament</div>';
+        return;
+    }
+    
+    const tournament = state.activeTournament;
+    const currentRound = tournament.round;
+    const matchesThisRound = tournament.matches.filter(m => m.round === currentRound);
+    
+    console.log(`📊 ${matchesThisRound.length} matchs dans le round ${currentRound}`);
     
     const matchesHTML = matchesThisRound.map(match => {
         const isCompleted = !!match.winner;
@@ -3625,116 +3633,73 @@ function updateRoundProgress() {
                 <!-- Joueur 1 -->
                 <div class="match-player ${winnerIsPlayer1 && isCompleted ? 'winner' : ''}">
                     ${isAdmin ? `
-                        <button onclick="swapMatchColors('${match.id}')" class="swap-colors-btn" title="Swap colors">
-                            ↻
-                        </button>
+                        <button onclick="swapMatchColors('${match.id}')" class="swap-colors-btn">↻</button>
                     ` : ''}
                     
                     <div class="stone-display ${match.player1IsBlack ? 'black' : 'white'}"></div>
-                    
                     <div class="player-label">${match.player1.name}</div>
-                    <div class="player-subtext">${match.player1.rank} • ${state.eloRatings[match.player1.id] || state.systemSettings.initialElo} Elo</div>
+                    <div class="player-subtext">${match.player1.rank}</div>
                     
-                    <!-- BOUTON VERT POUR JOUEUR 1 -->
-                    <div style="margin-top: 20px; width: 100%;">
-                        ${isAdmin ? `
+                    <!-- BOUTON VERT -->
+                    ${isAdmin ? `
+                        <div style="margin-top: 20px;">
                             <button onclick="setMatchWinner('${match.id}', '${match.player1.id}')" 
                                     class="win-btn"
-                                    style="${winnerIsPlayer1 && isCompleted ? 'background: #f39c12;' : 'background: #2ecc71;'}">
+                                    style="background: ${winnerIsPlayer1 && isCompleted ? '#f39c12' : '#2ecc71'};">
                                 ${winnerIsPlayer1 && isCompleted ? '✓ ' : '🏆 '}
-                                ${match.player1.name.split(' ')[0]} Wins
+                                ${match.player1.name} Wins
                             </button>
-                        ` : (
-                            isCompleted ?
-                                (winnerIsPlayer1 ?
-                                    '<div class="badge badge-success">🏆 WINNER</div>' :
-                                    '<div style="color: #e74c3c; font-size: 0.9rem;">Defeated</div>'
-                                ) :
-                                '<div style="color: #7f8c8d; font-size: 0.9rem;">Match in progress</div>'
-                        )}
-                    </div>
+                        </div>
+                    ` : (
+                        isCompleted ?
+                            (winnerIsPlayer1 ?
+                                '<div class="badge badge-success">🏆 WINNER</div>' :
+                                '<div style="color: #e74c3c;">Defeated</div>'
+                            ) :
+                            '<div style="color: #7f8c8d;">Match in progress</div>'
+                    )}
                 </div>
                 
-                <!-- Centre du match -->
-                <div class="match-status">
-                    VS
-                    ${isCompleted ? 
-                        '<div style="font-size: 0.8rem; color: #7f8c8d; margin-top: 5px;">Completed</div>' : 
-                        (isAdmin ? 
-                            `<div style="margin-top: 10px;">
-                                <button onclick="setMatchDraw('${match.id}')" 
-                                        style="background: #95a5a6; color: white; padding: 8px 16px; border: none; border-radius: 8px; cursor: pointer; font-size: 0.8rem;">
-                                    🤝 Draw
-                                </button>
-                            </div>` : 
-                            ''
-                        )
-                    }
-                </div>
+                <!-- Centre -->
+                <div class="match-status">VS</div>
                 
                 <!-- Joueur 2 -->
                 <div class="match-player ${!winnerIsPlayer1 && isCompleted ? 'winner' : ''}">
                     ${isAdmin ? `
-                        <button onclick="swapMatchColors('${match.id}')" class="swap-colors-btn" title="Swap colors">
-                            ↻
-                        </button>
+                        <button onclick="swapMatchColors('${match.id}')" class="swap-colors-btn">↻</button>
                     ` : ''}
                     
                     <div class="stone-display ${!match.player1IsBlack ? 'black' : 'white'}"></div>
-                    
                     <div class="player-label">${match.player2.name}</div>
-                    <div class="player-subtext">${match.player2.rank} • ${state.eloRatings[match.player2.id] || state.systemSettings.initialElo} Elo</div>
+                    <div class="player-subtext">${match.player2.rank}</div>
                     
-                    <!-- BOUTON VERT POUR JOUEUR 2 -->
-                    <div style="margin-top: 20px; width: 100%;">
-                        ${isAdmin ? `
+                    <!-- BOUTON VERT -->
+                    ${isAdmin ? `
+                        <div style="margin-top: 20px;">
                             <button onclick="setMatchWinner('${match.id}', '${match.player2.id}')" 
                                     class="win-btn"
-                                    style="${!winnerIsPlayer1 && isCompleted ? 'background: #f39c12;' : 'background: #2ecc71;'}">
+                                    style="background: ${!winnerIsPlayer1 && isCompleted ? '#f39c12' : '#2ecc71'};">
                                 ${!winnerIsPlayer1 && isCompleted ? '✓ ' : '🏆 '}
-                                ${match.player2.name.split(' ')[0]} Wins
+                                ${match.player2.name} Wins
                             </button>
-                        ` : (
-                            isCompleted ?
-                                (!winnerIsPlayer1 ?
-                                    '<div class="badge badge-success">🏆 WINNER</div>' :
-                                    '<div style="color: #e74c3c; font-size: 0.9rem;">Defeated</div>'
-                                ) :
-                                '<div style="color: #7f8c8d; font-size: 0.9rem;">Match in progress</div>'
-                        )}
-                    </div>
+                        </div>
+                    ` : (
+                        isCompleted ?
+                            (!winnerIsPlayer1 ?
+                                '<div class="badge badge-success">🏆 WINNER</div>' :
+                                '<div style="color: #e74c3c;">Defeated</div>'
+                            ) :
+                            '<div style="color: #7f8c8d;">Match in progress</div>'
+                    )}
                 </div>
             </div>
         `;
     }).join('');
     
     document.getElementById('matchesZone').innerHTML = matchesHTML || 
-        '<div class="empty-state">No matches for this round yet</div>';
-}
-
-    async function setMatchDraw(matchId) {
-    if (!isAdmin) {
-        showNotification('Admin access required', 'error');
-        return;
-    }
-
-    const match = state.activeTournament.matches.find(m => m.id === matchId);
-    if (!match) return;
-
-    const updatedMatches = state.activeTournament.matches.map(m => 
-        m.id === matchId ? { 
-            ...m, 
-            winner: 'draw',
-            endedAt: new Date().toISOString()
-        } : m
-    );
-
-    await updateDoc(systemRef, { 
-        "activeTournament.matches": updatedMatches,
-        lastAction: `🤝 Match ended in draw: ${match.player1.name} vs ${match.player2.name}`
-    });
+        '<div class="empty-state">No matches for this round</div>';
     
-    showNotification('Match set as draw', 'info');
+    console.log('✅ Matchs affichés');
 }
     function updateRankings() {
         const sortedPlayers = [...state.players].sort((a, b) => {
@@ -4316,6 +4281,7 @@ function updateRoundProgress() {
 </script>
 </body>
 </html>
+
 
 
 
