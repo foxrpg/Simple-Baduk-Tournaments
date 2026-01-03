@@ -3093,30 +3093,67 @@ function logoutAdmin() {
     }
 
     async function promptGameLink(matchId) {
+    console.log('DEBUG: Fonction appelée pour match:', matchId);
+    
     if (!isAdmin) {
-        showNotification('Admin only', 'error');
+        showNotification('Admin access required', 'error');
         return;
     }
 
-    const url = prompt('Collez le lien OGS / KGS de la partie :');
-    if (!url) return;
+    if (!state.activeTournament || !state.activeTournament.matches) {
+        showNotification('No active tournament found', 'error');
+        return;
+    }
 
-    // Mise à jour du match
-    const updatedMatches = state.activeTournament.matches.map(m =>
-        m.id === matchId ? { ...m, gameUrl: url } : m
-    );
+    const match = state.activeTournament.matches.find(m => m.id === matchId);
+    if (!match) {
+        showNotification('Match not found', 'error');
+        return;
+    }
 
-    await updateDoc(systemRef, {
-        "activeTournament.matches": updatedMatches
+    const currentUrl = match.gameUrl || '';
+    const url = prompt(`Enter game link for ${match.player1.name} vs ${match.player2.name}:`, currentUrl);
+    
+    if (url === null) return; // User cancelled
+    
+    const updatedMatches = state.activeTournament.matches.map(m => {
+        if (m.id === matchId) {
+            return {
+                ...m,
+                gameUrl: url.trim() || null
+            };
+        }
+        return m;
     });
 
-    showNotification('Lien ajouté !', 'success');
+    try {
+        await updateDoc(systemRef, {
+            "activeTournament.matches": updatedMatches
+        });
+        
+        showNotification(url.trim() ? 'Game link saved!' : 'Game link removed', 'success');
+    } catch (error) {
+        console.error('Error saving game link:', error);
+        showNotification('Error saving link', 'error');
+    }
 }
 
     async function createManualMatch() {
         if (!isAdmin) {
             showNotification('Admin access required', 'error');
             return;
+
+            // Dans createManualMatch() et generateSwissPairs() :
+const newMatch = {
+    id: Date.now().toString(),
+    player1: p1,
+    player2: p2,
+    winner: null,
+    round: currentRound,
+    player1IsBlack: player1IsBlack,
+    createdAt: new Date().toISOString(),
+    gameUrl: null // ← AJOUTEZ CETTE LIGNE
+};
         }
 
         const p1Id = document.getElementById('player1Select').value;
@@ -3417,6 +3454,18 @@ function logoutAdmin() {
         if (!isAdmin || !state.activeTournament) {
             showNotification('Admin access required', 'error');
             return;
+
+            // Dans createManualMatch() et generateSwissPairs() :
+const newMatch = {
+    id: Date.now().toString(),
+    player1: p1,
+    player2: p2,
+    winner: null,
+    round: currentRound,
+    player1IsBlack: player1IsBlack,
+    createdAt: new Date().toISOString(),
+    gameUrl: null // ← AJOUTEZ CETTE LIGNE
+};
         }
 
         const participants = [...state.activeTournament.participants];
@@ -4330,6 +4379,9 @@ document.addEventListener('DOMContentLoaded', () => {
     window.switchTab = switchTab;
     
     // Nouvelles fonctions
+      window.promptGameLink = promptGameLink;
+    window.setMatchWinner = setMatchWinner;
+    window.swapMatchColors = swapMatchColors;
     window.swapAllMatchColors = swapAllMatchColors;
     window.randomizeAllColors = randomizeAllColors;
     window.swapSelectedPlayers = swapSelectedPlayers;
