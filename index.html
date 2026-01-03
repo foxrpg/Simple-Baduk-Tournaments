@@ -120,6 +120,54 @@
             background-clip: text;
         }
 
+        /* Styles pour les perdants */
+.match-player.loser {
+    background: linear-gradient(135deg, rgba(231, 76, 60, 0.1) 0%, transparent 100%) !important;
+    border: 1px solid rgba(231, 76, 60, 0.3) !important;
+    opacity: 0.7;
+}
+
+.match-player.loser .player-label {
+    color: var(--danger) !important;
+    text-decoration: line-through;
+}
+
+.match-player.loser .player-subtext {
+    color: #e74c3c !important;
+}
+
+.match-player.loser .stone-display {
+    opacity: 0.5;
+    filter: grayscale(70%);
+}
+
+/* Style pour les invités (cacher les boutons) */
+.guest-mode .win-btn,
+.guest-mode .swap-colors-btn,
+.guest-mode .quick-actions,
+.guest-mode .advanced-match-controls,
+.guest-mode .manual-control-indicator {
+    display: none !important;
+}
+
+.guest-mode .match-status-badge {
+    display: inline-flex !important;
+}
+
+/* Badge pour les invités */
+.guest-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    background: var(--secondary);
+    color: white;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-left: 10px;
+}
+
         .admin-hidden {
             display: none !important;
         }
@@ -258,6 +306,17 @@
             overflow: hidden;
             box-shadow: var(--shadow);
         }
+
+        .badge-danger {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    display: inline-block;
+    margin-top: 15px;
+}
 
         .champion-section::before {
             content: "";
@@ -2301,26 +2360,27 @@
 
     // Admin Authentication
     function loginAdmin() {
-        const pin = document.getElementById('adminPin').value;
-        if (pin === "159753") {
-            isAdmin = true;
-            document.getElementById('authSection').style.display = 'none';
-            document.getElementById('adminControls').style.display = 'flex';
-            toggleAdminElements(true);
-            showNotification('Admin login successful - Advanced controls enabled', 'success');
-        } else {
-            showNotification('Incorrect PIN', 'error');
-        }
+    const pin = document.getElementById('adminPin').value;
+    if (pin === "159753") {
+        isAdmin = true;
+        document.getElementById('authSection').style.display = 'none';
+        document.getElementById('adminControls').style.display = 'flex';
+        toggleAdminElements(true);
+        updateModeIndicator();
+        showNotification('Admin login successful - Advanced controls enabled', 'success');
+    } else {
+        showNotification('Incorrect PIN', 'error');
     }
+}
 
-    function logoutAdmin() {
+function logoutAdmin() {
     isAdmin = false;
     document.getElementById('authSection').style.display = 'flex';
     document.getElementById('adminControls').style.display = 'none';
     toggleAdminElements(false);
+    updateModeIndicator();
     showNotification('Logged out successfully', 'info');
 }
-
     // Notification System
     function showNotification(message, type = 'info') {
         const container = document.getElementById('notificationContainer');
@@ -3474,47 +3534,52 @@ function updateRoundProgress() {
     const currentRound = state.activeTournament.round;
     const matchesThisRound = state.activeTournament.matches.filter(m => m.round === currentRound);
     
+    // Ajouter/retirer la classe guest-mode selon le statut admin
+    const container = document.querySelector('.container');
+    if (isAdmin) {
+        container.classList.remove('guest-mode');
+    } else {
+        container.classList.add('guest-mode');
+    }
+    
     const matchesHTML = matchesThisRound.map(match => {
         const isCompleted = !!match.winner;
         const winnerIsPlayer1 = match.winner === match.player1.id;
+        const loserIsPlayer1 = isCompleted && !winnerIsPlayer1;
+        const loserIsPlayer2 = isCompleted && winnerIsPlayer1;
         
-        // DÉTERMINE SI ON DOIT AFFICHER LES BOUTONS
-        // Les boutons apparaissent si:
-        // 1. L'admin est connecté (isAdmin = true) OU
-        // 2. On est en mode développement (on force l'affichage)
-        const shouldShowButtons = isAdmin || true; // ← CHANGE "true" en "false" pour cacher par défaut
+        // Déterminer si on doit afficher les boutons (admin seulement)
+        const shouldShowButtons = isAdmin;
         
         return `
             <div class="match-card ${isCompleted ? 'completed' : ''}" data-match-id="${match.id}">
                 <!-- Joueur 1 -->
-                <div class="match-player ${winnerIsPlayer1 && isCompleted ? 'winner' : ''}">
+                <div class="match-player ${winnerIsPlayer1 && isCompleted ? 'winner' : ''} 
+                                        ${loserIsPlayer1 ? 'loser' : ''}">
                     ${shouldShowButtons ? `
                         <button onclick="swapMatchColors('${match.id}')" class="swap-colors-btn" title="Swap colors">
                             ↻
                         </button>
                     ` : ''}
                     
-                    <div class="stone-display ${match.player1IsBlack ? 'black' : 'white'}"></div>
+                    <div class="stone-display ${match.player1IsBlack ? 'black' : 'white'} ${loserIsPlayer1 ? 'loser-stone' : ''}"></div>
                     
                     <div class="player-label">${match.player1.name}</div>
                     <div class="player-subtext">${match.player1.rank} • ${state.eloRatings[match.player1.id] || state.systemSettings.initialElo} Elo</div>
                     
-                    <!-- BOUTON VERT POUR JOUEUR 1 - TOUJOURS VISIBLE -->
+                    <!-- État du match -->
                     <div style="margin-top: 20px; width: 100%;">
-                        ${shouldShowButtons ? `
-                            <button onclick="setMatchWinner('${match.id}', '${match.player1.id}')" 
-                                    class="win-btn"
-                                    style="${winnerIsPlayer1 && isCompleted ? 'background: #f39c12;' : 'background: #2ecc71;'}">
-                                ${winnerIsPlayer1 && isCompleted ? '✓ ' : '🏆 '}
-                                ${match.player1.name.split(' ')[0]} Wins
-                            </button>
-                        ` : (
-                            isCompleted ?
-                                (winnerIsPlayer1 ?
-                                    '<div class="badge badge-success">🏆 WINNER</div>' :
-                                    '<div style="color: #e74c3c; font-size: 0.9rem;">Defeated</div>'
-                                ) :
-                                '<div style="color: #7f8c8d; font-size: 0.9rem;">Match in progress</div>'
+                        ${isCompleted ? (
+                            winnerIsPlayer1 ? 
+                                '<div class="badge badge-success">🏆 WINNER</div>' :
+                                '<div class="badge badge-danger">❌ DEFEATED</div>'
+                        ) : (
+                            shouldShowButtons ? 
+                                `<button onclick="setMatchWinner('${match.id}', '${match.player1.id}')" 
+                                        class="win-btn">
+                                    🏆 ${match.player1.name.split(' ')[0]} Wins
+                                </button>` :
+                                '<div style="color: #7f8c8d; font-size: 0.9rem; padding: 10px;">Match in progress</div>'
                         )}
                     </div>
                 </div>
@@ -3531,40 +3596,38 @@ function updateRoundProgress() {
                                     🤝 Draw
                                 </button>
                             </div>` : 
-                            ''
+                            '<div style="margin-top: 10px; font-size: 0.8rem; color: #7f8c8d;">Pending</div>'
                         )
                     }
                 </div>
                 
                 <!-- Joueur 2 -->
-                <div class="match-player ${!winnerIsPlayer1 && isCompleted ? 'winner' : ''}">
+                <div class="match-player ${!winnerIsPlayer1 && isCompleted ? 'winner' : ''} 
+                                        ${loserIsPlayer2 ? 'loser' : ''}">
                     ${shouldShowButtons ? `
                         <button onclick="swapMatchColors('${match.id}')" class="swap-colors-btn" title="Swap colors">
                             ↻
                         </button>
                     ` : ''}
                     
-                    <div class="stone-display ${!match.player1IsBlack ? 'black' : 'white'}"></div>
+                    <div class="stone-display ${!match.player1IsBlack ? 'black' : 'white'} ${loserIsPlayer2 ? 'loser-stone' : ''}"></div>
                     
                     <div class="player-label">${match.player2.name}</div>
                     <div class="player-subtext">${match.player2.rank} • ${state.eloRatings[match.player2.id] || state.systemSettings.initialElo} Elo</div>
                     
-                    <!-- BOUTON VERT POUR JOUEUR 2 - TOUJOURS VISIBLE -->
+                    <!-- État du match -->
                     <div style="margin-top: 20px; width: 100%;">
-                        ${shouldShowButtons ? `
-                            <button onclick="setMatchWinner('${match.id}', '${match.player2.id}')" 
-                                    class="win-btn"
-                                    style="${!winnerIsPlayer1 && isCompleted ? 'background: #f39c12;' : 'background: #2ecc71;'}">
-                                ${!winnerIsPlayer1 && isCompleted ? '✓ ' : '🏆 '}
-                                ${match.player2.name.split(' ')[0]} Wins
-                            </button>
-                        ` : (
-                            isCompleted ?
-                                (!winnerIsPlayer1 ?
-                                    '<div class="badge badge-success">🏆 WINNER</div>' :
-                                    '<div style="color: #e74c3c; font-size: 0.9rem;">Defeated</div>'
-                                ) :
-                                '<div style="color: #7f8c8d; font-size: 0.9rem;">Match in progress</div>'
+                        ${isCompleted ? (
+                            !winnerIsPlayer1 ? 
+                                '<div class="badge badge-success">🏆 WINNER</div>' :
+                                '<div class="badge badge-danger">❌ DEFEATED</div>'
+                        ) : (
+                            shouldShowButtons ? 
+                                `<button onclick="setMatchWinner('${match.id}', '${match.player2.id}')" 
+                                        class="win-btn">
+                                    🏆 ${match.player2.name.split(' ')[0]} Wins
+                                </button>` :
+                                '<div style="color: #7f8c8d; font-size: 0.9rem; padding: 10px;">Match in progress</div>'
                         )}
                     </div>
                 </div>
@@ -3574,6 +3637,32 @@ function updateRoundProgress() {
     
     document.getElementById('matchesZone').innerHTML = matchesHTML || 
         '<div class="empty-state">No matches for this round yet</div>';
+}
+
+    function updateModeIndicator() {
+    const headerControls = document.querySelector('.header-controls');
+    
+    // Chercher ou créer l'indicateur de mode
+    let modeIndicator = document.getElementById('modeIndicator');
+    
+    if (!modeIndicator) {
+        modeIndicator = document.createElement('div');
+        modeIndicator.id = 'modeIndicator';
+        modeIndicator.style.marginRight = '15px';
+        headerControls.insertBefore(modeIndicator, headerControls.firstChild);
+    }
+    
+    if (isAdmin) {
+        modeIndicator.innerHTML = `
+            <span style="font-weight: 600; color: var(--accent);">🔧 Admin Mode</span>
+            <span class="guest-badge" style="background: var(--accent);">Full Control</span>
+        `;
+    } else {
+        modeIndicator.innerHTML = `
+            <span style="font-weight: 600; color: var(--text-secondary);">👁️ Guest Mode</span>
+            <span class="guest-badge" style="background: var(--secondary);">View Only</span>
+        `;
+    }
 }
     function updateRankings() {
         const sortedPlayers = [...state.players].sort((a, b) => {
@@ -4112,6 +4201,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Masquer les éléments admin au chargement
     toggleAdminElements(false);
     
+    // Mettre à jour l'indicateur de mode
+    updateModeIndicator();
+    
     // Exposer les fonctions au niveau global pour les onclick HTML
     window.toggleTheme = toggleTheme;
     window.loginAdmin = loginAdmin;
@@ -4155,3 +4247,4 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
+
