@@ -1477,6 +1477,41 @@
             background: rgba(228, 63, 90, 0.05);
         }
 
+        /* Dans la section <style>, ajoutez : */
+.game-link {
+    display: block;
+    margin-top: 10px;
+    padding: 6px 12px;
+    background: var(--secondary);
+    color: white;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 0.85rem;
+    text-align: center;
+}
+
+.add-link-btn {
+    display: block;
+    margin-top: 10px;
+    width: 100%;
+    padding: 6px 12px;
+    background: transparent;
+    border: 1px dashed var(--border);
+    color: var(--text-secondary);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.85rem;
+}
+
+.game-link:hover {
+    background: var(--primary);
+}
+
+.add-link-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+   
         /* Gestion manuelle des joueurs dans les matchs */
         .player-select-controls {
             display: flex;
@@ -3230,6 +3265,36 @@ function logoutAdmin() {
 
     showNotification(`${winner.name} wins! Elo: +${eloChanges.newWinnerElo - winnerElo}`, 'success');
 }
+
+    // Ajoutez cette fonction (peut être en global, n'importe où)
+async function promptGameLink(matchId) {
+    if (!window.isAdmin) {
+        alert('Admin seulement');
+        return;
+    }
+    
+    const url = prompt('Collez le lien OGS/KGS de la partie :');
+    if (!url) return;
+    
+    // Trouver le match et ajouter le lien
+    const matchIndex = state.activeTournament.matches.findIndex(m => m.id === matchId);
+    if (matchIndex === -1) return;
+    
+    // Créer une copie mise à jour
+    const updatedMatches = [...state.activeTournament.matches];
+    updatedMatches[matchIndex] = {
+        ...updatedMatches[matchIndex],
+        gameUrl: url
+    };
+    
+    // Sauvegarder
+    await updateDoc(systemRef, {
+        "activeTournament.matches": updatedMatches
+    });
+    
+    alert('Lien ajouté !');
+    updateMatchesDisplay(); // Rafraîchir
+}
     async function endTournament() {
         if (!isAdmin) {
             showNotification('Admin access required', 'error');
@@ -3637,7 +3702,16 @@ function updateRoundProgress() {
     
     document.getElementById('matchesZone').innerHTML = matchesHTML || 
         '<div class="empty-state">No matches for this round yet</div>';
-}
+// Dans chaque match, après le bouton win/draw, ajoutez :
+${match.gameUrl ? `
+    <a href="${match.gameUrl}" target="_blank" class="game-link">
+        🔗 Voir partie
+    </a>
+` : isAdmin ? `
+    <button onclick="promptGameLink('${match.id}')" class="add-link-btn">
+        + Lien
+    </button>
+` : ''}
 
     function updateModeIndicator() {
     const headerControls = document.querySelector('.header-controls');
@@ -3857,7 +3931,13 @@ if (isAdmin && state.activeTournament) {
             '<div class="empty-state">No tournament history yet</div>';
         
         document.getElementById('totalTournaments').textContent = state.tournamentHistory.length;
-    }
+
+        ${tournament.matches?.some(m => m.gameUrl) ? `
+    <div style="margin-top: 10px; font-size: 0.85rem; color: var(--accent);">
+        📁 Parties disponibles
+    </div>
+` : ''}
+    
 
     function toggleHistoryDetails(index) {
         const detailsDiv = document.getElementById(`historyDetails${index}`);
@@ -4238,6 +4318,8 @@ document.addEventListener('DOMContentLoaded', () => {
     window.saveMatchChanges = saveMatchChanges;
     window.deleteSelectedMatch = deleteSelectedMatch;
     window.setBulkWinner = setBulkWinner;
+    window.promptGameLink = promptGameLink;
+                          
     
     // Exposer pour le debug
     window.appState = state;
@@ -4247,4 +4329,5 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
+
 
