@@ -3146,6 +3146,139 @@ async function promptGameLink(matchId) {
     
     isAdmin = wasAdmin;
 }
+    console.log("=== promptGameLink appelée ===");
+    console.log("Match ID:", matchId);
+    console.log("Admin mode:", isAdmin);
+    
+    // 1. Vérifier le mode admin
+    if (!isAdmin) {
+        alert("❌ Mode admin requis pour ajouter un lien");
+        return;
+    }
+    
+    // 2. Vérifier qu'il y a un tournoi actif
+    if (!state.activeTournament) {
+        alert("❌ Aucun tournoi actif");
+        return;
+    }
+    
+    // 3. Trouver le match
+    const match = state.activeTournament.matches.find(m => m.id === matchId);
+    if (!match) {
+        alert("❌ Match non trouvé");
+        return;
+    }
+    
+    console.log("Match trouvé:", match);
+    
+    // 4. Demander le lien
+    const currentLink = match.gameUrl || "";
+    const player1Name = match.player1.name.split(" ")[0];
+    const player2Name = match.player2.name.split(" ")[0];
+    
+    const newLink = prompt(
+        `🔗 Lien pour la partie :\n${player1Name} vs ${player2Name}\n\nCollez le lien OGS ou KGS :`,
+        currentLink
+    );
+    
+    // Si l'utilisateur annule
+    if (newLink === null) {
+        console.log("Annulé par l'utilisateur");
+        return;
+    }
+    
+    // 5. Mettre à jour les matches
+    const updatedMatches = state.activeTournament.matches.map(m => {
+        if (m.id === matchId) {
+            const updatedMatch = {
+                ...m,
+                gameUrl: newLink.trim() || null
+            };
+            console.log("Match mis à jour:", updatedMatch);
+            return updatedMatch;
+        }
+        return m;
+    });
+    
+    // 6. Sauvegarder dans Firebase
+    try {
+        console.log("Sauvegarde Firebase...");
+        await updateDoc(systemRef, {
+            "activeTournament.matches": updatedMatches
+        });
+        
+        // Message de succès
+        if (newLink.trim()) {
+            showNotification(`✅ Lien ajouté pour ${player1Name} vs ${player2Name}`, "success");
+        } else {
+            showNotification(`✅ Lien supprimé`, "success");
+        }
+        
+        // 7. Rafraîchir l'affichage IMMÉDIATEMENT
+        updateMatchesDisplay();
+        
+    } catch (error) {
+        console.error("Erreur Firebase:", error);
+        showNotification("❌ Erreur de sauvegarde : " + error.message, "error");
+    }
+}
+    async function createManualMatch() {
+    if (!isAdmin) {
+        showNotification('Admin access required', 'error');
+        return;
+    }
+
+    const p1Id = document.getElementById('player1Select').value;
+    const p2Id = document.getElementById('player2Select').value;
+
+    if (!p1Id || !p2Id) {
+        showNotification('Select two players', 'error');
+        return;
+    }
+
+    if (p1Id === p2Id) {
+        showNotification('Player cannot play against themselves', 'error');
+        return;
+    }
+
+    const p1 = state.activeTournament.participants.find(p => p.id === p1Id);
+    const p2 = state.activeTournament.participants.find(p => p.id === p2Id);
+
+    // Check for duplicate match in current round
+    const existingMatch = state.activeTournament.matches.find(m => 
+        ((m.player1.id === p1Id && m.player2.id === p2Id) ||
+        (m.player1.id === p2Id && m.player2.id === p1Id)) &&
+        m.round === state.activeTournament.round
+    );
+
+    if (existingMatch) {
+        showNotification('Match already exists in this round', 'error');
+        return;
+    }
+
+    // Déterminer qui a les noirs
+    const player1IsBlack = document.getElementById('manualBlack1').checked;
+
+    const newMatch = {
+        id: Date.now().toString(),
+        player1: p1,
+        player2: p2,
+        winner: null,
+        round: state.activeTournament.round,
+        player1IsBlack: player1IsBlack,
+        createdAt: new Date().toISOString(),
+        gameUrl: null // ← IMPORTANT : ajoutez cette ligne
+    };
+
+    const updatedMatches = [...state.activeTournament.matches, newMatch];
+    await updateDoc(systemRef, { 
+        "activeTournament.matches": updatedMatches,
+        lastAction: `⚔️ New match: ${p1.name} (${player1IsBlack ? 'Black' : 'White'}) vs ${p2.name} (${!player1IsBlack ? 'Black' : 'White'})`
+    });
+    
+    showNotification('Match created successfully', 'success');
+}
+
     // CORRIGÉ : Fonction pour échanger les couleurs d'un match
     async function swapMatchColors(matchId) {
         if (!isAdmin) {
