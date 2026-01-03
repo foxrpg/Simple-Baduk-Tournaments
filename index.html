@@ -3092,53 +3092,81 @@ function logoutAdmin() {
         showNotification(`Tournament "${name}" started!`, 'success');
     }
 
-  async function promptGameLink(matchId) {
-    console.log("=== AJOUT DE LIEN ===");
+async function promptGameLink(matchId) {
+    console.log("=== promptGameLink appelée ===");
     console.log("Match ID:", matchId);
+    console.log("Admin mode:", isAdmin);
     
-    // Test simple : d'abord on vérifie que ça fonctionne
-    if (!state.activeTournament || !state.activeTournament.matches) {
-        alert("Erreur: Pas de tournoi actif ou pas de matches");
+    // 1. Vérifier le mode admin
+    if (!isAdmin) {
+        alert("❌ Mode admin requis pour ajouter un lien");
         return;
     }
     
+    // 2. Vérifier qu'il y a un tournoi actif
+    if (!state.activeTournament) {
+        alert("❌ Aucun tournoi actif");
+        return;
+    }
+    
+    // 3. Trouver le match
     const match = state.activeTournament.matches.find(m => m.id === matchId);
     if (!match) {
-        alert("Erreur: Match non trouvé");
+        alert("❌ Match non trouvé");
         return;
     }
     
+    console.log("Match trouvé:", match);
+    
+    // 4. Demander le lien
     const currentLink = match.gameUrl || "";
-    const newLink = prompt(`Lien pour ${match.player1.name} vs ${match.player2.name} :`, currentLink);
+    const player1Name = match.player1.name.split(" ")[0];
+    const player2Name = match.player2.name.split(" ")[0];
     
-    if (newLink === null) return; // Annulé
+    const newLink = prompt(
+        `🔗 Lien pour la partie :\n${player1Name} vs ${player2Name}\n\nCollez le lien OGS ou KGS :`,
+        currentLink
+    );
     
-    // Mettre à jour les matches
+    // Si l'utilisateur annule
+    if (newLink === null) {
+        console.log("Annulé par l'utilisateur");
+        return;
+    }
+    
+    // 5. Mettre à jour les matches
     const updatedMatches = state.activeTournament.matches.map(m => {
         if (m.id === matchId) {
-            return {
+            const updatedMatch = {
                 ...m,
                 gameUrl: newLink.trim() || null
             };
+            console.log("Match mis à jour:", updatedMatch);
+            return updatedMatch;
         }
         return m;
     });
     
+    // 6. Sauvegarder dans Firebase
     try {
-        // Sauvegarder dans Firebase
+        console.log("Sauvegarde Firebase...");
         await updateDoc(systemRef, {
             "activeTournament.matches": updatedMatches
         });
         
-        // Afficher un message
-        showNotification(newLink.trim() ? "✅ Lien ajouté !" : "✅ Lien supprimé", "success");
+        // Message de succès
+        if (newLink.trim()) {
+            showNotification(`✅ Lien ajouté pour ${player1Name} vs ${player2Name}`, "success");
+        } else {
+            showNotification(`✅ Lien supprimé`, "success");
+        }
         
-        // Rafraîchir l'affichage
+        // 7. Rafraîchir l'affichage IMMÉDIATEMENT
         updateMatchesDisplay();
         
     } catch (error) {
         console.error("Erreur Firebase:", error);
-        showNotification("❌ Erreur lors de la sauvegarde", "error");
+        showNotification("❌ Erreur de sauvegarde : " + error.message, "error");
     }
 }
     async function createManualMatch() {
