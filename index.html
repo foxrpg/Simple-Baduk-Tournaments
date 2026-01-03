@@ -415,6 +415,40 @@
             box-shadow: var(--shadow-hover);
         }
 
+        .game-link {
+    display: block;
+    margin-top: 10px;
+    padding: 6px 12px;
+    background: var(--secondary);
+    color: white;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 0.85rem;
+    text-align: center;
+}
+
+.add-link-btn {
+    display: block;
+    margin-top: 10px;
+    width: 100%;
+    padding: 6px 12px;
+    background: transparent;
+    border: 1px dashed var(--border);
+    color: var(--text-secondary);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.85rem;
+}
+
+.game-link:hover {
+    background: var(--primary);
+}
+
+.add-link-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
         .card-header {
             display: flex;
             justify-content: space-between;
@@ -3058,6 +3092,27 @@ function logoutAdmin() {
         showNotification(`Tournament "${name}" started!`, 'success');
     }
 
+    async function promptGameLink(matchId) {
+    if (!isAdmin) {
+        showNotification('Admin only', 'error');
+        return;
+    }
+
+    const url = prompt('Collez le lien OGS / KGS de la partie :');
+    if (!url) return;
+
+    // Mise à jour du match
+    const updatedMatches = state.activeTournament.matches.map(m =>
+        m.id === matchId ? { ...m, gameUrl: url } : m
+    );
+
+    await updateDoc(systemRef, {
+        "activeTournament.matches": updatedMatches
+    });
+
+    showNotification('Lien ajouté !', 'success');
+}
+
     async function createManualMatch() {
         if (!isAdmin) {
             showNotification('Admin access required', 'error');
@@ -3647,14 +3702,14 @@ function updateRoundProgress() {
                                 '<div style="color: #7f8c8d; font-size: 0.9rem; padding: 10px;">Match in progress</div>'
                         )}
                     </div>
-                    <!-- Après la section "État du match" (après le div avec badge/win-btn) -->
+<!-- Lien vers la partie -->
 ${match.gameUrl ? `
     <div style="margin-top: 10px;">
         <a href="${match.gameUrl}" target="_blank" class="game-link">
             🔗 Voir la partie
         </a>
     </div>
-` : shouldShowButtons ? `
+` : isAdmin ? `
     <div style="margin-top: 10px;">
         <button onclick="promptGameLink('${match.id}')" class="add-link-btn">
             + Ajouter lien OGS/KGS
@@ -4320,6 +4375,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.deleteSelectedMatch = deleteSelectedMatch;
     window.setBulkWinner = setBulkWinner;
     window.promptGameLink = promptGameLink;
+    
                           
     
     // Exposer pour le debug
