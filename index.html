@@ -3320,14 +3320,6 @@ function logoutAdmin() {
 
     showNotification(`${winner.name} wins! Elo: +${eloChanges.newWinnerElo - winnerElo}`, 'success');
 }
-
-    // Ajoutez cette fonction (peut être en global, n'importe où)
-async function promptGameLink(matchId) {
-    if (!window.isAdmin) {
-        alert('Admin seulement');
-        return;
-    }
-    
     const url = prompt('Collez le lien OGS/KGS de la partie :');
     if (!url) return;
     
@@ -3349,7 +3341,7 @@ async function promptGameLink(matchId) {
     
     alert('Lien ajouté !');
     updateMatchesDisplay(); // Rafraîchir
-}
+
     async function endTournament() {
         if (!isAdmin) {
             showNotification('Admin access required', 'error');
