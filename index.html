@@ -2266,7 +2266,7 @@
         seasonHistory: []
     };
 
-    let isAdmin = true;
+    let isAdmin = false;
     let chart = null;
 
     // Fonction pour masquer/afficher les éléments admin
@@ -2314,12 +2314,12 @@
     }
 
     function logoutAdmin() {
-        isAdmin = false;
-        document.getElementById('authSection').style.display = 'flex';
-        document.getElementById('adminControls').style.display = 'none';
-        toggleAdminElements(false);
-        showNotification('Logged out successfully', 'info');
-    }
+    isAdmin = false;
+    document.getElementById('authSection').style.display = 'flex';
+    document.getElementById('adminControls').style.display = 'none';
+    toggleAdminElements(false);
+    showNotification('Logged out successfully', 'info');
+}
 
     // Notification System
     function showNotification(message, type = 'info') {
@@ -4097,29 +4097,20 @@ if (isAdmin && state.activeTournament) {
     }
 
     // Initialize
-    document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', () => {
     const savedTheme = localStorage.getItem('meijin-theme') || 'dark';
     document.body.setAttribute('data-theme', savedTheme);
     document.getElementById('themeIcon').textContent = savedTheme === 'dark' ? '☀️' : '🌙';
     
     document.getElementById('searchPlayers').addEventListener('input', () => filterPlayers('all'));
     
-    // FORCE L'AFFICHAGE ADMIN PAR DÉFAUT
-    isAdmin = true; // ← Ajoute cette ligne
-    document.getElementById('adminControls').style.display = 'flex';
-    document.getElementById('authSection').style.display = 'none';
-    document.querySelectorAll('.admin-hidden').forEach(el => {
-        el.classList.remove('admin-hidden');
-    });
+    // MODIFICATION IMPORTANTE : Ne pas être admin par défaut
+    isAdmin = false; // ← DÉFINIR À false PAR DÉFAUT
+    document.getElementById('adminControls').style.display = 'none';
+    document.getElementById('authSection').style.display = 'flex';
     
-    showNotification('Meijin Go System Pro loaded successfully', 'success');
-});
-        
-        // Masquer les éléments admin au chargement
-        toggleAdminElements(false);
-        
-        showNotification('Meijin Go System Pro loaded successfully', 'success');
-    ;
+    // Masquer les éléments admin au chargement
+    toggleAdminElements(false);
 
     // =================================================================
     // EXPOSER LES FONCTIONS AU NIVEAU GLOBAL
@@ -4166,6 +4157,7 @@ if (isAdmin && state.activeTournament) {
 </script>
 </body>
 </html>
+
 
 
 
