@@ -3598,7 +3598,7 @@ function updateRoundProgress() {
     
     const currentRound = state.activeTournament.round;
     const matchesThisRound = state.activeTournament.matches.filter(m => m.round === currentRound);
-    
+
     // Ajouter/retirer la classe guest-mode selon le statut admin
     const container = document.querySelector('.container');
     if (isAdmin) {
@@ -3647,6 +3647,20 @@ function updateRoundProgress() {
                                 '<div style="color: #7f8c8d; font-size: 0.9rem; padding: 10px;">Match in progress</div>'
                         )}
                     </div>
+                    <!-- Après la section "État du match" (après le div avec badge/win-btn) -->
+${match.gameUrl ? `
+    <div style="margin-top: 10px;">
+        <a href="${match.gameUrl}" target="_blank" class="game-link">
+            🔗 Voir la partie
+        </a>
+    </div>
+` : shouldShowButtons ? `
+    <div style="margin-top: 10px;">
+        <button onclick="promptGameLink('${match.id}')" class="add-link-btn">
+            + Ajouter lien OGS/KGS
+        </button>
+    </div>
+` : ''}
                 </div>
                 
                 <!-- Centre du match -->
@@ -3702,16 +3716,8 @@ function updateRoundProgress() {
     
     document.getElementById('matchesZone').innerHTML = matchesHTML || 
         '<div class="empty-state">No matches for this round yet</div>';
-// Dans chaque match, après le bouton win/draw, ajoutez :
-${match.gameUrl ? `
-    <a href="${match.gameUrl}" target="_blank" class="game-link">
-        🔗 Voir partie
-    </a>
-` : isAdmin ? `
-    <button onclick="promptGameLink('${match.id}')" class="add-link-btn">
-        + Lien
-    </button>
-` : ''}
+   }
+
 
     function updateModeIndicator() {
     const headerControls = document.querySelector('.header-controls');
@@ -3858,7 +3864,7 @@ if (isAdmin && state.activeTournament) {
                 month: 'short', 
                 day: 'numeric',
                 year: 'numeric'
-            });
+        });
             
             const winner = tournament.results?.[0]?.playerName || 'N/A';
             const participants = tournament.participants?.length || 0;
@@ -3931,12 +3937,7 @@ if (isAdmin && state.activeTournament) {
             '<div class="empty-state">No tournament history yet</div>';
         
         document.getElementById('totalTournaments').textContent = state.tournamentHistory.length;
-
-        ${tournament.matches?.some(m => m.gameUrl) ? `
-    <div style="margin-top: 10px; font-size: 0.85rem; color: var(--accent);">
-        📁 Parties disponibles
-    </div>
-` : ''}
+    }
     
 
     function toggleHistoryDetails(index) {
@@ -4329,5 +4330,3 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
-
-
