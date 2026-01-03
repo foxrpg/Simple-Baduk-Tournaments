@@ -3092,52 +3092,55 @@ function logoutAdmin() {
         showNotification(`Tournament "${name}" started!`, 'success');
     }
 
-    async function promptGameLink(matchId) {
-    console.log('DEBUG: Fonction appelée pour match:', matchId);
+  async function promptGameLink(matchId) {
+    console.log("=== AJOUT DE LIEN ===");
+    console.log("Match ID:", matchId);
     
-    if (!isAdmin) {
-        showNotification('Admin access required', 'error');
-        return;
-    }
-
+    // Test simple : d'abord on vérifie que ça fonctionne
     if (!state.activeTournament || !state.activeTournament.matches) {
-        showNotification('No active tournament found', 'error');
+        alert("Erreur: Pas de tournoi actif ou pas de matches");
         return;
     }
-
+    
     const match = state.activeTournament.matches.find(m => m.id === matchId);
     if (!match) {
-        showNotification('Match not found', 'error');
+        alert("Erreur: Match non trouvé");
         return;
     }
-
-    const currentUrl = match.gameUrl || '';
-    const url = prompt(`Enter game link for ${match.player1.name} vs ${match.player2.name}:`, currentUrl);
     
-    if (url === null) return; // User cancelled
+    const currentLink = match.gameUrl || "";
+    const newLink = prompt(`Lien pour ${match.player1.name} vs ${match.player2.name} :`, currentLink);
     
+    if (newLink === null) return; // Annulé
+    
+    // Mettre à jour les matches
     const updatedMatches = state.activeTournament.matches.map(m => {
         if (m.id === matchId) {
             return {
                 ...m,
-                gameUrl: url.trim() || null
+                gameUrl: newLink.trim() || null
             };
         }
         return m;
     });
-
+    
     try {
+        // Sauvegarder dans Firebase
         await updateDoc(systemRef, {
             "activeTournament.matches": updatedMatches
         });
         
-        showNotification(url.trim() ? 'Game link saved!' : 'Game link removed', 'success');
+        // Afficher un message
+        showNotification(newLink.trim() ? "✅ Lien ajouté !" : "✅ Lien supprimé", "success");
+        
+        // Rafraîchir l'affichage
+        updateMatchesDisplay();
+        
     } catch (error) {
-        console.error('Error saving game link:', error);
-        showNotification('Error saving link', 'error');
+        console.error("Erreur Firebase:", error);
+        showNotification("❌ Erreur lors de la sauvegarde", "error");
     }
 }
-
     async function createManualMatch() {
         if (!isAdmin) {
             showNotification('Admin access required', 'error');
@@ -3666,7 +3669,7 @@ function updateRoundProgress() {
     progressSection.innerHTML = html;
 }
 
-   function updateMatchesDisplay() {
+  function updateMatchesDisplay() {
     if (!state.activeTournament) {
         document.getElementById('matchesZone').innerHTML = '<div class="empty-state">No matches for this round yet</div>';
         return;
@@ -3723,23 +3726,9 @@ function updateRoundProgress() {
                                 '<div style="color: #7f8c8d; font-size: 0.9rem; padding: 10px;">Match in progress</div>'
                         )}
                     </div>
-<!-- Lien vers la partie -->
-${match.gameUrl ? `
-    <div style="margin-top: 10px;">
-        <a href="${match.gameUrl}" target="_blank" class="game-link">
-            🔗 Voir la partie
-        </a>
-    </div>
-` : isAdmin ? `
-    <div style="margin-top: 10px;">
-        <button onclick="promptGameLink('${match.id}')" class="add-link-btn">
-            + Ajouter lien OGS/KGS
-        </button>
-    </div>
-` : ''}
                 </div>
                 
-                <!-- Centre du match -->
+                <!-- Centre du match - ICI ON AJOUTE LES LIENS -->
                 <div class="match-status">
                     VS
                     ${isCompleted ? 
@@ -3754,6 +3743,35 @@ ${match.gameUrl ? `
                             '<div style="margin-top: 10px; font-size: 0.8rem; color: #7f8c8d;">Pending</div>'
                         )
                     }
+                    
+                    <!-- SECTION DES LIENS - ICI AU CENTRE -->
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(31, 64, 104, 0.1); border-radius: 10px; min-width: 250px;">
+                        ${match.gameUrl ? `
+                            <div style="text-align: center;">
+                                <a href="${match.gameUrl}" target="_blank" 
+                                   style="display: inline-block; padding: 10px 20px; background: var(--success); color: white; border-radius: 8px; text-decoration: none; font-weight: 600;">
+                                    🔗 Voir la partie
+                                </a>
+                                ${shouldShowButtons ? `
+                                    <button onclick="promptGameLink('${match.id}')" 
+                                            style="margin-top: 8px; padding: 6px 12px; background: var(--warning); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.8rem;">
+                                        ✏️ Modifier
+                                    </button>
+                                ` : ''}
+                            </div>
+                        ` : shouldShowButtons ? `
+                            <div style="text-align: center;">
+                                <button onclick="promptGameLink('${match.id}')" 
+                                        style="padding: 12px 24px; background: var(--secondary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                    + Ajouter lien OGS/KGS
+                                </button>
+                            </div>
+                        ` : `
+                            <div style="text-align: center; color: var(--text-secondary); font-size: 0.9rem;">
+                                Aucun lien disponible
+                            </div>
+                        `}
+                    </div>
                 </div>
                 
                 <!-- Joueur 2 -->
@@ -3792,7 +3810,7 @@ ${match.gameUrl ? `
     
     document.getElementById('matchesZone').innerHTML = matchesHTML || 
         '<div class="empty-state">No matches for this round yet</div>';
-   }
+}
 
 
     function updateModeIndicator() {
