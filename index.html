@@ -3756,7 +3756,6 @@ function updateRoundProgress() {
     }).join('');
     
     progressSection.innerHTML = html;
-}
 
   function updateMatchesDisplay() {
     console.log("=== updateMatchesDisplay appelée ===");
@@ -4423,7 +4422,7 @@ if (isAdmin && state.activeTournament) {
         });
     }
 
-    // Initialize
+    // Initialisation
 document.addEventListener('DOMContentLoaded', () => {
     const savedTheme = localStorage.getItem('meijin-theme') || 'dark';
     document.body.setAttribute('data-theme', savedTheme);
@@ -4431,8 +4430,8 @@ document.addEventListener('DOMContentLoaded', () => {
     
     document.getElementById('searchPlayers').addEventListener('input', () => filterPlayers('all'));
     
-    // MODIFICATION IMPORTANTE : Ne pas être admin par défaut
-    isAdmin = false; // ← DÉFINIR À false PAR DÉFAUT
+    // Mode admin désactivé par défaut
+    isAdmin = false;
     document.getElementById('adminControls').style.display = 'none';
     document.getElementById('authSection').style.display = 'flex';
     
@@ -4443,7 +4442,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateModeIndicator();
     
     // Exposer les fonctions au niveau global pour les onclick HTML
-     window.toggleTheme = toggleTheme;
+    window.toggleTheme = toggleTheme;
     window.loginAdmin = loginAdmin;
     window.logoutAdmin = logoutAdmin;
     window.addNewPlayer = addNewPlayer;
@@ -4458,11 +4457,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.deselectAllPlayers = deselectAllPlayers;
     window.filterPlayers = filterPlayers;
     window.switchTab = switchTab;
-    
-    // FONCTIONS POUR LES LIENS (CRITIQUE)
     window.promptGameLink = promptGameLink;
-    
-    // Nouvelles fonctions
     window.swapAllMatchColors = swapAllMatchColors;
     window.randomizeAllColors = randomizeAllColors;
     window.swapSelectedPlayers = swapSelectedPlayers;
@@ -4480,16 +4475,9 @@ document.addEventListener('DOMContentLoaded', () => {
     window.deleteSelectedMatch = deleteSelectedMatch;
     window.setBulkWinner = setBulkWinner;
     window.testGameLinkSystem = testGameLinkSystem;
-    
-    // Fonctions utilitaires
     window.updateMatchesDisplay = updateMatchesDisplay;
     
-    console.log("✅ Toutes les fonctions exposées !");
-    // Exposer pour le debug
+    console.log("✅ Application initialisée");
     window.appState = state;
     window.appIsAdmin = isAdmin;
-}); // ← CETTE ACCOLADE FERMANTE EST CRITIQUE
-
-</script>
-</body>
-</html>
+});
