@@ -3530,6 +3530,8 @@
     }
 
    function updateMatchesDisplay() {
+    console.log("🔄 updateMatchesDisplay appelée, admin:", isAdmin);
+    
     if (!state.activeTournament) {
         document.getElementById('matchesZone').innerHTML = '<div class="empty-state">No matches for this round yet</div>';
         return;
@@ -3538,29 +3540,33 @@
     const currentRound = state.activeTournament.round;
     const matchesThisRound = state.activeTournament.matches.filter(m => m.round === currentRound);
     
-    console.log("🔍 Debug - Nombre de matchs ce round:", matchesThisRound.length);
-    console.log("🔍 Debug - Mode admin:", isAdmin);
+    console.log("📊 Matchs ce round:", matchesThisRound.length);
     
-    // Mode admin/guest
+    // TOUJOURS enlever guest-mode quand admin, mais il faut aussi vérifier la logique
     const container = document.querySelector('.container');
-    if (isAdmin) {
-        container.classList.remove('guest-mode');
-    } else {
-        container.classList.add('guest-mode');
+    if (container) {
+        if (isAdmin) {
+            container.classList.remove('guest-mode');
+        } else {
+            container.classList.add('guest-mode');
+        }
     }
     
     const matchesHTML = matchesThisRound.map((match, index) => {
         const isCompleted = !!match.winner;
         const winnerIsPlayer1 = match.winner === match.player1.id;
         
-        console.log(`🔍 Match ${index}: ${match.player1.name} vs ${match.player2.name}, winner: ${match.winner}`);
+        // DÉBUG: Afficher les informations du match
+        console.log(`Match ${index}: ${match.player1.name} vs ${match.player2.name}, winner: ${match.winner}, isAdmin: ${isAdmin}`);
         
         return `
             <div class="match-card ${isCompleted ? 'completed' : ''}" data-match-id="${match.id}">
                 <!-- JOUEUR 1 -->
                 <div class="match-player ${winnerIsPlayer1 && isCompleted ? 'winner' : ''} ${!winnerIsPlayer1 && isCompleted ? 'loser' : ''}">
+                    <!-- BOUTON SWAP COLORS - TOUJOURS VISIBLE SI ADMIN -->
                     ${isAdmin ? `
-                        <button onclick="swapMatchColors('${match.id}')" class="swap-colors-btn" title="Swap colors">
+                        <button onclick="swapMatchColors('${match.id}')" class="swap-colors-btn" title="Swap colors" 
+                                style="display: ${isAdmin ? 'flex' : 'none'} !important;">
                             ↻
                         </button>
                     ` : ''}
@@ -3570,10 +3576,11 @@
                     <div class="player-label">${match.player1.name}</div>
                     <div class="player-subtext">${match.player1.rank} • ${state.eloRatings[match.player1.id] || 1500} Elo</div>
                     
-                    <!-- BOUTON VICTOIRE JOUEUR 1 -->
-                    ${!isCompleted && isAdmin ? `
+                    <!-- BOUTON VICTOURE JOUEUR 1 - TOUJOURS VISIBLE SI ADMIN ET MATCH NON TERMINÉ -->
+                    ${!isCompleted ? `
                         <button onclick="setMatchWinner('${match.id}', '${match.player1.id}')" 
-                                class="win-btn" style="margin-top: 15px;">
+                                class="win-btn" 
+                                style="display: ${isAdmin ? 'block' : 'none'} !important; margin-top: 15px;">
                             🏆 ${match.player1.name.split(' ')[0]} Wins
                         </button>
                     ` : ''}
@@ -3588,27 +3595,27 @@
                 <div class="match-status">
                     <div style="font-size: 1.5rem; font-weight: bold; color: var(--accent); margin-bottom: 20px;">VS</div>
                     
-                    <!-- LIEN DE LA PARTIE -->
+                    <!-- LIEN DE LA PARTIE - TOUJOURS VISIBLE SI ADMIN -->
                     <div style="text-align: center;">
                         ${match.gameUrl ? `
                             <a href="${match.gameUrl}" target="_blank" 
                                style="display: inline-block; padding: 10px 20px; background: var(--success); color: white; border-radius: 8px; text-decoration: none; font-weight: 600; margin-bottom: 10px;">
                                 🔗 GAME
                             </a>
-                            <br>
                             ${isAdmin ? `
-                                <button onclick="promptGameLink('${match.id}')" 
-                                        style="padding: 6px 12px; background: var(--warning); color: white; border: none; border-radius: 6px; cursor: pointer; margin-top: 5px;">
-                                    ✏️ Edit
-                                </button>
+                                <div>
+                                    <button onclick="promptGameLink('${match.id}')" 
+                                            style="padding: 6px 12px; background: var(--warning); color: white; border: none; border-radius: 6px; cursor: pointer;">
+                                        ✏️ Edit
+                                    </button>
+                                </div>
                             ` : ''}
-                        ` : isAdmin ? `
+                        ` : `
                             <button onclick="promptGameLink('${match.id}')" 
-                                    style="padding: 12px 24px; background: var(--secondary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                                    style="display: ${isAdmin ? 'inline-block' : 'none'} !important;
+                                           padding: 12px 24px; background: var(--secondary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
                                 + Add link
                             </button>
-                        ` : `
-                            <div style="color: var(--text-secondary); font-size: 0.9rem;">No game link</div>
                         `}
                     </div>
                     
@@ -3623,8 +3630,10 @@
                 
                 <!-- JOUEUR 2 -->
                 <div class="match-player ${!winnerIsPlayer1 && isCompleted ? 'winner' : ''} ${winnerIsPlayer1 && isCompleted ? 'loser' : ''}">
+                    <!-- BOUTON SWAP COLORS - TOUJOURS VISIBLE SI ADMIN -->
                     ${isAdmin ? `
-                        <button onclick="swapMatchColors('${match.id}')" class="swap-colors-btn" title="Swap colors">
+                        <button onclick="swapMatchColors('${match.id}')" class="swap-colors-btn" title="Swap colors"
+                                style="display: ${isAdmin ? 'flex' : 'none'} !important;">
                             ↻
                         </button>
                     ` : ''}
@@ -3634,10 +3643,11 @@
                     <div class="player-label">${match.player2.name}</div>
                     <div class="player-subtext">${match.player2.rank} • ${state.eloRatings[match.player2.id] || 1500} Elo</div>
                     
-                    <!-- BOUTON VICTOURE JOUEUR 2 -->
-                    ${!isCompleted && isAdmin ? `
+                    <!-- BOUTON VICTOURE JOUEUR 2 - TOUJOURS VISIBLE SI ADMIN ET MATCH NON TERMINÉ -->
+                    ${!isCompleted ? `
                         <button onclick="setMatchWinner('${match.id}', '${match.player2.id}')" 
-                                class="win-btn" style="margin-top: 15px;">
+                                class="win-btn" 
+                                style="display: ${isAdmin ? 'block' : 'none'} !important; margin-top: 15px;">
                             🏆 ${match.player2.name.split(' ')[0]} Wins
                         </button>
                     ` : ''}
@@ -3653,31 +3663,54 @@
     
     document.getElementById('matchesZone').innerHTML = matchesHTML || 
         '<div class="empty-state">No matches for this round yet</div>';
+    
+    console.log("✅ Affichage mis à jour");
 }
     function updateModeIndicator() {
-        const headerControls = document.querySelector('.header-controls');
-        
-        let modeIndicator = document.getElementById('modeIndicator');
-        
-        if (!modeIndicator) {
-            modeIndicator = document.createElement('div');
-            modeIndicator.id = 'modeIndicator';
-            modeIndicator.style.marginRight = '15px';
-            headerControls.insertBefore(modeIndicator, headerControls.firstChild);
-        }
-        
-        if (isAdmin) {
-            modeIndicator.innerHTML = `
-                <span style="font-weight: 600; color: var(--accent);">🔧 Admin Mode</span>
-                <span class="guest-badge" style="background: var(--accent);">Full Control</span>
-            `;
-        } else {
-            modeIndicator.innerHTML = `
-                <span style="font-weight: 600; color: var(--text-secondary);">👁️ Guest Mode</span>
-                <span class="guest-badge" style="background: var(--secondary);">View Only</span>
-            `;
-        }
+    console.log("🎛️ updateModeIndicator, admin:", isAdmin);
+    
+    const headerControls = document.querySelector('.header-controls');
+    if (!headerControls) return;
+    
+    let modeIndicator = document.getElementById('modeIndicator');
+    
+    if (!modeIndicator) {
+        modeIndicator = document.createElement('div');
+        modeIndicator.id = 'modeIndicator';
+        modeIndicator.style.marginRight = '15px';
+        headerControls.insertBefore(modeIndicator, headerControls.firstChild);
     }
+    
+    if (isAdmin) {
+        modeIndicator.innerHTML = `
+            <span style="font-weight: 600; color: var(--accent);">🔧 Admin Mode</span>
+            <span class="guest-badge" style="background: var(--accent);">Full Control</span>
+        `;
+        
+        // FORCER la suppression de guest-mode
+        document.querySelector('.container')?.classList.remove('guest-mode');
+        
+        // FORCER l'affichage de tous les éléments admin
+        document.querySelectorAll('.admin-hidden').forEach(el => {
+            el.classList.remove('admin-hidden');
+        });
+        
+        // FORCER le rafraîchissement des matchs
+        setTimeout(() => {
+            if (state.activeTournament) {
+                updateMatchesDisplay();
+            }
+        }, 100);
+        
+    } else {
+        modeIndicator.innerHTML = `
+            <span style="font-weight: 600; color: var(--text-secondary);">👁️ Guest Mode</span>
+            <span class="guest-badge" style="background: var(--secondary);">View Only</span>
+        `;
+        
+        document.querySelector('.container')?.classList.add('guest-mode');
+    }
+}
 
     function updateRankings() {
         const sortedPlayers = [...state.players].sort((a, b) => {
@@ -4192,7 +4225,82 @@
             checkbox.checked = false;
         });
     }
+// Ajoutez cette fonction AVANT le DOMContentLoaded
+function forceAdminButtonsDisplay() {
+    console.log("🔧 Vérification de l'affichage admin...");
+    
+    if (isAdmin) {
+        console.log("👑 Mode admin détecté, forçage de l'affichage...");
+        
+        // 1. Supprimer guest-mode
+        document.querySelector('.container')?.classList.remove('guest-mode');
+        
+        // 2. Afficher tous les éléments cachés
+        document.querySelectorAll('.admin-hidden').forEach(el => {
+            el.classList.remove('admin-hidden');
+        });
+        
+        // 3. Forcer l'affichage CSS
+        document.querySelectorAll('.win-btn, .swap-colors-btn').forEach(btn => {
+            btn.style.display = 'block';
+            btn.style.visibility = 'visible';
+            btn.style.opacity = '1';
+        });
+        
+        // 4. Vérifier les boutons de lien
+        document.querySelectorAll('.match-card').forEach(card => {
+            const centerDiv = card.querySelector('.match-status');
+            if (centerDiv && !centerDiv.querySelector('button, a')) {
+                const btn = document.createElement('button');
+                btn.textContent = '+ Add Game Link';
+                btn.onclick = function() {
+                    const matchId = card.dataset.matchId;
+                    if (matchId) {
+                        promptGameLink(matchId);
+                    }
+                };
+                btn.style.cssText = 'padding: 10px 20px; background: var(--secondary); color: white; border: none; border-radius: 8px; cursor: pointer; margin: 10px;';
+                centerDiv.appendChild(btn);
+            }
+        });
+    }
+}
 
+// Et modifiez la fin du DOMContentLoaded :
+document.addEventListener('DOMContentLoaded', () => {
+    const savedTheme = localStorage.getItem('meijin-theme') || 'dark';
+    document.body.setAttribute('data-theme', savedTheme);
+    document.getElementById('themeIcon').textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+    
+    document.getElementById('searchPlayers').addEventListener('input', () => filterPlayers('all'));
+    
+    // Mode admin désactivé par défaut
+    isAdmin = false;
+    document.getElementById('adminControls').style.display = 'none';
+    document.getElementById('authSection').style.display = 'flex';
+    
+    // Masquer les éléments admin au chargement
+    toggleAdminElements(false);
+    
+    // Mettre à jour l'indicateur de mode
+    updateModeIndicator();
+    
+    // Exposer les fonctions au niveau global
+    // ... [toutes vos fonctions window.* = ...]
+    
+    // AJOUTEZ CETTE LIGNE :
+    window.forceAdminButtonsDisplay = forceAdminButtonsDisplay;
+    
+    console.log("✅ Application initialisée sans erreurs");
+    
+    // EXÉCUTEZ automatiquement après un délai
+    setTimeout(() => {
+        if (isAdmin) {
+            forceAdminButtonsDisplay();
+            updateMatchesDisplay();
+        }
+    }, 1500);
+});
     // Initialize
     document.addEventListener('DOMContentLoaded', () => {
         const savedTheme = localStorage.getItem('meijin-theme') || 'dark';
@@ -4252,4 +4360,5 @@
 </script>
 </body>
 </html>
+
 
