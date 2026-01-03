@@ -3320,19 +3320,6 @@ function logoutAdmin() {
 
     showNotification(`${winner.name} wins! Elo: +${eloChanges.newWinnerElo - winnerElo}`, 'success');
 }
-    const url = prompt('Collez le lien OGS/KGS de la partie :');
-    if (!url) return;
-    
-    // Trouver le match et ajouter le lien
-    const matchIndex = state.activeTournament.matches.findIndex(m => m.id === matchId);
-    if (matchIndex === -1) return;
-    
-    // Créer une copie mise à jour
-    const updatedMatches = [...state.activeTournament.matches];
-    updatedMatches[matchIndex] = {
-        ...updatedMatches[matchIndex],
-        gameUrl: url
-    };
     
     // Sauvegarder
     await updateDoc(systemRef, {
