@@ -3698,6 +3698,8 @@ function updateRoundProgress() {
 }
 
   function updateMatchesDisplay() {
+    console.log("=== updateMatchesDisplay appelée ===");
+    
     if (!state.activeTournament) {
         document.getElementById('matchesZone').innerHTML = '<div class="empty-state">No matches for this round yet</div>';
         return;
@@ -3705,8 +3707,10 @@ function updateRoundProgress() {
     
     const currentRound = state.activeTournament.round;
     const matchesThisRound = state.activeTournament.matches.filter(m => m.round === currentRound);
-
-    // Ajouter/retirer la classe guest-mode selon le statut admin
+    
+    console.log("Matches ce round:", matchesThisRound.length);
+    
+    // Mode admin/guest
     const container = document.querySelector('.container');
     if (isAdmin) {
         container.classList.remove('guest-mode');
@@ -3717,120 +3721,91 @@ function updateRoundProgress() {
     const matchesHTML = matchesThisRound.map(match => {
         const isCompleted = !!match.winner;
         const winnerIsPlayer1 = match.winner === match.player1.id;
-        const loserIsPlayer1 = isCompleted && !winnerIsPlayer1;
-        const loserIsPlayer2 = isCompleted && winnerIsPlayer1;
-        
-        // Déterminer si on doit afficher les boutons (admin seulement)
-        const shouldShowButtons = isAdmin;
         
         return `
             <div class="match-card ${isCompleted ? 'completed' : ''}" data-match-id="${match.id}">
-                <!-- Joueur 1 -->
-                <div class="match-player ${winnerIsPlayer1 && isCompleted ? 'winner' : ''} 
-                                        ${loserIsPlayer1 ? 'loser' : ''}">
-                    ${shouldShowButtons ? `
+                <!-- JOUEUR 1 -->
+                <div class="match-player ${winnerIsPlayer1 && isCompleted ? 'winner' : ''} ${!winnerIsPlayer1 && isCompleted ? 'loser' : ''}">
+                    ${isAdmin ? `
                         <button onclick="swapMatchColors('${match.id}')" class="swap-colors-btn" title="Swap colors">
                             ↻
                         </button>
                     ` : ''}
                     
-                    <div class="stone-display ${match.player1IsBlack ? 'black' : 'white'} ${loserIsPlayer1 ? 'loser-stone' : ''}"></div>
+                    <div class="stone-display ${match.player1IsBlack ? 'black' : 'white'}"></div>
                     
                     <div class="player-label">${match.player1.name}</div>
-                    <div class="player-subtext">${match.player1.rank} • ${state.eloRatings[match.player1.id] || state.systemSettings.initialElo} Elo</div>
+                    <div class="player-subtext">${match.player1.rank} • ${state.eloRatings[match.player1.id] || 1500} Elo</div>
                     
-                    <!-- État du match -->
-                    <div style="margin-top: 20px; width: 100%;">
-                        ${isCompleted ? (
-                            winnerIsPlayer1 ? 
-                                '<div class="badge badge-success">🏆 WINNER</div>' :
-                                '<div class="badge badge-danger">❌ DEFEATED</div>'
-                        ) : (
-                            shouldShowButtons ? 
-                                `<button onclick="setMatchWinner('${match.id}', '${match.player1.id}')" 
-                                        class="win-btn">
-                                    🏆 ${match.player1.name.split(' ')[0]} Wins
-                                </button>` :
-                                '<div style="color: #7f8c8d; font-size: 0.9rem; padding: 10px;">Match in progress</div>'
-                        )}
-                    </div>
+                    <!-- BOUTON VICTOIRE JOUEUR 1 -->
+                    ${!isCompleted && isAdmin ? `
+                        <button onclick="setMatchWinner('${match.id}', '${match.player1.id}')" 
+                                class="win-btn" style="margin-top: 15px;">
+                            🏆 ${match.player1.name.split(' ')[0]} Wins
+                        </button>
+                    ` : ''}
+                    
+                    ${isCompleted ? (winnerIsPlayer1 ? 
+                        '<div class="badge badge-success" style="margin-top: 15px;">🏆 WINNER</div>' : 
+                        '<div class="badge badge-danger" style="margin-top: 15px;">❌ DEFEATED</div>'
+                    ) : ''}
                 </div>
                 
-                <!-- Centre du match - ICI ON AJOUTE LES LIENS -->
+                <!-- CENTRE DU MATCH -->
                 <div class="match-status">
-                    VS
-                    ${isCompleted ? 
-                        '<div style="font-size: 0.8rem; color: #7f8c8d; margin-top: 5px;">Completed</div>' : 
-                        (shouldShowButtons ? 
-                            `<div style="margin-top: 10px;">
-                                <button onclick="setMatchDraw('${match.id}')" 
-                                        style="background: #95a5a6; color: white; padding: 8px 16px; border: none; border-radius: 8px; cursor: pointer; font-size: 0.8rem;">
-                                    🤝 Draw
-                                </button>
-                            </div>` : 
-                            '<div style="margin-top: 10px; font-size: 0.8rem; color: #7f8c8d;">Pending</div>'
-                        )
-                    }
+                    <div style="font-size: 1.5rem; font-weight: bold; color: var(--accent);">VS</div>
                     
-                    <!-- SECTION DES LIENS - ICI AU CENTRE -->
-                    <div style="margin-top: 20px; padding: 15px; background: rgba(31, 64, 104, 0.1); border-radius: 10px; min-width: 250px;">
+                    <!-- LIEN DE LA PARTIE -->
+                    <div style="margin-top: 20px; text-align: center;">
                         ${match.gameUrl ? `
-                            <div style="text-align: center;">
-                                <a href="${match.gameUrl}" target="_blank" 
-                                   style="display: inline-block; padding: 10px 20px; background: var(--success); color: white; border-radius: 8px; text-decoration: none; font-weight: 600;">
-                                    🔗 Voir la partie
-                                </a>
-                                ${shouldShowButtons ? `
+                            <a href="${match.gameUrl}" target="_blank" 
+                               style="display: inline-block; padding: 10px 20px; background: var(--success); color: white; border-radius: 8px; text-decoration: none; font-weight: 600; margin-bottom: 10px;">
+                                🔗 Voir la partie
+                            </a>
+                            ${isAdmin ? `
+                                <div>
                                     <button onclick="promptGameLink('${match.id}')" 
-                                            style="margin-top: 8px; padding: 6px 12px; background: var(--warning); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.8rem;">
+                                            style="padding: 6px 12px; background: var(--warning); color: white; border: none; border-radius: 6px; cursor: pointer;">
                                         ✏️ Modifier
                                     </button>
-                                ` : ''}
-                            </div>
-                        ` : shouldShowButtons ? `
-                            <div style="text-align: center;">
-                                <button onclick="promptGameLink('${match.id}')" 
-                                        style="padding: 12px 24px; background: var(--secondary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                                    + Ajouter lien OGS/KGS
-                                </button>
-                            </div>
+                                </div>
+                            ` : ''}
+                        ` : isAdmin ? `
+                            <button onclick="promptGameLink('${match.id}')" 
+                                    style="padding: 12px 24px; background: var(--secondary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                                + Ajouter lien
+                            </button>
                         ` : `
-                            <div style="text-align: center; color: var(--text-secondary); font-size: 0.9rem;">
-                                Aucun lien disponible
-                            </div>
+                            <div style="color: var(--text-secondary);">Pas de lien</div>
                         `}
                     </div>
                 </div>
                 
-                <!-- Joueur 2 -->
-                <div class="match-player ${!winnerIsPlayer1 && isCompleted ? 'winner' : ''} 
-                                        ${loserIsPlayer2 ? 'loser' : ''}">
-                    ${shouldShowButtons ? `
+                <!-- JOUEUR 2 -->
+                <div class="match-player ${!winnerIsPlayer1 && isCompleted ? 'winner' : ''} ${winnerIsPlayer1 && isCompleted ? 'loser' : ''}">
+                    ${isAdmin ? `
                         <button onclick="swapMatchColors('${match.id}')" class="swap-colors-btn" title="Swap colors">
                             ↻
                         </button>
                     ` : ''}
                     
-                    <div class="stone-display ${!match.player1IsBlack ? 'black' : 'white'} ${loserIsPlayer2 ? 'loser-stone' : ''}"></div>
+                    <div class="stone-display ${!match.player1IsBlack ? 'black' : 'white'}"></div>
                     
                     <div class="player-label">${match.player2.name}</div>
-                    <div class="player-subtext">${match.player2.rank} • ${state.eloRatings[match.player2.id] || state.systemSettings.initialElo} Elo</div>
+                    <div class="player-subtext">${match.player2.rank} • ${state.eloRatings[match.player2.id] || 1500} Elo</div>
                     
-                    <!-- État du match -->
-                    <div style="margin-top: 20px; width: 100%;">
-                        ${isCompleted ? (
-                            !winnerIsPlayer1 ? 
-                                '<div class="badge badge-success">🏆 WINNER</div>' :
-                                '<div class="badge badge-danger">❌ DEFEATED</div>'
-                        ) : (
-                            shouldShowButtons ? 
-                                `<button onclick="setMatchWinner('${match.id}', '${match.player2.id}')" 
-                                        class="win-btn">
-                                    🏆 ${match.player2.name.split(' ')[0]} Wins
-                                </button>` :
-                                '<div style="color: #7f8c8d; font-size: 0.9rem; padding: 10px;">Match in progress</div>'
-                        )}
-                    </div>
+                    <!-- BOUTON VICTOIRE JOUEUR 2 -->
+                    ${!isCompleted && isAdmin ? `
+                        <button onclick="setMatchWinner('${match.id}', '${match.player2.id}')" 
+                                class="win-btn" style="margin-top: 15px;">
+                            🏆 ${match.player2.name.split(' ')[0]} Wins
+                        </button>
+                    ` : ''}
+                    
+                    ${isCompleted ? (!winnerIsPlayer1 ? 
+                        '<div class="badge badge-success" style="margin-top: 15px;">🏆 WINNER</div>' : 
+                        '<div class="badge badge-danger" style="margin-top: 15px;">❌ DEFEATED</div>'
+                    ) : ''}
                 </div>
             </div>
         `;
@@ -3839,7 +3814,6 @@ function updateRoundProgress() {
     document.getElementById('matchesZone').innerHTML = matchesHTML || 
         '<div class="empty-state">No matches for this round yet</div>';
 }
-
 
     function updateModeIndicator() {
     const headerControls = document.querySelector('.header-controls');
