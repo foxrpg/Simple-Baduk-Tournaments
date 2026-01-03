@@ -2940,10 +2940,10 @@
                 pointsPerLoss: parseInt(document.getElementById('pointsPerLoss').value) || -5
             },
             roundProgress: Array(roundsCount).fill(0).map((_, i) => ({
-                round: i + 1,
-                completedMatches: 0,
-                totalMatches: 0
-            })),
+    round: i + 1,
+    completedMatches: 0,
+    totalMatches: Math.floor(participants.length / 2)
+})),
             seedings: participants.map(p => ({ 
                 id: p.id, 
                 seed: (state.eloRatings[p.id] || state.systemSettings.initialElo) + Math.random() 
@@ -3051,102 +3051,125 @@
     }
 
     // CORRIGÉ : Fonction pour déclarer un vainqueur
-    async function setMatchWinner(matchId, winnerId) {
-        if (!isAdmin) {
-            showNotification('Admin access required', 'error');
-            return;
-        }
-
-        const match = state.activeTournament.matches.find(m => m.id === matchId);
-        if (!match) return;
-
-        const loserId = winnerId === match.player1.id ? match.player2.id : match.player1.id;
-        
-        const winner = state.players.find(p => p.id === winnerId);
-        const loser = state.players.find(p => p.id === loserId);
-
-        if (!winner || !loser) return;
-
-        // Calculate Elo changes
-        const winnerElo = state.eloRatings[winnerId] || state.systemSettings.initialElo;
-        const loserElo = state.eloRatings[loserId] || state.systemSettings.initialElo;
-        const eloChanges = calculateElo(winnerElo, loserElo, state.systemSettings.eloKFactor);
-        
-        // Update Elo ratings
-        const updatedEloRatings = {
-            ...state.eloRatings,
-            [winnerId]: eloChanges.newWinnerElo,
-            [loserId]: eloChanges.newLoserElo
-        };
-
-        // Update players
-const pointsPerWin = state.activeTournament?.settings?.pointsPerWin || 10;
-const pointsPerLoss = state.activeTournament?.settings?.pointsPerLoss || -5;
-
-const updatedPlayers = state.players.map(p => {
-    if (p.id === winnerId) {
-        return {
-            ...p,
-            points: (p.points || 0) + pointsPerWin,
-            wins: (p.wins || 0) + 1,
-            elo: eloChanges.newWinnerElo,
-            history: [...(p.history || [0]), (p.points || 0) + pointsPerWin],
-            tournamentsPlayed: (p.tournamentsPlayed || 0) + 1
-        };
+   async function setMatchWinner(matchId, winnerId) {
+    if (!isAdmin) {
+        showNotification('Admin access required', 'error');
+        return;
     }
-    if (p.id === loserId) {
-        return {
-            ...p,
-            points: Math.max(0, (p.points || 0) + pointsPerLoss),
-            losses: (p.losses || 0) + 1,
-            elo: eloChanges.newLoserElo,
-            history: [...(p.history || [0]), Math.max(0, (p.points || 0) + pointsPerLoss)],
-            tournamentsPlayed: (p.tournamentsPlayed || 0) + 1
-        };
+
+    // VÉRIFICATION RENFORCÉE
+    if (!state || !state.activeTournament || !state.activeTournament.matches) {
+        showNotification('No active tournament found', 'error');
+        return;
     }
-    return p;
-});
 
-        // Update match
-        const updatedMatches = state.activeTournament.matches.map(m => 
-            m.id === matchId ? { 
-                ...m, 
-                winner: winnerId,
-                eloChanges: {
-                    winner: { from: winnerElo, to: eloChanges.newWinnerElo },
-                    loser: { from: loserElo, to: eloChanges.newLoserElo }
-                },
-                endedAt: new Date().toISOString()
-            } : m
-        );
+    const match = state.activeTournament.matches.find(m => m.id === matchId);
+    if (!match) {
+        showNotification('Match not found', 'error');
+        return;
+    }
 
-        // Update round progress
-        const currentRound = state.activeTournament.round;
-        const roundProgress = [...state.activeTournament.roundProgress];
-        const roundIndex = currentRound - 1;
-        
-        if (roundIndex >= 0 && roundIndex < roundProgress.length) {
-            const completedMatches = updatedMatches.filter(m => 
-                m.round === currentRound && m.winner
-            ).length;
-            
-            roundProgress[roundIndex] = {
-                ...roundProgress[roundIndex],
-                completedMatches: completedMatches
+    const loserId = winnerId === match.player1.id ? match.player2.id : match.player1.id;
+    
+    const winner = state.players.find(p => p.id === winnerId);
+    const loser = state.players.find(p => p.id === loserId);
+
+    if (!winner || !loser) {
+        showNotification('Players not found', 'error');
+        return;
+    }
+
+    // Calculate Elo changes
+    const winnerElo = state.eloRatings[winnerId] || state.systemSettings.initialElo;
+    const loserElo = state.eloRatings[loserId] || state.systemSettings.initialElo;
+    const eloChanges = calculateElo(winnerElo, loserElo, state.systemSettings.eloKFactor);
+    
+    // Update Elo ratings
+    const updatedEloRatings = {
+        ...state.eloRatings,
+        [winnerId]: eloChanges.newWinnerElo,
+        [loserId]: eloChanges.newLoserElo
+    };
+
+    // Update players
+    const pointsPerWin = state.activeTournament?.settings?.pointsPerWin || 10;
+    const pointsPerLoss = state.activeTournament?.settings?.pointsPerLoss || -5;
+
+    const updatedPlayers = state.players.map(p => {
+        if (p.id === winnerId) {
+            return {
+                ...p,
+                points: (p.points || 0) + pointsPerWin,
+                wins: (p.wins || 0) + 1,
+                elo: eloChanges.newWinnerElo,
+                history: [...(p.history || [0]), (p.points || 0) + pointsPerWin],
+                tournamentsPlayed: (p.tournamentsPlayed || 0) + 1
             };
         }
+        if (p.id === loserId) {
+            return {
+                ...p,
+                points: Math.max(0, (p.points || 0) + pointsPerLoss),
+                losses: (p.losses || 0) + 1,
+                elo: eloChanges.newLoserElo,
+                history: [...(p.history || [0]), Math.max(0, (p.points || 0) + pointsPerLoss)],
+                tournamentsPlayed: (p.tournamentsPlayed || 0) + 1
+            };
+        }
+        return p;
+    });
 
-        await updateDoc(systemRef, {
-            players: updatedPlayers,
-            eloRatings: updatedEloRatings,
-            "activeTournament.matches": updatedMatches,
-            "activeTournament.roundProgress": roundProgress,
-            lastAction: `🏆 ${winner.name} defeated ${loser.name}! (+${eloChanges.newWinnerElo - winnerElo} Elo)`
-        });
+    // Update match
+    const updatedMatches = state.activeTournament.matches.map(m => 
+        m.id === matchId ? { 
+            ...m, 
+            winner: winnerId,
+            eloChanges: {
+                winner: { from: winnerElo, to: eloChanges.newWinnerElo },
+                loser: { from: loserElo, to: eloChanges.newLoserElo }
+            },
+            endedAt: new Date().toISOString()
+        } : m
+    );
 
-        showNotification(`${winner.name} wins! Elo: +${eloChanges.newWinnerElo - winnerElo}`, 'success');
+    // Update round progress (CORRIGÉ)
+    const currentRound = state.activeTournament.round;
+    let roundProgress = state.activeTournament.roundProgress || [];
+    
+    // S'assurer que roundProgress est un tableau
+    if (!Array.isArray(roundProgress)) {
+        const participants = state.activeTournament.participants || [];
+        const totalRounds = state.activeTournament.totalRounds || 3;
+        roundProgress = Array(totalRounds).fill(0).map((_, i) => ({
+            round: i + 1,
+            completedMatches: 0,
+            totalMatches: Math.floor(participants.length / 2)
+        }));
     }
 
+    const roundIndex = currentRound - 1;
+    
+    if (roundIndex >= 0 && roundIndex < roundProgress.length) {
+        const completedMatches = updatedMatches.filter(m => 
+            m.round === currentRound && m.winner
+        ).length;
+        
+        roundProgress[roundIndex] = {
+            ...roundProgress[roundIndex],
+            completedMatches: completedMatches
+        };
+    }
+
+    await updateDoc(systemRef, {
+        players: updatedPlayers,
+        eloRatings: updatedEloRatings,
+        "activeTournament.matches": updatedMatches,
+        "activeTournament.roundProgress": roundProgress,
+        lastAction: `🏆 ${winner.name} defeated ${loser.name}! (+${eloChanges.newWinnerElo - winnerElo} Elo)`
+    });
+
+    showNotification(`${winner.name} wins! Elo: +${eloChanges.newWinnerElo - winnerElo}`, 'success');
+}
     async function endTournament() {
         if (!isAdmin) {
             showNotification('Admin access required', 'error');
@@ -4143,6 +4166,7 @@ if (isAdmin && state.activeTournament) {
 </script>
 </body>
 </html>
+
 
 
 
