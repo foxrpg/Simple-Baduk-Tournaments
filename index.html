@@ -3170,72 +3170,61 @@ async function promptGameLink(matchId) {
     }
 }
     async function createManualMatch() {
-        if (!isAdmin) {
-            showNotification('Admin access required', 'error');
-            return;
-
-            // Dans createManualMatch() et generateSwissPairs() :
-const newMatch = {
-    id: Date.now().toString(),
-    player1: p1,
-    player2: p2,
-    winner: null,
-    round: currentRound,
-    player1IsBlack: player1IsBlack,
-    createdAt: new Date().toISOString(),
-    gameUrl: null // ← AJOUTEZ CETTE LIGNE
-};
-        }
-
-        const p1Id = document.getElementById('player1Select').value;
-        const p2Id = document.getElementById('player2Select').value;
-
-        if (!p1Id || !p2Id) {
-            showNotification('Select two players', 'error');
-            return;
-        }
-
-        if (p1Id === p2Id) {
-            showNotification('Player cannot play against themselves', 'error');
-            return;
-        }
-
-        const p1 = state.activeTournament.participants.find(p => p.id === p1Id);
-        const p2 = state.activeTournament.participants.find(p => p.id === p2Id);
-
-        // Check for duplicate match in current round
-        const existingMatch = state.activeTournament.matches.find(m => 
-            ((m.player1.id === p1Id && m.player2.id === p2Id) ||
-            (m.player1.id === p2Id && m.player2.id === p1Id)) &&
-            m.round === state.activeTournament.round
-        );
-
-        if (existingMatch) {
-            showNotification('Match already exists in this round', 'error');
-            return;
-        }
-
-        // Déterminer qui a les noirs
-        const player1IsBlack = document.getElementById('manualBlack1').checked;
-
-        const newMatch = {
-            id: Date.now().toString(),
-            player1: p1,
-            player2: p2,
-            winner: null,
-            round: state.activeTournament.round,
-            player1IsBlack: player1IsBlack,
-            createdAt: new Date().toISOString()
-        };
-
-        const updatedMatches = [...state.activeTournament.matches, newMatch];
-        await updateDoc(systemRef, { 
-            "activeTournament.matches": updatedMatches,
-            lastAction: `⚔️ New match: ${p1.name} (${player1IsBlack ? 'Black' : 'White'}) vs ${p2.name} (${!player1IsBlack ? 'Black' : 'White'})`
-        });
-        
-        showNotification('Match created successfully', 'success');
+    if (!isAdmin) {
+        showNotification('Admin access required', 'error');
+        return;
     }
+
+    const p1Id = document.getElementById('player1Select').value;
+    const p2Id = document.getElementById('player2Select').value;
+
+    if (!p1Id || !p2Id) {
+        showNotification('Select two players', 'error');
+        return;
+    }
+
+    if (p1Id === p2Id) {
+        showNotification('Player cannot play against themselves', 'error');
+        return;
+    }
+
+    const p1 = state.activeTournament.participants.find(p => p.id === p1Id);
+    const p2 = state.activeTournament.participants.find(p => p.id === p2Id);
+
+    // Check for duplicate match in current round
+    const existingMatch = state.activeTournament.matches.find(m => 
+        ((m.player1.id === p1Id && m.player2.id === p2Id) ||
+        (m.player1.id === p2Id && m.player2.id === p1Id)) &&
+        m.round === state.activeTournament.round
+    );
+
+    if (existingMatch) {
+        showNotification('Match already exists in this round', 'error');
+        return;
+    }
+
+    // Déterminer qui a les noirs
+    const player1IsBlack = document.getElementById('manualBlack1').checked;
+
+    const newMatch = {
+        id: Date.now().toString(),
+        player1: p1,
+        player2: p2,
+        winner: null,
+        round: state.activeTournament.round,
+        player1IsBlack: player1IsBlack,
+        createdAt: new Date().toISOString(),
+        gameUrl: null // ← IMPORTANT : ajoutez cette ligne
+    };
+
+    const updatedMatches = [...state.activeTournament.matches, newMatch];
+    await updateDoc(systemRef, { 
+        "activeTournament.matches": updatedMatches,
+        lastAction: `⚔️ New match: ${p1.name} (${player1IsBlack ? 'Black' : 'White'}) vs ${p2.name} (${!player1IsBlack ? 'Black' : 'White'})`
+    });
+    
+    showNotification('Match created successfully', 'success');
+}
 
     // CORRIGÉ : Fonction pour échanger les couleurs d'un match
     async function swapMatchColors(matchId) {
@@ -3482,131 +3471,151 @@ const newMatch = {
 
     // Generate Swiss Pairs
     async function generateSwissPairs() {
-        if (!isAdmin || !state.activeTournament) {
-            showNotification('Admin access required', 'error');
-            return;
-
-            // Dans createManualMatch() et generateSwissPairs() :
-const newMatch = {
-    id: Date.now().toString(),
-    player1: p1,
-    player2: p2,
-    winner: null,
-    round: currentRound,
-    player1IsBlack: player1IsBlack,
-    createdAt: new Date().toISOString(),
-    gameUrl: null // ← AJOUTEZ CETTE LIGNE
-};
-        }
-
-        const participants = [...state.activeTournament.participants];
-        const currentRound = state.activeTournament.round;
-        const existingMatches = state.activeTournament.matches.filter(m => m.round === currentRound);
-        
-        if (existingMatches.length > 0) {
-            if (!confirm('Matches already exist for this round. Generate new pairs anyway?')) {
-                return;
-            }
-        }
-
-        // Calculate current scores for this tournament
-        const scores = participants.map(player => {
-            const wins = state.activeTournament.matches.filter(m => m.winner === player.id).length;
-            const losses = state.activeTournament.matches.filter(m => 
-                (m.player1.id === player.id || m.player2.id === player.id) && 
-                m.winner && 
-                m.winner !== player.id
-            ).length;
-            
-            // Get opponents from previous rounds
-            const opponents = state.activeTournament.matches
-                .filter(m => (m.player1.id === player.id || m.player2.id === player.id) && m.round < currentRound)
-                .map(m => m.player1.id === player.id ? m.player2.id : m.player1.id);
-            
-            return {
-                ...player,
-                score: wins,
-                losses: losses,
-                opponents: new Set(opponents),
-                played: opponents.length,
-                elo: state.eloRatings[player.id] || state.systemSettings.initialElo
-            };
-        });
-
-        // Sort by score (wins), then by opponent's strength, then by Elo
-        scores.sort((a, b) => {
-            if (b.score !== a.score) return b.score - a.score;
-            if (b.elo !== a.elo) return b.elo - a.elo;
-            return a.played - b.played;
-        });
-
-        // Generate pairs
-        const newMatches = [];
-        const paired = new Set();
-
-        for (let i = 0; i < scores.length; i++) {
-            if (paired.has(scores[i].id)) continue;
-
-            let bestOpponent = null;
-            let bestScoreDiff = Infinity;
-
-            // Find suitable opponent
-            for (let j = i + 1; j < scores.length; j++) {
-                if (!paired.has(scores[j].id) && !scores[i].opponents.has(scores[j].id)) {
-                    const scoreDiff = Math.abs(scores[i].score - scores[j].score);
-                    if (scoreDiff < bestScoreDiff) {
-                        bestScoreDiff = scoreDiff;
-                        bestOpponent = j;
-                    }
-                }
-            }
-
-            // If found suitable opponent
-            if (bestOpponent !== null) {
-                newMatches.push({
-                    id: Date.now() + Math.random(),
-                    player1: scores[i],
-                    player2: scores[bestOpponent],
-                    winner: null,
-                    round: currentRound,
-                    player1IsBlack: Math.random() > 0.5
-                });
-                
-                paired.add(scores[i].id);
-                paired.add(scores[bestOpponent].id);
-            } else {
-                // If no suitable opponent, pair with closest available
-                for (let j = i + 1; j < scores.length; j++) {
-                    if (!paired.has(scores[j].id)) {
-                        newMatches.push({
-                            id: Date.now() + Math.random(),
-                            player1: scores[i],
-                            player2: scores[j],
-                            winner: null,
-                            round: currentRound,
-                            player1IsBlack: Math.random() > 0.5
-                        });
-                        
-                        paired.add(scores[i].id);
-                        paired.add(scores[j].id);
-                        break;
-                    }
-                }
-            }
-        }
-
-        // Filter out existing matches for this round
-        const filteredExistingMatches = state.activeTournament.matches.filter(m => m.round !== currentRound);
-        const updatedMatches = [...filteredExistingMatches, ...newMatches];
-        
-        await updateDoc(systemRef, {
-            "activeTournament.matches": updatedMatches,
-            lastAction: `🎲 Swiss pairs generated for round ${currentRound}: ${newMatches.length} matches`
-        });
-
-        showNotification(`Generated ${newMatches.length} pairs for round ${currentRound}`, 'success');
+    if (!isAdmin || !state.activeTournament) {
+        showNotification('Admin access required', 'error');
+        return;
     }
 
+    const participants = [...state.activeTournament.participants];
+    const currentRound = state.activeTournament.round;
+    const existingMatches = state.activeTournament.matches.filter(m => m.round === currentRound);
+    
+    if (existingMatches.length > 0) {
+        if (!confirm('Matches already exist for this round. Generate new pairs anyway?')) {
+            return;
+        }
+    }
+
+    // Calculate current scores for this tournament
+    const scores = participants.map(player => {
+        const wins = state.activeTournament.matches.filter(m => m.winner === player.id).length;
+        const losses = state.activeTournament.matches.filter(m => 
+            (m.player1.id === player.id || m.player2.id === player.id) && 
+            m.winner && 
+            m.winner !== player.id
+        ).length;
+        
+        // Get opponents from previous rounds
+        const opponents = state.activeTournament.matches
+            .filter(m => (m.player1.id === player.id || m.player2.id === player.id) && m.round < currentRound)
+            .map(m => m.player1.id === player.id ? m.player2.id : m.player1.id);
+        
+        return {
+            ...player,
+            score: wins,
+            losses: losses,
+            opponents: new Set(opponents),
+            played: opponents.length,
+            elo: state.eloRatings[player.id] || state.systemSettings.initialElo
+        };
+    });
+
+    // Sort by score (wins), then by opponent's strength, then by Elo
+    scores.sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score;
+        if (b.elo !== a.elo) return b.elo - a.elo;
+        return a.played - b.played;
+    });
+
+    // Generate pairs
+    const newMatches = [];
+    const paired = new Set();
+
+    for (let i = 0; i < scores.length; i++) {
+        if (paired.has(scores[i].id)) continue;
+
+        let bestOpponent = null;
+        let bestScoreDiff = Infinity;
+
+        // Find suitable opponent
+        for (let j = i + 1; j < scores.length; j++) {
+            if (!paired.has(scores[j].id) && !scores[i].opponents.has(scores[j].id)) {
+                const scoreDiff = Math.abs(scores[i].score - scores[j].score);
+                if (scoreDiff < bestScoreDiff) {
+                    bestScoreDiff = scoreDiff;
+                    bestOpponent = j;
+                }
+            }
+        }
+
+        // If found suitable opponent
+        if (bestOpponent !== null) {
+            newMatches.push({
+                id: Date.now() + Math.random(),
+                player1: scores[i],
+                player2: scores[bestOpponent],
+                winner: null,
+                round: currentRound,
+                player1IsBlack: Math.random() > 0.5,
+                gameUrl: null // ← IMPORTANT : ajoutez cette ligne
+            });
+            
+            paired.add(scores[i].id);
+            paired.add(scores[bestOpponent].id);
+        } else {
+            // If no suitable opponent, pair with closest available
+            for (let j = i + 1; j < scores.length; j++) {
+                if (!paired.has(scores[j].id)) {
+                    newMatches.push({
+                        id: Date.now() + Math.random(),
+                        player1: scores[i],
+                        player2: scores[j],
+                        winner: null,
+                        round: currentRound,
+                        player1IsBlack: Math.random() > 0.5,
+                        gameUrl: null // ← IMPORTANT : ajoutez cette ligne
+                    });
+                    
+                    paired.add(scores[i].id);
+                    paired.add(scores[j].id);
+                    break;
+                }
+            }
+        }
+    }
+
+    // Filter out existing matches for this round
+    const filteredExistingMatches = state.activeTournament.matches.filter(m => m.round !== currentRound);
+    const updatedMatches = [...filteredExistingMatches, ...newMatches];
+    
+    await updateDoc(systemRef, {
+        "activeTournament.matches": updatedMatches,
+        lastAction: `🎲 Swiss pairs generated for round ${currentRound}: ${newMatches.length} matches`
+    });
+
+    showNotification(`Generated ${newMatches.length} pairs for round ${currentRound}`, 'success');
+}
+
+// Ajoutez cette fonction après les autres fonctions
+function testGameLinkSystem() {
+    console.log("=== TEST DU SYSTÈME DE LIENS ===");
+    
+    // 1. Vérifier si on est admin
+    console.log("Admin mode:", isAdmin);
+    
+    // 2. Vérifier s'il y a des matches
+    if (!state.activeTournament || !state.activeTournament.matches) {
+        console.log("Aucun tournoi actif ou pas de matches");
+        return;
+    }
+    
+    console.log("Nombre de matches:", state.activeTournament.matches.length);
+    
+    // 3. Tester le premier match
+    if (state.activeTournament.matches.length > 0) {
+        const firstMatch = state.activeTournament.matches[0];
+        console.log("Premier match:", firstMatch);
+        console.log("ID du match:", firstMatch.id);
+        console.log("URL actuelle:", firstMatch.gameUrl || "Aucune");
+        
+        // 4. Tester la fonction promptGameLink
+        console.log("Test de promptGameLink...");
+        promptGameLink(firstMatch.id);
+    }
+}
+
+// Exposez la fonction pour tester
+window.testGameLinkSystem = testGameLinkSystem;
     async function clearCurrentMatches() {
         if (!isAdmin) {
             showNotification('Admin access required', 'error');
