@@ -3321,13 +3321,6 @@ function logoutAdmin() {
     showNotification(`${winner.name} wins! Elo: +${eloChanges.newWinnerElo - winnerElo}`, 'success');
 }
     
-    // Sauvegarder
-    await updateDoc(systemRef, {
-        "activeTournament.matches": updatedMatches
-    });
-    
-    alert('Lien ajouté !');
-    updateMatchesDisplay(); // Rafraîchir
 
     async function endTournament() {
         if (!isAdmin) {
