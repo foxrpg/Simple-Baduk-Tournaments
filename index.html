@@ -3095,83 +3095,24 @@ function logoutAdmin() {
 async function promptGameLink(matchId) {
     console.log("🎮 promptGameLink EXÉCUTÉ pour:", matchId);
     
-    // TEST FORCÉ - Enlever après vérification
-    alert("DEBUG: Fonction appelée ! Match ID: " + matchId);
-    
-    // Forcer le mode admin pour test
-    const wasAdmin = isAdmin;
-    isAdmin = true;
-    
-    if (!state.activeTournament) {
-        alert("Aucun tournoi actif");
-        isAdmin = wasAdmin;
-        return;
-    }
-    
-    const match = state.activeTournament.matches.find(m => m.id === matchId);
-    if (!match) {
-        alert("Match non trouvé: " + matchId);
-        console.log("Matches disponibles:", state.activeTournament.matches.map(m => m.id));
-        isAdmin = wasAdmin;
-        return;
-    }
-    
-    const testLink = "https://online-go.com/game/test-" + Date.now();
-    const response = confirm(`Ajouter un lien de test pour:\n${match.player1.name} vs ${match.player2.name} ?\n\nLien: ${testLink}`);
-    
-    if (response) {
-        // Mettre à jour localement
-        state.activeTournament.matches = state.activeTournament.matches.map(m => {
-            if (m.id === matchId) {
-                return { ...m, gameUrl: testLink };
-            }
-            return m;
-        });
-        
-        // Rafraîchir
-        updateMatchesDisplay();
-        
-        // Essayer Firebase
-        try {
-            await updateDoc(systemRef, {
-                "activeTournament.matches": state.activeTournament.matches
-            });
-            console.log("✅ Sauvegardé dans Firebase");
-        } catch (err) {
-            console.log("⚠️ Sauvegarde Firebase échouée, mais local OK");
-        }
-        
-        alert("✅ Lien ajouté !");
-    }
-    
-    isAdmin = wasAdmin;
-}
-    console.log("=== promptGameLink appelée ===");
-    console.log("Match ID:", matchId);
-    console.log("Admin mode:", isAdmin);
-    
-    // 1. Vérifier le mode admin
     if (!isAdmin) {
-        alert("❌ Mode admin requis pour ajouter un lien");
+        showNotification('❌ Mode admin requis pour ajouter un lien', 'error');
         return;
     }
     
-    // 2. Vérifier qu'il y a un tournoi actif
     if (!state.activeTournament) {
-        alert("❌ Aucun tournoi actif");
+        showNotification('❌ Aucun tournoi actif', 'error');
         return;
     }
     
-    // 3. Trouver le match
     const match = state.activeTournament.matches.find(m => m.id === matchId);
     if (!match) {
-        alert("❌ Match non trouvé");
+        showNotification('❌ Match non trouvé', 'error');
         return;
     }
     
     console.log("Match trouvé:", match);
     
-    // 4. Demander le lien
     const currentLink = match.gameUrl || "";
     const player1Name = match.player1.name.split(" ")[0];
     const player2Name = match.player2.name.split(" ")[0];
@@ -3187,22 +3128,19 @@ async function promptGameLink(matchId) {
         return;
     }
     
-    // 5. Mettre à jour les matches
+    // Mettre à jour les matches
     const updatedMatches = state.activeTournament.matches.map(m => {
         if (m.id === matchId) {
-            const updatedMatch = {
+            return {
                 ...m,
                 gameUrl: newLink.trim() || null
             };
-            console.log("Match mis à jour:", updatedMatch);
-            return updatedMatch;
         }
         return m;
     });
     
-    // 6. Sauvegarder dans Firebase
+    // Sauvegarder dans Firebase
     try {
-        console.log("Sauvegarde Firebase...");
         await updateDoc(systemRef, {
             "activeTournament.matches": updatedMatches
         });
@@ -3214,7 +3152,7 @@ async function promptGameLink(matchId) {
             showNotification(`✅ Lien supprimé`, "success");
         }
         
-        // 7. Rafraîchir l'affichage IMMÉDIATEMENT
+        // Rafraîchir l'affichage
         updateMatchesDisplay();
         
     } catch (error) {
@@ -3222,6 +3160,7 @@ async function promptGameLink(matchId) {
         showNotification("❌ Erreur de sauvegarde : " + error.message, "error");
     }
 }
+
     async function createManualMatch() {
     if (!isAdmin) {
         showNotification('Admin access required', 'error');
@@ -3755,6 +3694,38 @@ window.testGameLinkSystem = testGameLinkSystem;
     }
 
 function updateRoundProgress() {
+    const progressSection = document.getElementById('roundProgressSection'); // Corrigez l'ID
+    if (!progressSection) return;
+    
+    if (!state.activeTournament || !state.activeTournament.roundProgress || 
+        !Array.isArray(state.activeTournament.roundProgress)) {
+        progressSection.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text-secondary);">Progression non disponible</div>';
+        return;
+    }
+    
+    const tournament = state.activeTournament; // Utilisez state.activeTournament
+    const html = tournament.roundProgress.map((round, index) => {
+        const isCurrent = index + 1 === tournament.round;
+        const progress = round.totalMatches > 0 ? (round.completedMatches / round.totalMatches) * 100 : 0;
+        
+        return `
+            <div class="round-item ${isCurrent ? 'pulse' : ''}">
+                <div class="round-number" style="${isCurrent ? 'background: var(--accent);' : ''}">
+                    ${index + 1}
+                </div>
+                <div class="round-info">
+                    <div class="round-title">Round ${index + 1} ${isCurrent ? '(Current)' : ''}</div>
+                    <div class="round-stats">
+                        <span>${round.completedMatches || 0}/${round.totalMatches || 0} matches</span>
+                        <span>${Math.round(progress)}% complete</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    progressSection.innerHTML = html;
+}
     const progressSection = document.getElementById('round-progress');
     if (!progressSection) return;
     
