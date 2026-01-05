@@ -3593,6 +3593,250 @@ async function archiveCurrentRound() {
     }
 }
 
+// Ajoutez cette fonction et appelez-la depuis la console
+function debugRoundHistory() {
+    console.log("📊 DEBUG Round History:");
+    console.log("Total rounds archived:", state.roundHistory?.length || 0);
+    
+    if (state.roundHistory && state.roundHistory.length > 0) {
+        state.roundHistory.forEach((round, index) => {
+            console.log(`Round ${index + 1}:`, {
+                id: round.id,
+                tournamentId: round.tournamentId || round.tourneyId,
+                tournamentName: round.tournamentName,
+                roundNumber: round.roundNumber,
+                date: round.date,
+                matches: round.matches?.length || 0
+            });
+        });
+    } else {
+        console.log("❌ No rounds in roundHistory");
+    }
+    
+    // Vérifiez aussi dans tournamentHistory
+    console.log("📊 DEBUG Tournament History:");
+    console.log("Total tournaments:", state.tournamentHistory?.length || 0);
+    
+    if (state.tournamentHistory && state.tournamentHistory.length > 0) {
+        state.tournamentHistory.forEach((tournament, index) => {
+            console.log(`Tournament ${index + 1}: "${tournament.name}"`, {
+                id: tournament.id,
+                rounds: tournament.rounds?.length || 0,
+                matches: tournament.matches?.length || 0
+            });
+        });
+    }
+}
+
+// Dans le DOMContentLoaded, exposez-la :
+window.debugRoundHistory = debugRoundHistory;
+
+async function recoverLostRounds() {
+    if (!isAdmin) {
+        showNotification('Admin access required', 'error');
+        return;
+    }
+    
+    if (!confirm('This will attempt to recover lost rounds from existing matches. Continue?')) {
+        return;
+    }
+    
+    console.log("🔄 Attempting to recover lost rounds...");
+    
+    // Vérifiez d'abord si vous avez un tournoi actif avec des matchs
+    if (!state.activeTournament || !state.activeTournament.matches || state.activeTournament.matches.length === 0) {
+        showNotification('No active tournament with matches found', 'error');
+        return;
+    }
+    
+    // Group matches by round
+    const matchesByRound = {};
+    state.activeTournament.matches.forEach(match => {
+        const round = match.round || 1;
+        if (!matchesByRound[round]) {
+            matchesByRound[round] = [];
+        }
+        matchesByRound[round].push(match);
+    });
+    
+    console.log("Matches grouped by round:", matchesByRound);
+    
+    // Create round objects for each round with matches
+    const recoveredRounds = [];
+    
+    Object.keys(matchesByRound).sort((a, b) => a - b).forEach(roundNum => {
+        const roundMatches = matchesByRound[roundNum];
+        const completedMatches = roundMatches.filter(m => m.winner).length;
+        
+        const roundData = {
+            id: `recovered_${state.activeTournament.id}_${roundNum}_${Date.now()}`,
+            tournamentId: state.activeTournament.id,
+            tournamentName: state.activeTournament.name,
+            roundNumber: parseInt(roundNum),
+            date: new Date().toISOString(),
+            timestamp: Date.now(),
+            matches: roundMatches.map(match => ({
+                matchId: match.id,
+                player1: {
+                    id: match.player1.id,
+                    name: match.player1.name,
+                    rank: match.player1.rank,
+                    playedBlack: match.player1IsBlack,
+                    elo: state.eloRatings[match.player1.id] || state.systemSettings.initialElo
+                },
+                player2: {
+                    id: match.player2.id,
+                    name: match.player2.name,
+                    rank: match.player2.rank,
+                    playedBlack: !match.player1IsBlack,
+                    elo: state.eloRatings[match.player2.id] || state.systemSettings.initialElo
+                },
+                winner: match.winner,
+                winnerName: match.winner ? 
+                    (match.winner === match.player1.id ? match.player1.name : match.player2.name) : 
+                    null,
+                gameLink: match.gameUrl,
+                eloChanges: match.eloChanges || null,
+                completedAt: match.endedAt || new Date().toISOString()
+            })),
+            totalMatches: roundMatches.length,
+            completedMatches: completedMatches
+        };
+        
+        recoveredRounds.push(roundData);
+        
+        console.log(`Recovered round ${roundNum}:`, {
+            matches: roundMatches.length,
+            completed: completedMatches
+        });
+    });
+    
+    // Check if we already have these rounds in roundHistory
+    const existingRoundIds = new Set((state.roundHistory || []).map(r => `${r.tournamentId}_${r.roundNumber}`));
+    const newRounds = recoveredRounds.filter(r => 
+        !existingRoundIds.has(`${r.tournamentId}_${r.roundNumber}`)
+    );
+    
+    if (newRounds.length === 0) {
+        showNotification('No new rounds to recover (all rounds already archived)', 'info');
+        return;
+    }
+    
+    // Add to roundHistory
+    const updatedRoundHistory = [...(state.roundHistory || []), ...newRounds];
+    
+    try {
+        // Also update the tournament with rounds
+        const tournamentIndex = state.tournamentHistory.findIndex(t => t.id === state.activeTournament.id);
+        let updatedTournamentHistory = [...state.tournamentHistory];
+        
+        if (tournamentIndex !== -1) {
+            const tournament = updatedTournamentHistory[tournamentIndex];
+            updatedTournamentHistory[tournamentIndex] = {
+                ...tournament,
+                rounds: [...(tournament.rounds || []), ...newRounds]
+            };
+        }
+        
+        // Save to Firebase
+        await updateDoc(systemRef, {
+            roundHistory: updatedRoundHistory,
+            tournamentHistory: updatedTournamentHistory,
+            lastAction: `🔍 Recovered ${newRounds.length} lost rounds`
+        });
+        
+        showNotification(`✅ Recovered ${newRounds.length} rounds with ${recoveredRounds.reduce((sum, r) => sum + r.matches.length, 0)} matches`, 'success');
+        
+        console.log("Recovered rounds details:", newRounds);
+        
+    } catch (error) {
+        console.error("Error recovering rounds:", error);
+        showNotification("Error: " + error.message, 'error');
+    }
+}
+
+// Exposez la fonction
+window.recoverLostRounds = recoverLostRounds;
+
+async function manuallyArchiveCurrentRound() {
+    if (!isAdmin) {
+        showNotification('Admin access required', 'error');
+        return;
+    }
+    
+    if (!state.activeTournament) {
+        showNotification('No active tournament', 'error');
+        return;
+    }
+    
+    const currentRound = state.activeTournament.round;
+    const matchesThisRound = state.activeTournament.matches.filter(m => m.round === currentRound);
+    
+    if (matchesThisRound.length === 0) {
+        showNotification('No matches in current round to archive', 'warning');
+        return;
+    }
+    
+    const roundName = prompt('Enter a name for this archived round:', `Round ${currentRound} - ${state.activeTournament.name}`);
+    if (!roundName) return;
+    
+    const roundData = {
+        id: `manual_${state.activeTournament.id}_${currentRound}_${Date.now()}`,
+        tournamentId: state.activeTournament.id,
+        tournamentName: state.activeTournament.name,
+        roundNumber: currentRound,
+        roundName: roundName,
+        date: new Date().toISOString(),
+        timestamp: Date.now(),
+        matches: matchesThisRound.map(match => ({
+            matchId: match.id,
+            player1: {
+                id: match.player1.id,
+                name: match.player1.name,
+                rank: match.player1.rank,
+                playedBlack: match.player1IsBlack,
+                elo: state.eloRatings[match.player1.id] || state.systemSettings.initialElo
+            },
+            player2: {
+                id: match.player2.id,
+                name: match.player2.name,
+                rank: match.player2.rank,
+                playedBlack: !match.player1IsBlack,
+                elo: state.eloRatings[match.player2.id] || state.systemSettings.initialElo
+            },
+            winner: match.winner,
+            winnerName: match.winner ? 
+                (match.winner === match.player1.id ? match.player1.name : match.player2.name) : 
+                null,
+            gameLink: match.gameUrl,
+            eloChanges: match.eloChanges || null,
+            completedAt: match.endedAt || new Date().toISOString()
+        })),
+        totalMatches: matchesThisRound.length,
+        completedMatches: matchesThisRound.filter(m => m.winner).length,
+        manuallyArchived: true
+    };
+    
+    const updatedRoundHistory = [...(state.roundHistory || []), roundData];
+    
+    try {
+        await updateDoc(systemRef, {
+            roundHistory: updatedRoundHistory,
+            lastAction: `📁 Manually archived round ${currentRound}: "${roundName}"`
+        });
+        
+        showNotification(`✅ Round ${currentRound} archived manually as "${roundName}"`, 'success');
+        
+        console.log("Manually archived round:", roundData);
+        
+    } catch (error) {
+        console.error("Error manually archiving round:", error);
+        showNotification("Error: " + error.message, 'error');
+    }
+}
+
+window.manuallyArchiveCurrentRound = manuallyArchiveCurrentRound;
+
     // Generate Swiss Pairs
     async function generateSwissPairs() {
     if (!isAdmin || !state.activeTournament) {
@@ -3660,15 +3904,15 @@ async function archiveCurrentRound() {
 
         return {
             ...player,
-            id: player.id,
-            wins: winsInTournament,
-            losses: lossesInTournament,
-            score: score,
-            buchholz: buchholz,
-            sonnebornBerger: sonnebornBerger,
-            opponents: new Set(opponents),
-            elo: state.eloRatings[player.id] || state.systemSettings.initialElo,
-            played: opponents.length
+             id: player.id,
+    wins: winsInTournament,
+    losses: lossesInTournament,
+    score: score,
+    buchholz: buchholz,
+    sonnebornBerger: sonnebornBerger,
+    opponents: opponents, // <-- CORRIGÉ : tableau simple
+    elo: state.eloRatings[player.id] || state.systemSettings.initialElo,
+    played: opponents.length
         };
     });
 
