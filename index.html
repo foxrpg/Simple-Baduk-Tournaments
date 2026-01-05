@@ -2477,19 +2477,22 @@ let state = {
 
     // Tab Switching
     function switchTab(tabName) {
-        document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-        
-        event.target.classList.add('active');
-        
-        if (tabName === 'active') {
-            document.getElementById('activeTournamentCard').classList.add('active');
-        } else if (tabName === 'history') {
-            document.getElementById('tournamentHistoryCard').classList.add('active');
-        } else if (tabName === 'manual') {
-            document.getElementById('manualManagementCard').classList.add('active');
-        }
+    document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+    
+    event.target.classList.add('active');
+    
+    if (tabName === 'active') {
+        document.getElementById('activeTournamentCard').classList.add('active');
+    } else if (tabName === 'archive') {  // <-- AJOUTEZ CETTE LIGNE
+        document.getElementById('roundsArchiveCard').classList.add('active');
+        updateRoundsArchive(); // Rafraîchir l'affichage
+    } else if (tabName === 'history') {
+        document.getElementById('tournamentHistoryCard').classList.add('active');
+    } else if (tabName === 'manual') {
+        document.getElementById('manualManagementCard').classList.add('active');
     }
+}
 
     // =================================================================
     // NOUVELLES FONCTIONNALITÉS
@@ -3243,9 +3246,31 @@ function displayTournamentRoundsDetails(rounds) {
         });
         
         showNotification('Match created successfully', 'success');
+    
+function switchTab(tabName) {
+    // Retirer la classe active de tous les tabs
+    document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+    
+    // Ajouter la classe active au tab cliqué
+    event.target.classList.add('active');
+    
+    // Afficher le contenu correspondant
+    if (tabName === 'active') {
+        document.getElementById('activeTournamentCard').classList.add('active');
+    } else if (tabName === 'archive') {
+        document.getElementById('roundsArchiveCard').classList.add('active');
+        // Rafraîchir l'affichage des rounds archivés
+        if (typeof updateRoundsArchive === 'function') {
+            updateRoundsArchive();
+        }
+    } else if (tabName === 'history') {
+        document.getElementById('tournamentHistoryCard').classList.add('active');
+    } else if (tabName === 'manual') {
+        document.getElementById('manualManagementCard').classList.add('active');
     }
+}
 
-    function switchTab(tabName) {
     document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
     
