@@ -779,55 +779,7 @@
             gap: 15px;
         }
 
-        <!-- Bannière des récompenses (visible seulement pour le dernier tournoi de la saison) -->
-<div id="seasonRewardsBanner" class="format-banner" style="display: none; background: linear-gradient(135deg, rgba(255,215,0,0.15) 0%, rgba(255,165,0,0.1) 100%); border-left: 4px solid var(--gold); margin-top: 20px;">
-    <div class="format-title">
-        <span>🎁 Last Tournament Rewards</span>
-        <span style="font-size: 0.8rem; background: var(--gold); color: black; padding: 2px 8px; border-radius: 12px; font-weight: bold;">
-            SPECIAL PRIZES
-        </span>
-    </div>
-    <div class="format-details" style="grid-template-columns: repeat(3, 1fr); gap: 20px;">
-        <div style="display: flex; flex-direction: column; gap: 5px;">
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <div style="width: 30px; height: 30px; background: var(--gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1rem;">
-                    1
-                </div>
-                <span style="font-weight: 600; color: var(--text-primary);">🥇 1st Place</span>
-            </div>
-            <div style="font-size: 0.9rem; color: var(--text-secondary); margin-left: 40px;" id="reward1">
-                30% off coupon
-            </div>
-        </div>
         
-        <div style="display: flex; flex-direction: column; gap: 5px;">
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <div style="width: 30px; height: 30px; background: var(--silver); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1rem;">
-                    2
-                </div>
-                <span style="font-weight: 600; color: var(--text-primary);">🥈 2nd Place</span>
-            </div>
-            <div style="font-size: 0.9rem; color: var(--text-secondary); margin-left: 40px;" id="reward2">
-                $10 off coupon
-            </div>
-        </div>
-        
-        <div style="display: flex; flex-direction: column; gap: 5px;">
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <div style="width: 30px; height: 30px; background: var(--bronze); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1rem;">
-                    3
-                </div>
-                <span style="font-weight: 600; color: var(--text-primary);">🥉 3rd Place</span>
-            </div>
-            <div style="font-size: 0.9rem; color: var(--text-secondary); margin-left: 40px;" id="reward3">
-                One-hour personalized lesson with Hugo
-            </div>
-        </div>
-    </div>
-    <div style="margin-top: 15px; font-size: 0.85rem; color: var(--text-secondary); font-style: italic;">
-        Rewards apply only to this last tournament of the season
-    </div>
-</div>
 
         .tournament-title {
             font-size: 1.8rem;
@@ -2085,6 +2037,56 @@
                             </button>
                         </div>
                     </div>
+
+                    <!-- Bannière des récompenses (visible seulement pour le dernier tournoi de la saison) -->
+<div id="seasonRewardsBanner" class="format-banner" style="display: none; background: linear-gradient(135deg, rgba(255,215,0,0.15) 0%, rgba(255,165,0,0.1) 100%); border-left: 4px solid var(--gold); margin-top: 20px;">
+    <div class="format-title">
+        <span>🎁 Last Tournament Rewards</span>
+        <span style="font-size: 0.8rem; background: var(--gold); color: black; padding: 2px 8px; border-radius: 12px; font-weight: bold;">
+            SPECIAL PRIZES
+        </span>
+    </div>
+    <div class="format-details" style="grid-template-columns: repeat(3, 1fr); gap: 20px;">
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="width: 30px; height: 30px; background: var(--gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1rem;">
+                    1
+                </div>
+                <span style="font-weight: 600; color: var(--text-primary);">🥇 1st Place</span>
+            </div>
+            <div style="font-size: 0.9rem; color: var(--text-secondary); margin-left: 40px;" id="reward1">
+                30% off coupon
+            </div>
+        </div>
+        
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="width: 30px; height: 30px; background: var(--silver); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1rem;">
+                    2
+                </div>
+                <span style="font-weight: 600; color: var(--text-primary);">🥈 2nd Place</span>
+            </div>
+            <div style="font-size: 0.9rem; color: var(--text-secondary); margin-left: 40px;" id="reward2">
+                $10 off coupon
+            </div>
+        </div>
+        
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="width: 30px; height: 30px; background: var(--bronze); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1rem;">
+                    3
+                </div>
+                <span style="font-weight: 600; color: var(--text-primary);">🥉 3rd Place</span>
+            </div>
+            <div style="font-size: 0.9rem; color: var(--text-secondary); margin-left: 40px;" id="reward3">
+                One-hour personalized lesson with Hugo
+            </div>
+        </div>
+    </div>
+    <div style="margin-top: 15px; font-size: 0.85rem; color: var(--text-secondary); font-style: italic;">
+        Rewards apply only to this last tournament of the season
+    </div>
+</div>
 
                     <!-- Gestion manuelle avancée -->
                     <div class="advanced-match-controls admin-hidden">
@@ -4918,7 +4920,55 @@ async function deleteRound(roundId) {
             `;
         }
     }
+
 }
+        const tournamentTypeIcon = document.getElementById('tournamentTypeIcon');
+        const tournamentTypeText = document.getElementById('tournamentTypeText');
+        
+        if (state.activeTournament) {
+            document.getElementById('activeTournamentCard').style.display = 'block';
+            document.getElementById('tournamentSetupCard').style.display = 'none';
+            
+            document.getElementById('tournamentTitle').textContent = state.activeTournament.name;
+            document.getElementById('currentRound').textContent = state.activeTournament.round;
+            document.getElementById('totalRounds').textContent = state.activeTournament.totalRounds;
+            document.getElementById('tournamentPlayerCount').textContent = state.activeTournament.participants.length;
+            
+            if (state.activeTournament.type === 'single-elimination') {
+                tournamentTypeIcon.textContent = '🏆';
+                tournamentTypeText.textContent = 'Single Elimination';
+            } else {
+                tournamentTypeIcon.textContent = '♟️';
+                tournamentTypeText.textContent = 'Swiss System';
+            }
+            
+            if (isAdmin && state.activeTournament) {
+                document.getElementById('roundsCount').value = state.activeTournament.totalRounds || 3;
+                document.getElementById('pointsPerWin').value = state.activeTournament.settings?.pointsPerWin || 10;
+                document.getElementById('pointsPerLoss').value = state.activeTournament.settings?.pointsPerLoss || -5;
+            }
+            
+            const participants = state.activeTournament.participants || [];
+            const playerOptions = participants.map(p => 
+                `<option value="${p.id}">${p.name} (${p.rank}) - ${state.eloRatings[p.id] || state.systemSettings.initialElo} Elo</option>`
+            ).join('');
+            
+            document.getElementById('player1Select').innerHTML = `<option value="">Select player 1</option>${playerOptions}`;
+            document.getElementById('player2Select').innerHTML = `<option value="">Select player 2</option>${playerOptions}`;
+            
+            document.getElementById('forceWinnerSelect').innerHTML = `<option value="">Select winner (optional)</option>${playerOptions}`;
+            
+            updateMatchesDisplay();
+        } else {
+            document.getElementById('activeTournamentCard').style.display = 'none';
+            document.getElementById('tournamentSetupCard').style.display = 'block';
+            
+            updateEnrollmentZone();
+            
+            const nextTournamentNum = (state.tournamentCount % 4) + 1;
+            document.getElementById('nextTournamentNumber').textContent = nextTournamentNum;
+        }
+
     function updateEnrollmentZone() {
         const playersHTML = state.players.map(player => `
             <label class="enrollment-item">
@@ -5168,7 +5218,7 @@ window.testSeasonRewards = testSeasonRewards;
         const seasonProgress = (tournamentInSeason / 4) * 100;
         document.getElementById('seasonProgressText').textContent = `${tournamentInSeason}/4`;
         document.getElementById('seasonProgressFill').style.width = `${seasonProgress}%`;
-    }
+    
 
     function updateStatistics() {
         const totalPlayers = state.players.length;
