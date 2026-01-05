@@ -62,12 +62,6 @@
             --shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.4);
         }
 
-        const SEASON_REWARDS = {
-    1: "30% off coupon",
-    2: "$10 off coupon", 
-    3: "One-hour personalized lesson with Hugo"
-};
-
         * {
             margin: 0;
             padding: 0;
@@ -2267,6 +2261,14 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getFirestore, doc, onSnapshot, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    
+        // Récompenses de saison - DÉPLACÉ ICI
+    const SEASON_REWARDS = {
+        1: "30% off coupon",
+        2: "$10 off coupon", 
+        3: "One-hour personalized lesson with Hugo"
+    };
 
     const firebaseConfig = {
         apiKey: "AIzaSyDzse9aVDIAFscTbGs-3Disy2wdRHWPRF0",
@@ -4541,8 +4543,20 @@ window.manuallyArchiveCurrentRound = manuallyArchiveCurrentRound;
         });
         
         const winner = tournament.results?.[0]?.playerName || 'N/A';
+        
+        // MODIFICATION ICI : Compter les matchs depuis les rounds archivés
+        let totalMatchesCount = 0;
+        if (tournament.rounds && tournament.rounds.length > 0) {
+            // Compter tous les matchs de tous les rounds
+            totalMatchesCount = tournament.rounds.reduce((total, round) => {
+                return total + (round.matches?.length || 0);
+            }, 0);
+        } else {
+            // Fallback sur les anciens matchs
+            totalMatchesCount = tournament.matches?.length || 0;
+        }
+        
         const participants = tournament.participants?.length || 0;
-        const matchesCount = tournament.matches?.length || 0;
         
         return `
             <div class="history-item ${tournament.isSeasonFinale ? 'season-finale' : ''}">
@@ -4601,14 +4615,18 @@ window.manuallyArchiveCurrentRound = manuallyArchiveCurrentRound;
                             ${displayTournamentRoundsDetails(tournament.rounds)}
                         </div>
                     </div>
-                ` : ''}
+                ` : `
+                    <div style="margin-top: 15px; color: var(--text-secondary); font-size: 0.9rem;">
+                        ⚠️ No rounds archived for this tournament
+                    </div>
+                `}
                 
                 <div class="history-stats">
                     <div class="history-stat">
                         <span>👥 ${participants} players</span>
                     </div>
                     <div class="history-stat">
-                        <span>⚔️ ${matchesCount} matches</span>
+                        <span>⚔️ ${totalMatchesCount} matches</span>  <!-- MODIFIÉ ICI -->
                     </div>
                     <div class="history-stat">
                         <span>🏆 ${winner}</span>
@@ -4629,7 +4647,6 @@ window.manuallyArchiveCurrentRound = manuallyArchiveCurrentRound;
     
     document.getElementById('tournamentHistoryList').innerHTML = tournamentHistoryHTML;
 }
-
     function toggleHistoryDetails(index) {
         const detailsDiv = document.getElementById(`historyDetails${index}`);
         detailsDiv.classList.toggle('expanded');
@@ -4641,6 +4658,50 @@ window.manuallyArchiveCurrentRound = manuallyArchiveCurrentRound;
             button.innerHTML = '📊 View Details';
         }
     }
+
+    function debugTournamentData(tournamentId = null) {
+    console.log("🔍 DEBUG Tournament Data:");
+    
+    if (tournamentId) {
+        const tournament = state.tournamentHistory.find(t => t.id === tournamentId);
+        if (tournament) {
+            console.log("Tournament:", tournament.name);
+            console.log("Matches in tournament.matches:", tournament.matches?.length || 0);
+            console.log("Rounds archived:", tournament.rounds?.length || 0);
+            console.log("Total matches in rounds:", tournament.rounds?.reduce((sum, r) => sum + (r.matches?.length || 0), 0) || 0);
+            console.log("Round details:", tournament.rounds);
+        } else {
+            console.log("Tournament not found");
+        }
+    } else {
+        console.log("All tournaments:", state.tournamentHistory.map(t => ({
+            name: t.name,
+            matches: t.matches?.length || 0,
+            rounds: t.rounds?.length || 0,
+            totalMatchesInRounds: t.rounds?.reduce((sum, r) => sum + (r.matches?.length || 0), 0) || 0
+        })));
+    }
+}
+
+function testSeasonRewards() {
+    console.log("🎁 Season Rewards Test:");
+    console.log("1st place:", SEASON_REWARDS[1]);
+    console.log("2nd place:", SEASON_REWARDS[2]);
+    console.log("3rd place:", SEASON_REWARDS[3]);
+    
+    // Test d'affichage
+    return `
+        <div style="padding: 10px; background: var(--bg-light); border-radius: 8px; margin: 10px 0;">
+            <h3>Test des récompenses</h3>
+            <p>🥇 ${SEASON_REWARDS[1]}</p>
+            <p>🥈 ${SEASON_REWARDS[2]}</p>
+            <p>🥉 ${SEASON_REWARDS[3]}</p>
+        </div>
+    `;
+}
+
+// Exposez-la pour tester
+window.testSeasonRewards = testSeasonRewards;
 
     function updateSeasonTimeline() {
         const tournamentInSeason = (state.tournamentCount % 4) + 1;
@@ -5071,6 +5132,7 @@ window.toggleTournamentRounds = toggleTournamentRounds;
         updateModeIndicator();
         
         // Exposer les fonctions au niveau global
+        window.debugTournamentData = debugTournamentData;
         window.archiveCurrentRound = archiveCurrentRound;  // <-- AJOUTEZ CETTE LIGNE
         window.debugRoundArchiving = debugRoundArchiving;
         window.toggleTheme = toggleTheme;
