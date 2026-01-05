@@ -3274,9 +3274,9 @@ async function archiveCurrentRound() {
     console.log(`Archiving round ${currentRound} with ${matchesThisRound.length} matches`);
     
     const roundData = {
-        id: `round_${state.activeTournament.id}_${currentRound}_${Date.now()}`,
-        tourneyId: state.activeTournament.id,
-        tourneyName: state.activeTournament.name,
+    id: `round_${state.activeTournament.id}_${currentRound}_${Date.now()}`,
+    tournamentId: state.activeTournament.id, // <-- CORRIGÉ
+    tournamentName: state.activeTournament.name,
         roundNumber: currentRound,
         date: new Date().toISOString(),
         timestamp: Date.now(),
@@ -3328,10 +3328,10 @@ async function archiveCurrentRound() {
         // Ajouter à l'historique dans Firebase
         const updatedRoundHistory = [...(state.roundHistory || []), roundData];
         
-        await systemRef.update({
-            roundHistory: updatedRoundHistory,
-            lastAction: `📁 Round ${currentRound} archived with ${matchesThisRound.length} matches`
-        });
+        await updateDoc(systemRef, {
+    roundHistory: updatedRoundHistory,
+    lastAction: `📁 Round ${currentRound} archived with ${matchesThisRound.length} matches`
+});
         
         console.log("Round archived successfully:", roundData);
         showNotification(`Round ${currentRound} archived successfully`, 'success');
@@ -3645,12 +3645,23 @@ async function archiveCurrentRound() {
         return;
     }
 
-    if (state.activeTournament.round >= state.activeTournament.totalRounds) {
+    if (!state.activeTournament) {
+        showNotification('No active tournament', 'error');
+        return;
+    }
+
+    const currentRound = state.activeTournament.round;
+    
+    if (currentRound >= state.activeTournament.totalRounds) {
         showNotification('Tournament has reached maximum rounds', 'warning');
         return;
     }
 
-    if (confirm('Start next round? This will ARCHIVE current round and clear matches.')) {
+    if (!confirm(`Start round ${currentRound + 1}? This will archive round ${currentRound} and clear its matches.`)) {
+        return;
+    }
+
+    try {
         // 1. ARCHIVER le round actuel
         const archivedRound = await archiveCurrentRound();
         
@@ -3660,17 +3671,29 @@ async function archiveCurrentRound() {
         }
         
         // 2. Passer au round suivant
-        const nextRound = state.activeTournament.round + 1;
+        const nextRound = currentRound + 1;
         
-        await systemRef.update({
-            activeTournament: null,
-            tournamentHistory: [...state.tournamentHistory, tournamentRecord],
-            tournamentCount: updatedTournamentCount,
-            champion: updatedChampion,
-            lastAction: `🏁 Tournament "${state.activeTournament.name}" ended`
+        // 3. Supprimer les matchs du round actuel
+        const updatedMatches = state.activeTournament.matches.filter(m => m.round !== currentRound);
+        
+        // 4. Mettre à jour le round dans le tournoi
+        const updatedTournament = {
+            ...state.activeTournament,
+            round: nextRound,
+            matches: updatedMatches
+        };
+        
+        // Utiliser updateDoc au lieu de systemRef.update
+        await updateDoc(systemRef, {
+            "activeTournament": updatedTournament,
+            lastAction: `📊 Round ${currentRound} archived → Starting round ${nextRound}`
         });
         
-        showNotification(`✅ Round ${nextRound-1} archived → Round ${nextRound} started`, 'success');
+        showNotification(`✅ Round ${currentRound} archived → Round ${nextRound} started`, 'success');
+        
+    } catch (error) {
+        console.error("Error in clearCurrentMatches:", error);
+        showNotification("Error: " + error.message, 'error');
     }
 }
 
