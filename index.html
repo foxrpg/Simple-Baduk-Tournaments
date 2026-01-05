@@ -68,6 +68,23 @@
             box-sizing: border-box;
         }
 
+        .season-finale {
+    border: 2px solid rgba(255, 215, 0, 0.3) !important;
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.05) 0%, transparent 100%) !important;
+}
+
+.rewards-badge {
+    background: linear-gradient(135deg, var(--gold) 0%, #FFA500 100%);
+    color: black;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 0.8rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
         body {
             font-family: 'Inter', sans-serif;
             background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
@@ -3328,49 +3345,89 @@ async function archiveCurrentRound() {
 }
 
     async function endTournament() {
-
-     // 1. Archiver le dernier round si pas déjà fait
-    if (state.activeTournament && state.activeTournament.matches.length > 0) {
-        await archiveCurrentRound();
+    if (!isAdmin) {
+        showNotification('Admin access required', 'error');
+        return;
     }
-    
-    // 2. Récupérer tous les rounds de ce tournoi
-    const tournamentRounds = state.roundHistory.filter(r => 
-        r.tourneyId === state.activeTournament.id
-    );
-    
-    console.log("Tournament rounds to archive:", tournamentRounds.length);
-        if (!isAdmin) {
-            showNotification('Admin access required', 'error');
-            return;
-        }
 
-        if (!confirm('End this tournament and update rankings?')) {
-            return;
-        }
+    if (!confirm('End this tournament and update rankings?')) {
+        return;
+    }
 
-        let updatedTournamentCount = state.tournamentCount + 1;
-        let updatedSeason = state.season;
-        let updatedChampion = state.champion;
+    // Archiver le dernier round
+    try {
+        await archiveCurrentRound();
+    } catch (error) {
+        console.error("Failed to archive final round:", error);
+    }
+
+    let updatedTournamentCount = state.tournamentCount + 1;
+    let updatedSeason = state.season;
+    let updatedChampion = state.champion;
+    
+    // Calculate tournament results with rewards
+    const tournamentResults = state.activeTournament.participants.map(p => {
+        const wins = state.activeTournament.matches.filter(m => m.winner === p.id).length;
+        const losses = state.activeTournament.matches.filter(m => 
+            (m.player1.id === p.id || m.player2.id === p.id) && 
+            m.winner && 
+            m.winner !== p.id
+        ).length;
+        return { 
+            ...p, 
+            tournamentWins: wins,
+            tournamentLosses: losses,
+            tournamentPoints: wins * state.activeTournament.settings.pointsPerWin + 
+                            losses * state.activeTournament.settings.pointsPerLoss
+        };
+    }).sort((a, b) => b.tournamentPoints - a.tournamentPoints);
+
+    state.roundHistory.filter(r => r.tournamentId === state.activeTournament.id)
+// Pas : r.tourneyId
+
+    // ⭐⭐ AJOUT: Vérifier si c'est le dernier tournoi de la saison ⭐⭐
+    const isSeasonFinale = (updatedTournamentCount % 4 === 0);
+    const tournamentPositionInSeason = (state.tournamentCount % 4) + 1;
+    
+    // ⭐⭐ AJOUT: Préparer les récompenses ⭐⭐
+    let rewards = null;
+    if (isSeasonFinale && tournamentResults.length >= 3) {
+        rewards = {
+            champion: {
+                player: tournamentResults[0],
+                reward: SEASON_REWARDS[1]
+            },
+            runnerUp: {
+                player: tournamentResults[1],
+                reward: SEASON_REWARDS[2]
+            },
+            thirdPlace: {
+                player: tournamentResults[2],
+                reward: SEASON_REWARDS[3]
+            }
+        };
         
-        // Calculate tournament results
-        const tournamentResults = state.activeTournament.participants.map(p => {
-            const wins = state.activeTournament.matches.filter(m => m.winner === p.id).length;
-            const losses = state.activeTournament.matches.filter(m => 
-                (m.player1.id === p.id || m.player2.id === p.id) && 
-                m.winner && 
-                m.winner !== p.id
-            ).length;
-            return { 
-                ...p, 
-                tournamentWins: wins,
-                tournamentLosses: losses,
-                tournamentPoints: wins * state.activeTournament.settings.pointsPerWin + losses * state.activeTournament.settings.pointsPerLoss
-            };
-        }).sort((a, b) => b.tournamentPoints - a.tournamentPoints);
+        // Notification spéciale pour les récompenses
+        showNotification(
+            `🏆 SEASON FINALE COMPLETE!\n` +
+            `🥇 ${tournamentResults[0].name}: ${SEASON_REWARDS[1]}\n` +
+            `🥈 ${tournamentResults[1].name}: ${SEASON_REWARDS[2]}\n` +
+            `🥉 ${tournamentResults[2].name}: ${SEASON_REWARDS[3]}`,
+            'success'
+        );
+    }
 
-        // Add tournament to history
-           const tournamentRecord = {
+    // Récupérer les rounds du tournoi
+    const tournamentRounds = state.roundHistory ? 
+        state.roundHistory.filter(r => r.tournamentId === state.activeTournament.id) : 
+        [];
+    
+    const remainingRoundHistory = state.roundHistory ? 
+        state.roundHistory.filter(r => r.tournamentId !== state.activeTournament.id) : 
+        [];
+
+    // Add tournament to history WITH ROUNDS AND REWARDS
+    const tournamentRecord = {
         ...state.activeTournament,
         endTime: new Date().toISOString(),
         results: tournamentResults.map(r => ({
@@ -3382,53 +3439,89 @@ async function archiveCurrentRound() {
         })),
         winner: tournamentResults[0]?.id || null,
         season: state.season,
-        positionInSeason: (state.tournamentCount % 4) + 1,
-        rounds: tournamentRounds, // ← AJOUT IMPORTANT: inclure tous les rounds
+        positionInSeason: tournamentPositionInSeason,
+        rounds: tournamentRounds,
         totalRoundsArchived: tournamentRounds.length,
-        archivedAt: new Date().toISOString()
+        // ⭐⭐ AJOUT: Ajouter les récompenses au record ⭐⭐
+        isSeasonFinale: isSeasonFinale,
+        rewards: rewards,
+        podium: rewards ? [
+            { position: 1, player: tournamentResults[0].name, reward: SEASON_REWARDS[1] },
+            { position: 2, player: tournamentResults[1].name, reward: SEASON_REWARDS[2] },
+            { position: 3, player: tournamentResults[2].name, reward: SEASON_REWARDS[3] }
+        ] : null
     };
 
-        // Check if season is complete (4 tournaments)
-        if (updatedTournamentCount % 4 === 0) {
-            updatedSeason += 1;
+    // Check if season is complete (4 tournaments)
+    if (isSeasonFinale) {
+        updatedSeason += 1;
+        
+        if (tournamentResults.length > 0 && tournamentResults[0].tournamentWins > 0) {
+            updatedChampion = tournamentResults[0].name;
+        }
+        
+        const seasonRecord = {
+            season: state.season,
+            tournaments: state.tournamentHistory.slice(-3).concat([tournamentRecord]),
+            champion: updatedChampion,
+            endDate: new Date().toISOString(),
+            // ⭐⭐ AJOUT: Récompenses dans le record de saison ⭐⭐
+            rewardsDistributed: rewards !== null,
+            podium: tournamentRecord.podium
+        };
+        
+        const updatedSeasonHistory = [...state.seasonHistory, seasonRecord];
+        
+        try {
+            await systemRef.update({
+                activeTournament: null,
+                tournamentHistory: [...state.tournamentHistory, tournamentRecord],
+                tournamentCount: updatedTournamentCount,
+                season: updatedSeason,
+                champion: updatedChampion,
+                autoQualifiers: [],
+                seasonHistory: updatedSeasonHistory,
+                roundHistory: remainingRoundHistory,
+                lastAction: `🏆 Season ${state.season} complete! ${updatedChampion} is the new champion!`
+            });
             
-            if (tournamentResults.length > 0 && tournamentResults[0].tournamentWins > 0) {
-                updatedChampion = tournamentResults[0].name;
+            // ⭐⭐ AJOUT: Notification détaillée des récompenses ⭐⭐
+            if (rewards) {
+                setTimeout(() => {
+                    showNotification(
+                        `🎉 SEASON ${state.season} REWARDS DISTRIBUTED!\n\n` +
+                        `🥇 ${tournamentResults[0].name}: ${SEASON_REWARDS[1]}\n` +
+                        `🥈 ${tournamentResults[1].name}: ${SEASON_REWARDS[2]}\n` +
+                        `🥉 ${tournamentResults[2].name}: ${SEASON_REWARDS[3]}`,
+                        'success',
+                        10000 // 10 secondes
+                    );
+                }, 2000);
             }
             
-            const seasonRecord = {
-                season: state.season,
-                tournaments: state.tournamentHistory.slice(-3).concat([tournamentRecord]),
-                champion: updatedChampion,
-                endDate: new Date().toISOString()
-            };
-            
-              // ⭐⭐⭐⭐ MODIFIEZ CETTE SECTION ⭐⭐⭐⭐
-        await systemRef.update({
-            activeTournament: null,
-            tournamentHistory: [...state.tournamentHistory, tournamentRecord],
-            tournamentCount: updatedTournamentCount,
-            season: updatedSeason,
-            champion: updatedChampion,
-            autoQualifiers: [],
-            seasonHistory: updatedSeasonHistory,
-            lastAction: `🏆 Season ${state.season} complete! ${updatedChampion} is the new champion!`
-        });
-        // ⭐⭐⭐⭐ JUSQU'ICI ⭐⭐⭐⭐
-            
-            showNotification(`Season ${state.season} complete! New season started.`, 'success');
-        } else {
-            await updateDoc(systemRef, {
+        } catch (error) {
+            console.error("Firebase update error:", error);
+            showNotification("Error saving tournament data", 'error');
+        }
+        
+    } else {
+        try {
+            await systemRef.update({
                 activeTournament: null,
                 tournamentHistory: [...state.tournamentHistory, tournamentRecord],
                 tournamentCount: updatedTournamentCount,
                 champion: updatedChampion,
+                roundHistory: remainingRoundHistory,
                 lastAction: `🏁 Tournament "${state.activeTournament.name}" ended`
             });
             
             showNotification('Tournament ended successfully', 'success');
+        } catch (error) {
+            console.error("Firebase update error:", error);
+            showNotification("Error saving tournament data", 'error');
         }
     }
+}
 
     // Generate Swiss Pairs
     async function generateSwissPairs() {
@@ -3939,102 +4032,68 @@ async function archiveCurrentRound() {
     }
 
     function updateTournamentHistory() {
-        const tournamentHistoryHTML = state.tournamentHistory.slice().reverse().map((tournament, index) => {
-            const date = new Date(tournament.startTime);
-            const formattedDate = date.toLocaleDateString('en-US', { 
-                month: 'short', 
-                day: 'numeric',
-                year: 'numeric'
-            });
-            
-            const winner = tournament.results?.[0]?.playerName || 'N/A';
-            const participants = tournament.participants?.length || 0;
-            const matchesCount = tournament.matches?.length || 0;
-            
-            return `
-                <div class="history-item">
-                    <div class="history-header">
-                        <div class="history-title">${tournament.name}</div>
-                        <div class="history-meta">${formattedDate}</div>
+    const tournamentHistoryHTML = state.tournamentHistory.slice().reverse().map((tournament, index) => {
+        const date = new Date(tournament.startTime);
+        const formattedDate = date.toLocaleDateString('en-US', { 
+            month: 'short', 
+            day: 'numeric',
+            year: 'numeric'
+        });
+        
+        const winner = tournament.results?.[0]?.playerName || 'N/A';
+        const participants = tournament.participants?.length || 0;
+        const matchesCount = tournament.matches?.length || 0;
+        
+        return `
+            <div class="history-item ${tournament.isSeasonFinale ? 'season-finale' : ''}">
+                <div class="history-header">
+                    <div class="history-title">
+                        ${tournament.name}
+                        ${tournament.isSeasonFinale ? ' 🏆' : ''}
                     </div>
-                    <div style="color: var(--text-secondary); font-size: 0.9rem; margin: 10px 0;">
-                        Season ${tournament.season || 1} • Tournament ${tournament.positionInSeason || 1}/4 • 
-                        <span class="${tournament.type === 'single-elimination' ? 'match-status-badge match-status-completed' : 'match-status-badge match-status-pending'}" 
-                              style="font-size: 0.7rem; padding: 2px 8px;">
-                            ${tournament.type === 'single-elimination' ? '🏆 Elimination' : '♟️ Swiss'}
-                        </span>
-
-                     ${tournament.rounds && tournament.rounds.length > 0 ? 
-                        `<span style="margin-left: 10px; color: var(--success);">📁 ${tournament.rounds.length} rounds archived</span>` : 
+                    <div class="history-meta">${formattedDate}</div>
+                </div>
+                <div style="color: var(--text-secondary); font-size: 0.9rem; margin: 10px 0;">
+                    Season ${tournament.season || 1} • Tournament ${tournament.positionInSeason || 1}/4 • 
+                    <span class="${tournament.type === 'single-elimination' ? 'match-status-badge match-status-completed' : 'match-status-badge match-status-pending'}" 
+                          style="font-size: 0.7rem; padding: 2px 8px;">
+                        ${tournament.type === 'single-elimination' ? '🏆 Elimination' : '♟️ Swiss'}
+                    </span>
+                    ${tournament.isSeasonFinale ? 
+                        '<span style="margin-left: 10px; background: var(--gold); color: black; padding: 2px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: bold;">SEASON FINALE</span>' : 
                         ''
                     }
                 </div>
                 
-                <!-- AJOUTER LE BOUTON POUR VOIR LES ROUNDS -->
-                <button class="history-expand-btn" onclick="toggleTournamentRounds('${tournament.id}')">
-                    📊 View Rounds (${tournament.rounds ? tournament.rounds.length : 0})
-                </button>
+                ${tournament.rewards ? `
+                    <div style="background: linear-gradient(135deg, rgba(255,215,0,0.1) 0%, rgba(255,215,0,0.05) 100%); 
+                                border-radius: var(--radius-md); padding: 12px; margin: 10px 0; border-left: 3px solid var(--gold);">
+                        <div style="font-weight: 600; color: var(--gold); margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+                            🏅 Season Rewards Distributed
+                        </div>
+                        <div style="font-size: 0.85rem;">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
+                                <div style="width: 20px; height: 20px; background: var(--gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">1</div>
+                                <span>${tournament.podium[0].player}: <strong>${tournament.podium[0].reward}</strong></span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
+                                <div style="width: 20px; height: 20px; background: var(--silver); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">2</div>
+                                <span>${tournament.podium[1].player}: <strong>${tournament.podium[1].reward}</strong></span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <div style="width: 20px; height: 20px; background: var(--bronze); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">3</div>
+                                <span>${tournament.podium[2].player}: <strong>${tournament.podium[2].reward}</strong></span>
+                            </div>
+                        </div>
+                    </div>
+                ` : ''}
                 
-                <!-- SECTION DES ROUNDS (cachée par défaut) -->
-                <div class="rounds-details" id="rounds_${tournament.id}" style="display: none; margin-top: 15px;">
-                    ${tournament.rounds ? displayTournamentRoundsDetails(tournament.rounds) : 'No rounds archived'}
-                    </div>
-                    <div class="history-stats">
-                        <div class="history-stat">
-                            <span>👥</span>
-                            <span>${participants} players</span>
-                        </div>
-                        <div class="history-stat">
-                            <span>⚔️</span>
-                            <span>${matchesCount} matches</span>
-                        </div>
-                        <div class="history-stat">
-                            <span>🏆</span>
-                            <span>${winner.substring(0, 12)}</span>
-                        </div>
-                    </div>
-                    
-                    <button class="history-expand-btn" onclick="toggleHistoryDetails(${state.tournamentHistory.length - 1 - index})">
-                        📊 View Details
-                    </button>
-                    
-                    <div class="history-details" id="historyDetails${state.tournamentHistory.length - 1 - index}">
-                        ${tournament.results ? `
-                            <h4 style="margin: 15px 0 10px 0; color: var(--text-primary);">Final Rankings:</h4>
-                            <table class="history-details-table">
-                                <thead>
-                                    <tr>
-                                        <th>Rank</th>
-                                        <th>Player</th>
-                                        <th>Wins</th>
-                                        <th>Losses</th>
-                                        <th>Points</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${tournament.results.slice(0, 5).map((result, idx) => `
-                                        <tr>
-                                            <td>${idx + 1}</td>
-                                            <td>${result.playerName}</td>
-                                            <td>${result.wins || 0}</td>
-                                            <td>${result.losses || 0}</td>
-                                            <td>${result.points || 0}</td>
-                                        </tr>
-                                    `).join('')}
-                                </tbody>
-                            </table>
-                        ` : ''}
-                    </div>
-                </div>
-            `;
-        }).join('');
-        
-        document.getElementById('tournamentHistoryList').innerHTML = tournamentHistoryHTML || 
-            '<div class="empty-state">No tournament history yet</div>';
-        
-        document.getElementById('totalTournaments').textContent = state.tournamentHistory.length;
-        
-         document.getElementById('tournamentHistoryList').innerHTML = tournamentHistoryHTML;
+                <!-- ... reste du code existant ... -->
+            </div>
+        `;
+    }).join('');
+    
+    document.getElementById('tournamentHistoryList').innerHTML = tournamentHistoryHTML;
 }
 
 
