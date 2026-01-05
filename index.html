@@ -2847,7 +2847,77 @@ let state = {
         
         return { newWinnerElo, newLoserElo };
     }
-
+function displayTournamentRoundsDetails(rounds) {
+    if (!rounds || rounds.length === 0) {
+        return '<div style="color: var(--text-secondary); padding: 10px; text-align: center;">No rounds archived</div>';
+    }
+    
+    // Trier les rounds par numéro
+    const sortedRounds = [...rounds].sort((a, b) => a.roundNumber - b.roundNumber);
+    
+    let html = '<div style="background: var(--bg-light); border-radius: var(--radius-md); padding: 15px;">';
+    
+    sortedRounds.forEach(round => {
+        const roundDate = new Date(round.date).toLocaleDateString('en-US', {
+            day: '2-digit',
+            month: 'short',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+        
+        html += `
+            <div style="margin-bottom: 15px; padding: 10px; border-bottom: 1px solid var(--border);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <strong style="color: var(--accent);">Round ${round.roundNumber}</strong>
+                    <small style="color: var(--text-secondary);">${roundDate}</small>
+                </div>
+                
+                <div style="font-size: 0.85rem;">
+                    <div style="margin-bottom: 5px;">
+                        <span style="color: var(--text-secondary);">Matches: </span>
+                        <strong>${round.completedMatches || 0}/${round.totalMatches || 0} completed</strong>
+                    </div>
+                    
+                    ${round.matches && round.matches.length > 0 ? round.matches.map(match => `
+                        <div style="margin: 5px 0; padding: 8px; background: rgba(255,255,255,0.05); border-radius: var(--radius-sm);">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <div class="stone-display ${match.player1.playedBlack ? 'black' : 'white'}" 
+                                     style="width: 20px; height: 20px;"></div>
+                                <span style="font-weight: ${match.winner === match.player1.id ? 'bold' : 'normal'}; 
+                                      color: ${match.winner === match.player1.id ? 'var(--success)' : 'inherit'};">
+                                    ${match.player1.name}
+                                </span>
+                                <span style="color: var(--text-secondary);">vs</span>
+                                <div class="stone-display ${match.player2.playedBlack ? 'black' : 'white'}" 
+                                     style="width: 20px; height: 20px;"></div>
+                                <span style="font-weight: ${match.winner === match.player2.id ? 'bold' : 'normal'};
+                                      color: ${match.winner === match.player2.id ? 'var(--success)' : 'inherit'};">
+                                    ${match.player2.name}
+                                </span>
+                            </div>
+                            ${match.winner ? 
+                                `<div style="font-size: 0.8rem; color: var(--success); margin-top: 3px;">
+                                    🏆 Winner: ${match.winnerName}
+                                </div>` : 
+                                `<div style="font-size: 0.8rem; color: var(--warning); margin-top: 3px;">
+                                    ⏳ No result
+                                </div>`
+                            }
+                            ${match.gameLink ? 
+                                `<div style="font-size: 0.7rem; margin-top: 3px;">
+                                    🔗 <a href="${match.gameLink}" target="_blank" style="color: var(--secondary);">Game link</a>
+                                </div>` : ''
+                            }
+                        </div>
+                    `).join('') : '<div style="color: var(--text-secondary); font-size: 0.8rem;">No match details</div>'}
+                </div>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    return html;
+}
     // Auto Qualifiers Logic
     function updateAutoQualifiers() {
         const sortedPlayers = [...state.players].sort((a, b) => {
@@ -4111,14 +4181,47 @@ async function archiveCurrentRound() {
                     </div>
                 ` : ''}
                 
-                <!-- ... reste du code existant ... -->
+                <!-- NOUVEAU : Bouton pour voir les rounds archivés -->
+                ${tournament.rounds && tournament.rounds.length > 0 ? `
+                    <div style="margin-top: 15px;">
+                        <button onclick="toggleTournamentRounds('${tournament.id}')" 
+                                class="history-expand-btn" 
+                                style="margin-bottom: 10px;">
+                            📊 View Rounds (${tournament.rounds.length})
+                        </button>
+                        
+                        <div id="rounds_${tournament.id}" style="display: none;">
+                            ${displayTournamentRoundsDetails(tournament.rounds)}
+                        </div>
+                    </div>
+                ` : ''}
+                
+                <div class="history-stats">
+                    <div class="history-stat">
+                        <span>👥 ${participants} players</span>
+                    </div>
+                    <div class="history-stat">
+                        <span>⚔️ ${matchesCount} matches</span>
+                    </div>
+                    <div class="history-stat">
+                        <span>🏆 ${winner}</span>
+                    </div>
+                </div>
+                
+                <!-- Bouton pour voir les détails (optionnel) -->
+                <button onclick="toggleHistoryDetails(${index})" class="history-expand-btn">
+                    📊 View Details
+                </button>
+                
+                <div class="history-details" id="historyDetails${index}">
+                    <!-- Les détails existants restent ici -->
+                </div>
             </div>
         `;
     }).join('');
     
     document.getElementById('tournamentHistoryList').innerHTML = tournamentHistoryHTML;
 }
-
 
     function toggleHistoryDetails(index) {
         const detailsDiv = document.getElementById(`historyDetails${index}`);
@@ -4609,6 +4712,19 @@ function displayTournamentRoundsDetails(rounds) {
     return html;
 }
 
+function toggleTournamentRounds(tournamentId) {
+    const roundsDiv = document.getElementById(`rounds_${tournamentId}`);
+    const button = event.target;
+    
+    if (roundsDiv.style.display === 'none' || !roundsDiv.style.display) {
+        roundsDiv.style.display = 'block';
+        button.innerHTML = `📊 Hide Rounds`;
+    } else {
+        roundsDiv.style.display = 'none';
+        button.innerHTML = `📊 View Rounds`;
+    }
+}
+
 // Exposer les fonctions globalement
 window.toggleTournamentRounds = toggleTournamentRounds;
     // Initialize
@@ -4632,6 +4748,8 @@ window.toggleTournamentRounds = toggleTournamentRounds;
         
         // Exposer les fonctions au niveau global
         window.toggleTheme = toggleTheme;
+        window.toggleTournamentRounds = toggleTournamentRounds;
+window.toggleHistoryDetails = toggleHistoryDetails;
         window.loginAdmin = loginAdmin;
         window.logoutAdmin = logoutAdmin;
         window.addNewPlayer = addNewPlayer;
