@@ -3420,6 +3420,24 @@ async function archiveCurrentRound() {
     }
 }
 
+function debugRoundArchiving() {
+    console.log("🔍 Debug Round Archiving:");
+    console.log("Active Tournament:", state.activeTournament);
+    console.log("Current Round:", state.activeTournament?.round);
+    console.log("Matches this round:", state.activeTournament?.matches?.filter(m => m.round === state.activeTournament.round)?.length || 0);
+    console.log("Round History:", state.roundHistory);
+    
+    if (state.activeTournament) {
+        const currentRound = state.activeTournament.round;
+        const matches = state.activeTournament.matches.filter(m => m.round === currentRound);
+        console.log("Matches details:", matches.map(m => ({
+            id: m.id,
+            players: `${m.player1.name} vs ${m.player2.name}`,
+            winner: m.winner,
+            gameUrl: m.gameUrl
+        })));
+    }
+}
     async function endTournament() {
     if (!isAdmin) {
         showNotification('Admin access required', 'error');
@@ -5053,6 +5071,8 @@ window.toggleTournamentRounds = toggleTournamentRounds;
         updateModeIndicator();
         
         // Exposer les fonctions au niveau global
+        window.archiveCurrentRound = archiveCurrentRound;  // <-- AJOUTEZ CETTE LIGNE
+        window.debugRoundArchiving = debugRoundArchiving;
         window.toggleTheme = toggleTheme;
         window.toggleTournamentRounds = toggleTournamentRounds;
 window.toggleHistoryDetails = toggleHistoryDetails;
