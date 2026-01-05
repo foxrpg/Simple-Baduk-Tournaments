@@ -2256,26 +2256,26 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-
-    let state = {
-        players: [],
-        activeTournament: null,
-        tournamentHistory: [],
-        season: 1,
-        tournamentCount: 0,
-        champion: "None",
-        autoQualifiers: [],
-        lastAction: "System initialized",
-        systemSettings: {
-            pointsPerWin: 10,
-            pointsPerLoss: -5,
-            initialElo: 1500,
-            eloKFactor: 32,
-            roundsPerTournament: 3
-        },
-        eloRatings: {},
-        seasonHistory: []
-    };
+let state = {
+    players: [],
+    activeTournament: null,
+    tournamentHistory: [],
+    season: 1,
+    tournamentCount: 0,
+    champion: "None",
+    autoQualifiers: [],
+    lastAction: "System initialized",
+    systemSettings: {
+        pointsPerWin: 10,
+        pointsPerLoss: -5,
+        initialElo: 1500,
+        eloKFactor: 32,
+        roundsPerTournament: 3
+    },
+    eloRatings: {},
+    seasonHistory: [],
+    roundHistory: [] // ← AJOUTÉ ICI
+};
 
     let isAdmin = false;
     let chart = null;
@@ -2359,23 +2359,23 @@
     const systemRef = doc(db, "system", "current");
 
     onSnapshot(systemRef, (docSnap) => {
-        if (docSnap.exists()) {
-            const data = docSnap.data();
-            state = {
-                ...state,
-                ...data,
-                players: data.players || [],
-                activeTournament: data.activeTournament || null,
-                tournamentHistory: data.tournamentHistory || [],
-                tournamentCount: data.tournamentCount || 0,
-                season: data.season || 1,
-                champion: data.champion || "None",
-                autoQualifiers: data.autoQualifiers || [],
-                systemSettings: data.systemSettings || state.systemSettings,
-                eloRatings: data.eloRatings || {},
-                seasonHistory: data.seasonHistory || []
-            };
-            
+    if (docSnap.exists()) {
+        const data = docSnap.data();
+        state = {
+            ...state,
+            ...data,
+            players: data.players || [],
+            activeTournament: data.activeTournament || null,
+            tournamentHistory: data.tournamentHistory || [],
+            tournamentCount: data.tournamentCount || 0,
+            season: data.season || 1,
+            champion: data.champion || "None",
+            autoQualifiers: data.autoQualifiers || [],
+            systemSettings: data.systemSettings || state.systemSettings,
+            eloRatings: data.eloRatings || {},
+            seasonHistory: data.seasonHistory || [],
+            roundHistory: data.roundHistory || [] // ← AJOUTÉ ICI
+        };
             updateUI();
             updateSeasonInfo();
             updateTournamentHistory();
@@ -3234,7 +3234,112 @@
         showNotification(`${winner.name} wins! Elo: +${eloChanges.newWinnerElo - winnerElo}`, 'success');
     }
 
+    // Recherchez la fonction setMatchWinner (~ligne 450)
+// APRÈS cette fonction, ajoutez :
+
+// ============================================================
+// NOUVELLE FONCTION: ARCHIVER LE ROUND ACTUEL
+// ============================================================
+async function archiveCurrentRound() {
+    if (!state.activeTournament) {
+        console.log("No active tournament to archive");
+        return;
+    }
+    
+    const currentRound = state.activeTournament.round;
+    const matchesThisRound = state.activeTournament.matches.filter(m => m.round === currentRound);
+    
+    if (matchesThisRound.length === 0) {
+        console.log("No matches in current round to archive");
+        return;
+    }
+    
+    console.log(`Archiving round ${currentRound} with ${matchesThisRound.length} matches`);
+    
+    const roundData = {
+        id: `round_${state.activeTournament.id}_${currentRound}_${Date.now()}`,
+        tourneyId: state.activeTournament.id,
+        tourneyName: state.activeTournament.name,
+        roundNumber: currentRound,
+        date: new Date().toISOString(),
+        timestamp: Date.now(),
+        matches: matchesThisRound.map(match => ({
+            matchId: match.id,
+            player1: {
+                id: match.player1.id,
+                name: match.player1.name,
+                rank: match.player1.rank,
+                playedBlack: match.player1IsBlack,
+                elo: state.eloRatings[match.player1.id] || state.systemSettings.initialElo
+            },
+            player2: {
+                id: match.player2.id,
+                name: match.player2.name,
+                rank: match.player2.rank,
+                playedBlack: !match.player1IsBlack,
+                elo: state.eloRatings[match.player2.id] || state.systemSettings.initialElo
+            },
+            winner: match.winner,
+            winnerName: match.winner ? 
+                (match.winner === match.player1.id ? match.player1.name : match.player2.name) : 
+                null,
+            gameLink: match.gameUrl,
+            eloChanges: match.eloChanges || null,
+            completedAt: match.endedAt || new Date().toISOString()
+        })),
+        standings: state.activeTournament.participants.map(p => {
+            const wins = state.activeTournament.matches.filter(m => m.winner === p.id).length;
+            return {
+                id: p.id,
+                name: p.name,
+                rank: p.rank,
+                wins: wins,
+                losses: state.activeTournament.matches.filter(m => 
+                    (m.player1.id === p.id || m.player2.id === p.id) && 
+                    m.winner && 
+                    m.winner !== p.id
+                ).length,
+                points: p.points || 0,
+                elo: state.eloRatings[p.id] || state.systemSettings.initialElo
+            };
+        }).sort((a, b) => b.wins - a.wins),
+        totalMatches: matchesThisRound.length,
+        completedMatches: matchesThisRound.filter(m => m.winner).length
+    };
+    
+    try {
+        // Ajouter à l'historique dans Firebase
+        const updatedRoundHistory = [...(state.roundHistory || []), roundData];
+        
+        await systemRef.update({
+            roundHistory: updatedRoundHistory,
+            lastAction: `📁 Round ${currentRound} archived with ${matchesThisRound.length} matches`
+        });
+        
+        console.log("Round archived successfully:", roundData);
+        showNotification(`Round ${currentRound} archived successfully`, 'success');
+        
+        return roundData;
+    } catch (error) {
+        console.error("Error archiving round:", error);
+        showNotification("Error archiving round", 'error');
+        return null;
+    }
+}
+
     async function endTournament() {
+
+     // 1. Archiver le dernier round si pas déjà fait
+    if (state.activeTournament && state.activeTournament.matches.length > 0) {
+        await archiveCurrentRound();
+    }
+    
+    // 2. Récupérer tous les rounds de ce tournoi
+    const tournamentRounds = state.roundHistory.filter(r => 
+        r.tourneyId === state.activeTournament.id
+    );
+    
+    console.log("Tournament rounds to archive:", tournamentRounds.length);
         if (!isAdmin) {
             showNotification('Admin access required', 'error');
             return;
@@ -3265,20 +3370,23 @@
         }).sort((a, b) => b.tournamentPoints - a.tournamentPoints);
 
         // Add tournament to history
-        const tournamentRecord = {
-            ...state.activeTournament,
-            endTime: new Date().toISOString(),
-            results: tournamentResults.map(r => ({
-                playerId: r.id,
-                playerName: r.name,
-                wins: r.tournamentWins,
-                losses: r.tournamentLosses,
-                points: r.tournamentPoints
-            })),
-            winner: tournamentResults[0]?.id || null,
-            season: state.season,
-            positionInSeason: (state.tournamentCount % 4) + 1
-        };
+           const tournamentRecord = {
+        ...state.activeTournament,
+        endTime: new Date().toISOString(),
+        results: tournamentResults.map(r => ({
+            playerId: r.id,
+            playerName: r.name,
+            wins: r.tournamentWins,
+            losses: r.tournamentLosses,
+            points: r.tournamentPoints
+        })),
+        winner: tournamentResults[0]?.id || null,
+        season: state.season,
+        positionInSeason: (state.tournamentCount % 4) + 1,
+        rounds: tournamentRounds, // ← AJOUT IMPORTANT: inclure tous les rounds
+        totalRoundsArchived: tournamentRounds.length,
+        archivedAt: new Date().toISOString()
+    };
 
         // Check if season is complete (4 tournaments)
         if (updatedTournamentCount % 4 === 0) {
@@ -3295,18 +3403,18 @@
                 endDate: new Date().toISOString()
             };
             
-            const updatedSeasonHistory = [...state.seasonHistory, seasonRecord];
-            
-            await updateDoc(systemRef, {
-                activeTournament: null,
-                tournamentHistory: [...state.tournamentHistory, tournamentRecord],
-                tournamentCount: updatedTournamentCount,
-                season: updatedSeason,
-                champion: updatedChampion,
-                autoQualifiers: [],
-                seasonHistory: updatedSeasonHistory,
-                lastAction: `🏆 Season ${state.season} complete! ${updatedChampion} is the new champion!`
-            });
+              // ⭐⭐⭐⭐ MODIFIEZ CETTE SECTION ⭐⭐⭐⭐
+        await systemRef.update({
+            activeTournament: null,
+            tournamentHistory: [...state.tournamentHistory, tournamentRecord],
+            tournamentCount: updatedTournamentCount,
+            season: updatedSeason,
+            champion: updatedChampion,
+            autoQualifiers: [],
+            seasonHistory: updatedSeasonHistory,
+            lastAction: `🏆 Season ${state.season} complete! ${updatedChampion} is the new champion!`
+        });
+        // ⭐⭐⭐⭐ JUSQU'ICI ⭐⭐⭐⭐
             
             showNotification(`Season ${state.season} complete! New season started.`, 'success');
         } else {
@@ -3439,27 +3547,39 @@
     }
 
     async function clearCurrentMatches() {
-        if (!isAdmin) {
-            showNotification('Admin access required', 'error');
-            return;
-        }
-
-        if (state.activeTournament.round >= state.activeTournament.totalRounds) {
-            showNotification('Tournament has reached maximum rounds', 'warning');
-            return;
-        }
-
-        if (confirm('Start next round? This will clear current round matches.')) {
-            const nextRound = state.activeTournament.round + 1;
-            
-            await updateDoc(systemRef, {
-                "activeTournament.round": nextRound,
-                lastAction: `🔄 Round ${nextRound} started`
-            });
-            
-            showNotification(`Round ${nextRound} started`, 'info');
-        }
+    if (!isAdmin) {
+        showNotification('Admin access required', 'error');
+        return;
     }
+
+    if (state.activeTournament.round >= state.activeTournament.totalRounds) {
+        showNotification('Tournament has reached maximum rounds', 'warning');
+        return;
+    }
+
+    if (confirm('Start next round? This will ARCHIVE current round and clear matches.')) {
+        // 1. ARCHIVER le round actuel
+        const archivedRound = await archiveCurrentRound();
+        
+        if (!archivedRound) {
+            showNotification('Failed to archive round', 'error');
+            return;
+        }
+        
+        // 2. Passer au round suivant
+        const nextRound = state.activeTournament.round + 1;
+        
+        await systemRef.update({
+            activeTournament: null,
+            tournamentHistory: [...state.tournamentHistory, tournamentRecord],
+            tournamentCount: updatedTournamentCount,
+            champion: updatedChampion,
+            lastAction: `🏁 Tournament "${state.activeTournament.name}" ended`
+        });
+        
+        showNotification(`✅ Round ${nextRound-1} archived → Round ${nextRound} started`, 'success');
+    }
+}
 
     // Mise à jour de l'interface utilisateur
     function updateUI() {
@@ -3843,6 +3963,21 @@
                               style="font-size: 0.7rem; padding: 2px 8px;">
                             ${tournament.type === 'single-elimination' ? '🏆 Elimination' : '♟️ Swiss'}
                         </span>
+
+                     ${tournament.rounds && tournament.rounds.length > 0 ? 
+                        `<span style="margin-left: 10px; color: var(--success);">📁 ${tournament.rounds.length} rounds archived</span>` : 
+                        ''
+                    }
+                </div>
+                
+                <!-- AJOUTER LE BOUTON POUR VOIR LES ROUNDS -->
+                <button class="history-expand-btn" onclick="toggleTournamentRounds('${tournament.id}')">
+                    📊 View Rounds (${tournament.rounds ? tournament.rounds.length : 0})
+                </button>
+                
+                <!-- SECTION DES ROUNDS (cachée par défaut) -->
+                <div class="rounds-details" id="rounds_${tournament.id}" style="display: none; margin-top: 15px;">
+                    ${tournament.rounds ? displayTournamentRoundsDetails(tournament.rounds) : 'No rounds archived'}
                     </div>
                     <div class="history-stats">
                         <div class="history-stat">
@@ -3898,7 +4033,10 @@
             '<div class="empty-state">No tournament history yet</div>';
         
         document.getElementById('totalTournaments').textContent = state.tournamentHistory.length;
-    }
+        
+         document.getElementById('tournamentHistoryList').innerHTML = tournamentHistoryHTML;
+}
+
 
     function toggleHistoryDetails(index) {
         const detailsDiv = document.getElementById(`historyDetails${index}`);
@@ -4301,6 +4439,96 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }, 1500);
 });
+
+// ============================================================
+// FONCTIONS POUR AFFICHER LES ROUNDS
+// ============================================================
+
+function toggleTournamentRounds(tournamentId) {
+    const roundsDiv = document.getElementById(`rounds_${tournamentId}`);
+    const button = event.target;
+    
+    if (roundsDiv.style.display === 'none') {
+        roundsDiv.style.display = 'block';
+        button.innerHTML = '📊 Hide Rounds';
+    } else {
+        roundsDiv.style.display = 'none';
+        button.innerHTML = '📊 View Rounds';
+    }
+}
+
+function displayTournamentRoundsDetails(rounds) {
+    if (!rounds || rounds.length === 0) {
+        return '<div style="color: var(--text-secondary); padding: 10px; text-align: center;">No rounds archived</div>';
+    }
+    
+    let html = '<div style="background: var(--bg-light); border-radius: var(--radius-md); padding: 15px;">';
+    
+    // Trier les rounds par numéro
+    rounds.sort((a, b) => a.roundNumber - b.roundNumber).forEach(round => {
+        const roundDate = new Date(round.date).toLocaleDateString('fr-FR', {
+            day: '2-digit',
+            month: 'short',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+        
+        html += `
+            <div style="margin-bottom: 15px; padding: 10px; border-bottom: 1px solid var(--border);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <strong style="color: var(--accent);">Round ${round.roundNumber}</strong>
+                    <small style="color: var(--text-secondary);">${roundDate}</small>
+                </div>
+                
+                <div style="font-size: 0.85rem;">
+                    <div style="margin-bottom: 5px;">
+                        <span style="color: var(--text-secondary);">Matches: </span>
+                        <strong>${round.completedMatches || 0}/${round.totalMatches || 0} completed</strong>
+                    </div>
+                    
+                    ${round.matches.map(match => `
+                        <div style="margin: 5px 0; padding: 8px; background: rgba(255,255,255,0.05); border-radius: var(--radius-sm);">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <div class="stone-display ${match.player1.playedBlack ? 'black' : 'white'}" 
+                                     style="width: 20px; height: 20px;"></div>
+                                <span style="font-weight: ${match.winner === match.player1.id ? 'bold' : 'normal'}; 
+                                      color: ${match.winner === match.player1.id ? 'var(--success)' : 'inherit'};">
+                                    ${match.player1.name}
+                                </span>
+                                <span style="color: var(--text-secondary);">vs</span>
+                                <div class="stone-display ${match.player2.playedBlack ? 'black' : 'white'}" 
+                                     style="width: 20px; height: 20px;"></div>
+                                <span style="font-weight: ${match.winner === match.player2.id ? 'bold' : 'normal'};
+                                      color: ${match.winner === match.player2.id ? 'var(--success)' : 'inherit'};">
+                                    ${match.player2.name}
+                                </span>
+                            </div>
+                            ${match.winner ? 
+                                `<div style="font-size: 0.8rem; color: var(--success); margin-top: 3px;">
+                                    🏆 Winner: ${match.winnerName}
+                                </div>` : 
+                                `<div style="font-size: 0.8rem; color: var(--warning); margin-top: 3px;">
+                                    ⏳ No result
+                                </div>`
+                            }
+                            ${match.gameLink ? 
+                                `<div style="font-size: 0.7rem; margin-top: 3px;">
+                                    🔗 <a href="${match.gameLink}" target="_blank" style="color: var(--secondary);">Game link</a>
+                                </div>` : ''
+                            }
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    return html;
+}
+
+// Exposer les fonctions globalement
+window.toggleTournamentRounds = toggleTournamentRounds;
     // Initialize
     document.addEventListener('DOMContentLoaded', () => {
         const savedTheme = localStorage.getItem('meijin-theme') || 'dark';
@@ -4360,5 +4588,6 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
+
 
 
