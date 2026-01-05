@@ -2160,6 +2160,40 @@
                     </div>
                 </div>
             </div>
+<!-- Statistics Card - CACHÉ EN MODE GUEST -->
+<div class="card hide-in-guest">
+    <div class="card-header">
+        <h2 class="card-title">📊 Statistics</h2>
+    </div>
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value" id="totalPlayers">0</div>
+            <div class="stat-label">Total Players</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="totalMatches">0</div>
+            <div class="stat-label">Total Matches</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="avgElo">1500</div>
+            <div class="stat-label">Avg Elo</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="winRate">0%</div>
+            <div class="stat-label">Win Rate</div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart Card - CACHÉ EN MODE GUEST -->
+<div class="card hide-in-guest">
+    <div class="card-header">
+        <h2 class="card-title">📈 Points Evolution</h2>
+    </div>
+    <div class="chart-container">
+        <canvas id="seasonChart"></canvas>
+    </div>
+</div>
             <!-- Onglet de gestion manuelle -->
             <div id="manualManagementCard" class="tab-content">
                 <div class="card">
@@ -2490,6 +2524,7 @@ let state = {
             updateUI();
             updateSeasonInfo();
             updateTournamentHistory();
+
         } else {
             setDoc(systemRef, state).catch(console.error);
         }
@@ -2657,6 +2692,13 @@ let state = {
         
         showNotification(`Filtering history: ${filterType}`, 'info');
     }
+
+    // 7. Statistiques de l'historique
+    function updateHistoryStatistics() {
+        const totalMatches = state.tournamentHistory.reduce((sum, t) => sum + (t.matches?.length || 0), 0);
+        const avgPlayers = state.tournamentHistory.length > 0 
+            ? Math.round(state.tournamentHistory.reduce((sum, t) => sum + (t.participants?.length || 0), 0) / state.tournamentHistory.length)
+            : 0;
         
         // Compter les victoires par joueur
         const winCounts = {};
@@ -2685,7 +2727,7 @@ let state = {
         document.getElementById('historyAvgPlayers').textContent = avgPlayers;
         document.getElementById('historyTotalWins').textContent = Object.values(winCounts).reduce((a, b) => a + b, 0);
         document.getElementById('historyMostWins').textContent = mostWinsPlayer;
-    
+    }
 
     // 8. Gestion manuelle avancée
     async function resetAllMatchColors() {
@@ -4299,6 +4341,7 @@ window.manuallyArchiveCurrentRound = manuallyArchiveCurrentRound;
     function updateUI() {
     updateRankings();
     updateTournamentView();
+    updateStatistics();
     updateRecentMatches();
     updateSeasonTimeline();
     updateRoundProgress();
@@ -5178,7 +5221,9 @@ window.testSeasonRewards = testSeasonRewards;
         const seasonProgress = (tournamentInSeason / 4) * 100;
         document.getElementById('seasonProgressText').textContent = `${tournamentInSeason}/4`;
         document.getElementById('seasonProgressFill').style.width = `${seasonProgress}%`;
+    
 
+    function updateStatistics() {
         const totalPlayers = state.players.length;
         const totalMatches = state.tournamentHistory.reduce((sum, t) => sum + (t.matches?.length || 0), 0) + 
                             (state.activeTournament?.matches?.length || 0);
@@ -5194,7 +5239,7 @@ window.testSeasonRewards = testSeasonRewards;
         document.getElementById('totalMatches').textContent = totalMatches;
         document.getElementById('avgElo').textContent = avgElo;
         document.getElementById('winRate').textContent = `${winRate}%`;
-    
+    }
 
     function updateRecentMatches() {
         const recentMatches = [];
