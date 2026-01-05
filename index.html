@@ -1902,6 +1902,64 @@
                         </div>
                     </div>
 
+                    <!-- Rounds Archive -->
+<div id="roundsArchiveCard" class="tab-content">
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">📁 Rounds Archive</h2>
+            <div style="color: var(--text-secondary); font-size: 0.9rem;">
+                <span id="currentTournamentName">Current Tournament</span> • 
+                <span id="archivedRoundsCount">0</span> rounds archived
+            </div>
+        </div>
+        
+        <!-- Filtres pour les rounds -->
+        <div class="history-filters" id="roundsFilters">
+            <button class="history-filter active" onclick="filterRounds('all')">All Rounds</button>
+            <button class="history-filter" onclick="filterRounds('completed')">Completed</button>
+            <button class="history-filter" onclick="filterRounds('current')">Current Round</button>
+            <button class="history-filter" onclick="filterRounds('withGames')">With Game Links</button>
+        </div>
+        
+        <!-- Statistiques des rounds -->
+        <div class="history-stats-grid">
+            <div class="history-stat-item">
+                <div class="history-stat-value" id="totalArchivedMatches">0</div>
+                <div class="history-stat-label">Total Matches</div>
+            </div>
+            <div class="history-stat-item">
+                <div class="history-stat-value" id="completedArchivedMatches">0</div>
+                <div class="history-stat-label">Completed</div>
+            </div>
+            <div class="history-stat-item">
+                <div class="history-stat-value" id="roundsWithGames">0</div>
+                <div class="history-stat-label">With Game Links</div>
+            </div>
+            <div class="history-stat-item">
+                <div class="history-stat-value" id="avgMatchesPerRound">0</div>
+                <div class="history-stat-label">Avg/Round</div>
+            </div>
+        </div>
+        
+        <!-- Liste des rounds archivés -->
+        <div class="rounds-archive-list" id="roundsArchiveList" style="margin-top: 20px;">
+            <!-- Les rounds seront affichés ici -->
+        </div>
+        
+        <!-- Bouton pour archiver manuellement le round actuel -->
+        <div class="admin-hidden" style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border);">
+            <div style="text-align: center;">
+                <button onclick="manuallyArchiveCurrentRound()" class="btn btn-secondary">
+                    <span>📥</span> Archive Current Round (Round <span id="currentRoundNumber">1</span>)
+                </button>
+                <div style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 10px;">
+                    This will save the current round to archive without ending the tournament
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
                     <!-- Bouton d'inversion des couleurs global -->
                     <div class="color-controls admin-hidden" id="globalColorControls">
                         <button onclick="swapAllMatchColors()" class="swap-colors-global-btn">
@@ -1930,6 +1988,13 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="tabs" id="tournamentTabs">
+    <button class="tab active" onclick="switchTab('active')">🎯 Active Tournament</button>
+    <button class="tab" onclick="switchTab('archive')">📁 Rounds Archive</button>  <!-- NOUVEAU -->
+    <button class="tab" onclick="switchTab('history')">📜 Tournament History</button>
+    <button class="tab admin-hidden" onclick="switchTab('manual')" id="manualTab">🛠️ Manual Management</button>
+</div>
 
                     <!-- Manual Pairing avec améliorations -->
                     <div id="manualPairingSection" class="pairing-section admin-hidden">
@@ -3180,6 +3245,24 @@ function displayTournamentRoundsDetails(rounds) {
         showNotification('Match created successfully', 'success');
     }
 
+    function switchTab(tabName) {
+    document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+    
+    event.target.classList.add('active');
+    
+    if (tabName === 'active') {
+        document.getElementById('activeTournamentCard').classList.add('active');
+    } else if (tabName === 'archive') {  // NOUVEAU
+        document.getElementById('roundsArchiveCard').classList.add('active');
+        updateRoundsArchive();  // Rafraîchir l'affichage
+    } else if (tabName === 'history') {
+        document.getElementById('tournamentHistoryCard').classList.add('active');
+    } else if (tabName === 'manual') {
+        document.getElementById('manualManagementCard').classList.add('active');
+    }
+}
+
     // Fonction pour échanger les couleurs d'un match
     async function swapMatchColors(matchId) {
         if (!isAdmin) {
@@ -3654,8 +3737,6 @@ function debugRoundHistory() {
     }
 }
 
-// Dans le DOMContentLoaded, exposez-la :
-window.debugRoundHistory = debugRoundHistory;
 
 async function recoverLostRounds() {
     if (!isAdmin) {
@@ -4178,19 +4259,21 @@ window.manuallyArchiveCurrentRound = manuallyArchiveCurrentRound;
 
     // Mise à jour de l'interface utilisateur
     function updateUI() {
-        updateRankings();
-        updateTournamentView();
-        updateStatistics();
-        updateRecentMatches();
-        updateSeasonTimeline();
-        updateRoundProgress();
-        if (chart) chart.destroy();
-        renderChart();
-        updateSeasonInfo();
-        if (isAdmin) {
-            updateEditMatchSelect();
-        }
+    updateRankings();
+    updateTournamentView();
+    updateStatistics();
+    updateRecentMatches();
+    updateSeasonTimeline();
+    updateRoundProgress();
+    if (chart) chart.destroy();
+    renderChart();
+    updateSeasonInfo();
+    if (isAdmin) {
+        updateEditMatchSelect();
     }
+    updateRoundsArchive();  // AJOUTEZ CETTE LIGNE
+}
+
 
     function updateEditMatchSelect() {
         if (!state.activeTournament) return;
@@ -4209,6 +4292,203 @@ window.manuallyArchiveCurrentRound = manuallyArchiveCurrentRound;
             matchSelect.appendChild(option);
         });
     }
+
+    function updateRoundsArchive() {
+    if (!state.activeTournament) {
+        document.getElementById('roundsArchiveList').innerHTML = `
+            <div class="empty-state">
+                <div class="empty-state-icon">📁</div>
+                <h3>No active tournament</h3>
+                <p>Start a tournament to see archived rounds here</p>
+            </div>
+        `;
+        return;
+    }
+    
+    const tournamentId = state.activeTournament.id;
+    const tournamentRounds = state.roundHistory.filter(r => r.tournamentId === tournamentId);
+    
+    // Mettre à jour les infos
+    document.getElementById('currentTournamentName').textContent = state.activeTournament.name;
+    document.getElementById('archivedRoundsCount').textContent = tournamentRounds.length;
+    document.getElementById('currentRoundNumber').textContent = state.activeTournament.round;
+    
+    // Calculer les statistiques
+    const totalMatches = tournamentRounds.reduce((sum, round) => sum + (round.matches?.length || 0), 0);
+    const completedMatches = tournamentRounds.reduce((sum, round) => sum + (round.completedMatches || 0), 0);
+    const roundsWithGames = tournamentRounds.filter(round => 
+        round.matches?.some(m => m.gameLink)
+    ).length;
+    const avgMatchesPerRound = tournamentRounds.length > 0 ? 
+        Math.round(totalMatches / tournamentRounds.length) : 0;
+    
+    document.getElementById('totalArchivedMatches').textContent = totalMatches;
+    document.getElementById('completedArchivedMatches').textContent = completedMatches;
+    document.getElementById('roundsWithGames').textContent = roundsWithGames;
+    document.getElementById('avgMatchesPerRound').textContent = avgMatchesPerRound;
+    
+    // Afficher les rounds
+    if (tournamentRounds.length === 0) {
+        document.getElementById('roundsArchiveList').innerHTML = `
+            <div class="empty-state">
+                <div class="empty-state-icon">📁</div>
+                <h3>No rounds archived yet</h3>
+                <p>Rounds will appear here after they are archived</p>
+                <div style="margin-top: 15px;">
+                    <button onclick="manuallyArchiveCurrentRound()" class="btn btn-primary admin-hidden">
+                        📥 Archive Current Round
+                    </button>
+                </div>
+            </div>
+        `;
+        return;
+    }
+    
+    // Trier les rounds par numéro (décroissant pour voir le plus récent en premier)
+    const sortedRounds = [...tournamentRounds].sort((a, b) => b.roundNumber - a.roundNumber);
+    
+    const roundsHTML = sortedRounds.map(round => {
+        const roundDate = new Date(round.date || round.timestamp);
+        const formattedDate = roundDate.toLocaleDateString('en-US', {
+            day: '2-digit',
+            month: 'short',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+        
+        const isCurrentRound = round.roundNumber === state.activeTournament.round;
+        const completionRate = round.totalMatches > 0 ? 
+            Math.round((round.completedMatches / round.totalMatches) * 100) : 0;
+        
+        return `
+            <div class="history-item ${isCurrentRound ? 'season-finale' : ''}" 
+                 style="cursor: pointer;" 
+                 onclick="toggleRoundDetails('${round.id}')">
+                <div class="history-header">
+                    <div class="history-title">
+                        <span style="color: var(--accent); font-weight: 700;">Round ${round.roundNumber}</span>
+                        ${isCurrentRound ? '<span style="margin-left: 10px; background: var(--accent); color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.7rem;">CURRENT</span>' : ''}
+                    </div>
+                    <div class="history-meta">${formattedDate}</div>
+                </div>
+                
+                <div style="margin: 10px 0;">
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+                        <div style="flex: 1;">
+                            <div style="font-size: 0.9rem; color: var(--text-secondary);">
+                                <span>📊 ${round.completedMatches || 0}/${round.totalMatches || 0} matches completed</span>
+                            </div>
+                            <div class="progress-bar" style="margin-top: 5px; height: 6px;">
+                                <div class="progress-fill" style="width: ${completionRate}%"></div>
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <span style="font-size: 0.85rem; color: var(--text-secondary);">
+                                ${completionRate}% complete
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 15px; font-size: 0.85rem; color: var(--text-secondary);">
+                        <span>👥 ${round.standings?.length || 0} players</span>
+                        <span>🎮 ${round.matches?.filter(m => m.gameLink).length || 0} with game links</span>
+                        <span>📅 ${round.manuallyArchived ? 'Manual archive' : 'Auto archive'}</span>
+                    </div>
+                </div>
+                
+                <!-- Détails du round (cachés par défaut) -->
+                <div id="roundDetails_${round.id}" class="history-details">
+                    ${displayTournamentRoundsDetails([round])}
+                    
+                    <!-- Actions sur le round -->
+                    <div class="history-actions admin-hidden">
+                        <button onclick="exportRoundData('${round.id}')" class="quick-action-btn">
+                            <span>📤</span> Export Round Data
+                        </button>
+                        <button onclick="deleteRound('${round.id}')" class="quick-action-btn" style="background: var(--danger); color: white;">
+                            <span>🗑️</span> Delete Round
+                        </button>
+                    </div>
+                </div>
+                
+                <button class="history-expand-btn" onclick="toggleRoundDetails('${round.id}')">
+                    📊 View Round Details
+                </button>
+            </div>
+        `;
+    }).join('');
+    
+    document.getElementById('roundsArchiveList').innerHTML = roundsHTML;
+}
+
+// Fonction pour afficher/masquer les détails d'un round
+function toggleRoundDetails(roundId) {
+    const detailsDiv = document.getElementById(`roundDetails_${roundId}`);
+    const button = event.target.closest('.history-item').querySelector('.history-expand-btn');
+    
+    if (detailsDiv.classList.contains('expanded')) {
+        detailsDiv.classList.remove('expanded');
+        button.innerHTML = '📊 View Round Details';
+    } else {
+        detailsDiv.classList.add('expanded');
+        button.innerHTML = '📊 Hide Details';
+    }
+    
+    // Empêcher la propagation pour éviter de déclencher le onclick du parent
+    event.stopPropagation();
+}
+
+// Fonction pour filtrer les rounds
+function filterRounds(filterType) {
+    document.querySelectorAll('#roundsFilters .history-filter').forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+    
+    // Ici vous pourriez implémenter le filtrage si nécessaire
+    showNotification(`Filtering rounds: ${filterType}`, 'info');
+}
+
+// Fonction pour exporter les données d'un round
+async function exportRoundData(roundId) {
+    const round = state.roundHistory.find(r => r.id === roundId);
+    if (!round) {
+        showNotification('Round not found', 'error');
+        return;
+    }
+    
+    const dataStr = JSON.stringify(round, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+    const exportFileName = `round-${round.tournamentName}-${round.roundNumber}-${new Date().toISOString().split('T')[0]}.json`;
+    
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileName);
+    linkElement.click();
+    
+    showNotification(`Round ${round.roundNumber} data exported`, 'success');
+}
+
+// Fonction pour supprimer un round (admin only)
+async function deleteRound(roundId) {
+    if (!isAdmin || !confirm('Are you sure you want to delete this round? This action cannot be undone.')) {
+        return;
+    }
+    
+    const updatedRoundHistory = state.roundHistory.filter(r => r.id !== roundId);
+    
+    try {
+        await updateDoc(systemRef, {
+            roundHistory: updatedRoundHistory,
+            lastAction: `🗑️ Round deleted from archive`
+        });
+        
+        showNotification('Round deleted successfully', 'success');
+        updateRoundsArchive();
+        
+    } catch (error) {
+        console.error("Error deleting round:", error);
+        showNotification("Error: " + error.message, 'error');
+    }
+}
 
     function updateRoundProgress() {
         const progressSection = document.getElementById('roundProgressSection');
@@ -5132,6 +5412,12 @@ window.toggleTournamentRounds = toggleTournamentRounds;
         updateModeIndicator();
         
         // Exposer les fonctions au niveau global
+        window.updateRoundsArchive = updateRoundsArchive;
+window.toggleRoundDetails = toggleRoundDetails;
+window.filterRounds = filterRounds;
+window.exportRoundData = exportRoundData;
+window.deleteRound = deleteRound;
+        window.getAppState = () => state;
         window.debugTournamentData = debugTournamentData;
         window.archiveCurrentRound = archiveCurrentRound;  // <-- AJOUTEZ CETTE LIGNE
         window.debugRoundArchiving = debugRoundArchiving;
