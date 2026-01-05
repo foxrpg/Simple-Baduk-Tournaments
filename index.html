@@ -3838,7 +3838,7 @@ async function manuallyArchiveCurrentRound() {
 window.manuallyArchiveCurrentRound = manuallyArchiveCurrentRound;
 
     // Generate Swiss Pairs
-    async function generateSwissPairs() {
+   async function generateSwissPairs() {
     if (!isAdmin || !state.activeTournament) {
         showNotification('Admin access required', 'error');
         return;
@@ -3870,7 +3870,7 @@ window.manuallyArchiveCurrentRound = manuallyArchiveCurrentRound;
                 m.round < currentRound
             ).length;
         
-        // Liste des adversaires déjà rencontrés
+        // Liste des adversaires déjà rencontrés (tableau, pas Set)
         const opponents = state.activeTournament.matches
             .filter(m => 
                 (m.player1.id === player.id || m.player2.id === player.id) && 
@@ -3904,15 +3904,15 @@ window.manuallyArchiveCurrentRound = manuallyArchiveCurrentRound;
 
         return {
             ...player,
-             id: player.id,
-    wins: winsInTournament,
-    losses: lossesInTournament,
-    score: score,
-    buchholz: buchholz,
-    sonnebornBerger: sonnebornBerger,
-    opponents: opponents, // <-- CORRIGÉ : tableau simple
-    elo: state.eloRatings[player.id] || state.systemSettings.initialElo,
-    played: opponents.length
+            id: player.id,
+            wins: winsInTournament,
+            losses: lossesInTournament,
+            score: score,
+            buchholz: buchholz,
+            sonnebornBerger: sonnebornBerger,
+            opponents: opponents, // Tableau, pas Set (pour Firebase)
+            elo: state.eloRatings[player.id] || state.systemSettings.initialElo,
+            played: opponents.length
         };
     });
 
@@ -3944,7 +3944,7 @@ window.manuallyArchiveCurrentRound = manuallyArchiveCurrentRound;
         score: p.score,
         buchholz: p.buchholz,
         elo: p.elo,
-        opponents: Array.from(p.opponents)
+        opponents: p.opponents || []
     })));
 
     // Premier essai : pairing idéal
@@ -3959,8 +3959,8 @@ window.manuallyArchiveCurrentRound = manuallyArchiveCurrentRound;
         for (let j = i + 1; j < playersToPair.length; j++) {
             if (paired.has(playersToPair[j].id)) continue;
             
-            // Vérifier s'ils ne se sont pas déjà rencontrés
-            if (playersToPair[i].opponents.has(playersToPair[j].id)) continue;
+            // Vérifier s'ils ne se sont pas déjà rencontrés (CORRIGÉ ICI)
+            if (playersToPair[i].opponents && playersToPair[i].opponents.includes(playersToPair[j].id)) continue;
             
             // Calculer la différence de score
             const scoreDiff = Math.abs(playersToPair[i].score - playersToPair[j].score);
@@ -4092,7 +4092,6 @@ window.manuallyArchiveCurrentRound = manuallyArchiveCurrentRound;
         showNotification("Error generating pairs: " + error.message, 'error');
     }
 }
-
     async function clearCurrentMatches() {
     if (!isAdmin) {
         showNotification('Admin access required', 'error');
