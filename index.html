@@ -84,10 +84,6 @@
     align-items: center;
     gap: 5px;
 }
-/* Ajoutez dans la section <style> */
-.guest-mode .hide-in-guest {
-    display: none !important;
-}
 
         body {
             font-family: 'Inter', sans-serif;
@@ -1835,7 +1831,41 @@
                 </div>
             </div>
 
+            <!-- Statistics Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">📊 Statistics</h2>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalPlayers">0</div>
+                        <div class="stat-label">Total Players</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalMatches">0</div>
+                        <div class="stat-label">Total Matches</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="avgElo">1500</div>
+                        <div class="stat-label">Avg Elo</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="winRate">0%</div>
+                        <div class="stat-label">Win Rate</div>
+                    </div>
+                </div>
+            </div>
 
+            <!-- Chart Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">📈 Points Evolution</h2>
+                </div>
+                <div class="chart-container">
+                    <canvas id="seasonChart"></canvas>
+                </div>
+            </div>
+        </aside>
 
         <!-- Middle Column -->
         <main>
@@ -2160,40 +2190,7 @@
                     </div>
                 </div>
             </div>
-<!-- Statistics Card - CACHÉ EN MODE GUEST -->
-<div class="card hide-in-guest">
-    <div class="card-header">
-        <h2 class="card-title">📊 Statistics</h2>
-    </div>
-    <div class="stats-grid">
-        <div class="stat-card">
-            <div class="stat-value" id="totalPlayers">0</div>
-            <div class="stat-label">Total Players</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-value" id="totalMatches">0</div>
-            <div class="stat-label">Total Matches</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-value" id="avgElo">1500</div>
-            <div class="stat-label">Avg Elo</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-value" id="winRate">0%</div>
-            <div class="stat-label">Win Rate</div>
-        </div>
-    </div>
-</div>
 
-<!-- Chart Card - CACHÉ EN MODE GUEST -->
-<div class="card hide-in-guest">
-    <div class="card-header">
-        <h2 class="card-title">📈 Points Evolution</h2>
-    </div>
-    <div class="chart-container">
-        <canvas id="seasonChart"></canvas>
-    </div>
-</div>
             <!-- Onglet de gestion manuelle -->
             <div id="manualManagementCard" class="tab-content">
                 <div class="card">
@@ -2524,7 +2521,7 @@ let state = {
             updateUI();
             updateSeasonInfo();
             updateTournamentHistory();
-
+            updateHistoryStatistics();
         } else {
             setDoc(systemRef, state).catch(console.error);
         }
