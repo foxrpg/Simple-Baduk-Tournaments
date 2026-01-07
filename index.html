@@ -3185,6 +3185,7 @@ function displayTournamentRoundsDetails(rounds) {
     // Fonction pour ajouter/modifier un lien de jeu
     async function promptGameLink(matchId) {
     console.log("🔗 promptGameLink called for match:", matchId);
+    console.log("Type du matchId:", typeof matchId);
     
     if (!isAdmin) {
         showNotification('❌ Admin access required', 'error');
@@ -3196,11 +3197,39 @@ function displayTournamentRoundsDetails(rounds) {
         return;
     }
     
-    const match = state.activeTournament.matches.find(m => m.id === matchId);
+    // DEBUG: Afficher les matchs
+    console.log("🔍 Recherche du match ID:", matchId);
+    console.log("🔍 Nombre de matchs disponibles:", state.activeTournament.matches.length);
+    
+    // Recherche améliorée du match
+    let match = null;
+    
+    // Essai 1: Recherche exacte
+    match = state.activeTournament.matches.find(m => m.id === matchId);
+    
     if (!match) {
+        // Essai 2: Recherche avec conversion
+        match = state.activeTournament.matches.find(m => String(m.id) === String(matchId));
+    }
+    
+    if (!match) {
+        // Essai 3: Recherche avec conversion implicite
+        match = state.activeTournament.matches.find(m => m.id == matchId);
+    }
+    
+    if (!match) {
+        console.error("❌ Match non trouvé!");
+        console.error("ID recherché:", matchId);
+        console.error("Matchs disponibles:", state.activeTournament.matches.map(m => ({
+            id: m.id,
+            type: typeof m.id,
+            players: `${m.player1?.name} vs ${m.player2?.name}`
+        })));
         showNotification('❌ Match not found', 'error');
         return;
     }
+    
+    console.log("✅ Match trouvé:", match);
     
     const currentLink = match.gameUrl || "";
     const player1Name = match.player1.name.split(" ")[0];
@@ -3216,7 +3245,13 @@ function displayTournamentRoundsDetails(rounds) {
     }
     
     const updatedMatches = state.activeTournament.matches.map(m => {
-        if (m.id === matchId) {
+        // Utiliser la même logique de recherche pour trouver le bon match
+        const isSameMatch = 
+            (m.id === matchId) || 
+            (String(m.id) === String(matchId)) || 
+            (m.id == matchId);
+        
+        if (isSameMatch) {
             return {
                 ...m,
                 gameUrl: newLink.trim() || null
@@ -3245,6 +3280,47 @@ function displayTournamentRoundsDetails(rounds) {
         showNotification("❌ Save error: " + error.message, "error");
     }
 }
+
+// Ajoutez cette fonction après les déclarations de variables (ligne ~130)
+function debugMatches() {
+    if (!state.activeTournament) {
+        console.log("❌ Pas de tournoi actif");
+        return;
+    }
+    
+    console.log("=== DÉBOGAGE DES MATCHS ===");
+    console.log("Tournoi:", state.activeTournament.name);
+    console.log("Round actuel:", state.activeTournament.round);
+    console.log("Nombre total de matchs:", state.activeTournament.matches?.length || 0);
+    
+    // Matchs du round actuel
+    const currentRoundMatches = state.activeTournament.matches.filter(m => m.round === state.activeTournament.round);
+    console.log("Matchs du round actuel:", currentRoundMatches.length);
+    
+    if (state.activeTournament.matches && state.activeTournament.matches.length > 0) {
+        console.log("\n📋 Liste complète des matchs:");
+        state.activeTournament.matches.forEach((match, index) => {
+            console.log(`\n--- Match ${index} ---`);
+            console.log("ID:", match.id, "(type:", typeof match.id + ")");
+            console.log("Joueurs:", `${match.player1?.name} vs ${match.player2?.name}`);
+            console.log("Round:", match.round);
+            console.log("Vainqueur:", match.winner || "Pas encore");
+            console.log("Lien de jeu:", match.gameUrl || "Aucun");
+        });
+    } else {
+        console.log("Aucun match dans ce tournoi");
+    }
+    
+    // Afficher aussi les IDs des boutons dans le DOM
+    console.log("\n🔍 IDs dans le DOM:");
+    const matchElements = document.querySelectorAll('[data-match-id]');
+    matchElements.forEach((el, i) => {
+        console.log(`Bouton ${i}: data-match-id="${el.dataset.matchId}"`);
+    });
+}
+
+// Exposez-la globalement
+window.debugMatches = debugMatches;
     async function createManualMatch() {
         if (!isAdmin) {
             showNotification('Admin access required', 'error');
@@ -3372,112 +3448,163 @@ function switchTab(tabName) {
 
     // Fonction pour déclarer un vainqueur
     async function setMatchWinner(matchId, winnerId) {
-        if (!isAdmin) {
-            showNotification('Admin access required', 'error');
-            return;
-        }
+    console.log("=== DEBUG setMatchWinner ===");
+    console.log("matchId reçu:", matchId, "type:", typeof matchId);
+    console.log("winnerId reçu:", winnerId, "type:", typeof winnerId);
+    
+    if (!isAdmin) {
+        showNotification('Admin access required', 'error');
+        return;
+    }
 
-        if (!state || !state.activeTournament || !state.activeTournament.matches) {
-            showNotification('No active tournament found', 'error');
-            return;
-        }
+    if (!state || !state.activeTournament || !state.activeTournament.matches) {
+        console.error("❌ Erreur: Pas de tournoi actif ou pas de matchs");
+        showNotification('No active tournament found', 'error');
+        return;
+    }
 
-        const match = state.activeTournament.matches.find(m => m.id === matchId);
-        if (!match) {
-            showNotification('Match not found', 'error');
-            return;
-        }
+    // DEBUG: Afficher tous les matchs avec leurs IDs
+    console.log("🔍 Tous les matchs disponibles (" + state.activeTournament.matches.length + "):");
+    state.activeTournament.matches.forEach((m, i) => {
+        console.log(`[${i}] ID: "${m.id}" (type: ${typeof m.id}), Match: ${m.player1?.name} vs ${m.player2?.name}, Round: ${m.round}`);
+    });
 
-        const loserId = winnerId === match.player1.id ? match.player2.id : match.player1.id;
-        
-        const winner = state.players.find(p => p.id === winnerId);
-        const loser = state.players.find(p => p.id === loserId);
-
-        if (!winner || !loser) {
-            showNotification('Players not found', 'error');
-            return;
-        }
-
-        // Calculate Elo changes
-        const winnerElo = state.eloRatings[winnerId] || state.systemSettings.initialElo;
-        const loserElo = state.eloRatings[loserId] || state.systemSettings.initialElo;
-        const eloChanges = calculateElo(winnerElo, loserElo, state.systemSettings.eloKFactor);
-        
-        // Update Elo ratings
-        const updatedEloRatings = {
-            ...state.eloRatings,
-            [winnerId]: eloChanges.newWinnerElo,
-            [loserId]: eloChanges.newLoserElo
-        };
-
-        // Update players
-        const pointsPerWin = state.activeTournament?.settings?.pointsPerWin || 10;
-        const pointsPerLoss = state.activeTournament?.settings?.pointsPerLoss || -5;
-
-        const updatedPlayers = state.players.map(p => {
-            if (p.id === winnerId) {
-                return {
-                    ...p,
-                    points: (p.points || 0) + pointsPerWin,
-                    wins: (p.wins || 0) + 1,
-                    elo: eloChanges.newWinnerElo,
-                    history: [...(p.history || [0]), (p.points || 0) + pointsPerWin],
-                    tournamentsPlayed: (p.tournamentsPlayed || 0) + 1
-                };
-            }
-            if (p.id === loserId) {
-                return {
-                    ...p,
-                    points: Math.max(0, (p.points || 0) + pointsPerLoss),
-                    losses: (p.losses || 0) + 1,
-                    elo: eloChanges.newLoserElo,
-                    history: [...(p.history || [0]), Math.max(0, (p.points || 0) + pointsPerLoss)],
-                    tournamentsPlayed: (p.tournamentsPlayed || 0) + 1
-                };
-            }
-            return p;
-        });
-
-        // Update match
-        const updatedMatches = state.activeTournament.matches.map(m => 
-            m.id === matchId ? { 
-                ...m, 
-                winner: winnerId,
-                eloChanges: {
-                    winner: { from: winnerElo, to: eloChanges.newWinnerElo },
-                    loser: { from: loserElo, to: eloChanges.newLoserElo }
-                },
-                endedAt: new Date().toISOString()
-            } : m
+    // Recherche améliorée du match
+    let match = null;
+    
+    // Essai 1: Recherche exacte
+    match = state.activeTournament.matches.find(m => m.id === matchId);
+    console.log("Recherche exacte (===):", match ? "✅ Trouvé" : "❌ Non trouvé");
+    
+    if (!match) {
+        // Essai 2: Recherche avec conversion en string
+        match = state.activeTournament.matches.find(m => String(m.id) === String(matchId));
+        console.log("Recherche avec String():", match ? "✅ Trouvé" : "❌ Non trouvé");
+    }
+    
+    if (!match) {
+        // Essai 3: Recherche avec == (conversion implicite)
+        match = state.activeTournament.matches.find(m => m.id == matchId);
+        console.log("Recherche avec == :", match ? "✅ Trouvé" : "❌ Non trouvé");
+    }
+    
+    if (!match) {
+        // Essai 4: Recherche par approximation (pour les nombres flottants)
+        match = state.activeTournament.matches.find(m => 
+            Math.abs(Number(m.id) - Number(matchId)) < 0.0001
         );
+        console.log("Recherche par approximation:", match ? "✅ Trouvé" : "❌ Non trouvé");
+    }
+    
+    if (!match) {
+        console.error("❌ Match non trouvé avec aucun des méthodes de recherche!");
+        console.error("ID recherché:", matchId);
+        console.error("Type de l'ID recherché:", typeof matchId);
+        showNotification('Match not found', 'error');
+        return;
+    }
 
-        // Update round progress
-        const currentRound = state.activeTournament.round;
-        let roundProgress = state.activeTournament.roundProgress || [];
-        
-        if (!Array.isArray(roundProgress)) {
-            const participants = state.activeTournament.participants || [];
-            const totalRounds = state.activeTournament.totalRounds || 3;
-            roundProgress = Array(totalRounds).fill(0).map((_, i) => ({
-                round: i + 1,
-                completedMatches: 0,
-                totalMatches: Math.floor(participants.length / 2)
-            }));
-        }
+    console.log("✅ Match trouvé:", {
+        id: match.id,
+        player1: match.player1.name,
+        player2: match.player2.name,
+        round: match.round,
+        winner: match.winner
+    });
 
-        const roundIndex = currentRound - 1;
-        
-        if (roundIndex >= 0 && roundIndex < roundProgress.length) {
-            const completedMatches = updatedMatches.filter(m => 
-                m.round === currentRound && m.winner
-            ).length;
-            
-            roundProgress[roundIndex] = {
-                ...roundProgress[roundIndex],
-                completedMatches: completedMatches
+    const loserId = winnerId === match.player1.id ? match.player2.id : match.player1.id;
+    
+    const winner = state.players.find(p => p.id === winnerId);
+    const loser = state.players.find(p => p.id === loserId);
+
+    if (!winner || !loser) {
+        showNotification('Players not found', 'error');
+        return;
+    }
+
+    // Calculate Elo changes
+    const winnerElo = state.eloRatings[winnerId] || state.systemSettings.initialElo;
+    const loserElo = state.eloRatings[loserId] || state.systemSettings.initialElo;
+    const eloChanges = calculateElo(winnerElo, loserElo, state.systemSettings.eloKFactor);
+    
+    // Update Elo ratings
+    const updatedEloRatings = {
+        ...state.eloRatings,
+        [winnerId]: eloChanges.newWinnerElo,
+        [loserId]: eloChanges.newLoserElo
+    };
+
+    // Update players
+    const pointsPerWin = state.activeTournament?.settings?.pointsPerWin || 10;
+    const pointsPerLoss = state.activeTournament?.settings?.pointsPerLoss || -5;
+
+    const updatedPlayers = state.players.map(p => {
+        if (p.id === winnerId) {
+            return {
+                ...p,
+                points: (p.points || 0) + pointsPerWin,
+                wins: (p.wins || 0) + 1,
+                elo: eloChanges.newWinnerElo,
+                history: [...(p.history || [0]), (p.points || 0) + pointsPerWin],
+                tournamentsPlayed: (p.tournamentsPlayed || 0) + 1
             };
         }
+        if (p.id === loserId) {
+            return {
+                ...p,
+                points: Math.max(0, (p.points || 0) + pointsPerLoss),
+                losses: (p.losses || 0) + 1,
+                elo: eloChanges.newLoserElo,
+                history: [...(p.history || [0]), Math.max(0, (p.points || 0) + pointsPerLoss)],
+                tournamentsPlayed: (p.tournamentsPlayed || 0) + 1
+            };
+        }
+        return p;
+    });
 
+    // Update match
+    const updatedMatches = state.activeTournament.matches.map(m => 
+        m.id === match.id || String(m.id) === String(match.id) ? { 
+            ...m, 
+            winner: winnerId,
+            eloChanges: {
+                winner: { from: winnerElo, to: eloChanges.newWinnerElo },
+                loser: { from: loserElo, to: eloChanges.newLoserElo }
+            },
+            endedAt: new Date().toISOString()
+        } : m
+    );
+
+    // Update round progress
+    const currentRound = state.activeTournament.round;
+    let roundProgress = state.activeTournament.roundProgress || [];
+    
+    if (!Array.isArray(roundProgress)) {
+        const participants = state.activeTournament.participants || [];
+        const totalRounds = state.activeTournament.totalRounds || 3;
+        roundProgress = Array(totalRounds).fill(0).map((_, i) => ({
+            round: i + 1,
+            completedMatches: 0,
+            totalMatches: Math.floor(participants.length / 2)
+        }));
+    }
+
+    const roundIndex = currentRound - 1;
+    
+    if (roundIndex >= 0 && roundIndex < roundProgress.length) {
+        const completedMatches = updatedMatches.filter(m => 
+            m.round === currentRound && m.winner
+        ).length;
+        
+        roundProgress[roundIndex] = {
+            ...roundProgress[roundIndex],
+            completedMatches: completedMatches
+        };
+    }
+
+    console.log("💾 Sauvegarde des modifications...");
+    
+    try {
         await updateDoc(systemRef, {
             players: updatedPlayers,
             eloRatings: updatedEloRatings,
@@ -3486,9 +3613,13 @@ function switchTab(tabName) {
             lastAction: `🏆 ${winner.name} defeated ${loser.name}! (+${eloChanges.newWinnerElo - winnerElo} Elo)`
         });
 
+        console.log("✅ Sauvegarde réussie!");
         showNotification(`${winner.name} wins! Elo: +${eloChanges.newWinnerElo - winnerElo}`, 'success');
+    } catch (error) {
+        console.error("❌ Erreur de sauvegarde:", error);
+        showNotification("Error saving match result: " + error.message, 'error');
     }
-
+}
     // Recherchez la fonction setMatchWinner (~ligne 450)
 // APRÈS cette fonction, ajoutez :
 
@@ -5624,6 +5755,7 @@ window.toggleTournamentRounds = toggleTournamentRounds;
         
         // Exposer les fonctions au niveau global
         window.updateRoundsArchive = updateRoundsArchive;
+        
 window.toggleRoundDetails = toggleRoundDetails;
 window.filterRounds = filterRounds;
 window.exportRoundData = exportRoundData;
