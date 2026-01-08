@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Serif+JP:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
+
             --primary-dark: #1a1a2e;
             --primary: #162447;
             --secondary: #1f4068;
@@ -71,6 +72,15 @@
         .season-finale {
     border: 2px solid rgba(255, 215, 0, 0.3) !important;
     background: linear-gradient(135deg, rgba(255, 215, 0, 0.05) 0%, transparent 100%) !important;
+}
+
+/* FORCE l'affichage exclusif des onglets - AJOUTEZ CECI */
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
 }
 
 .rewards-badge {
@@ -2545,38 +2555,51 @@ function debugRoundArchive() {
    function switchTab(tabName) {
     console.log("🔄 Switching to tab:", tabName);
     
-    // Retirer la classe active de tous les tabs
-    document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+    // 1. Désactiver tous les tabs
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
     
-    // Trouver le tab cliqué
-    const clickedTab = document.querySelector(`.tab[onclick*="${tabName}"]`);
+    // 2. Cacher TOUS les contenus d'onglet
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+    });
+    
+    // 3. Activer le tab cliqué
+    const clickedTab = event.target.closest('.tab');
     if (clickedTab) {
         clickedTab.classList.add('active');
     }
     
-    // Afficher le contenu correspondant
-    if (tabName === 'active') {
-        console.log("📊 Showing Active Tournament");
-        document.getElementById('activeTournamentCard').classList.add('active');
-    } else if (tabName === 'archive') {
-        console.log("📁 Showing Rounds Archive");
-        document.getElementById('roundsArchiveCard').classList.add('active');
-        // Rafraîchir l'affichage des rounds archivés
-        if (typeof updateRoundsArchive === 'function') {
-            console.log("🔄 Calling updateRoundsArchive");
-            updateRoundsArchive();
-        }
-    } else if (tabName === 'history') {
-        console.log("📜 Showing Tournament History");
-        document.getElementById('tournamentHistoryCard').classList.add('active');
-    } else if (tabName === 'manual') {
-        console.log("🛠️ Showing Manual Management");
-        document.getElementById('manualManagementCard').classList.add('active');
+    // 4. Afficher SEULEMENT le contenu correspondant
+    switch(tabName) {
+        case 'active':
+            document.getElementById('activeTournamentCard').classList.add('active');
+            console.log("📊 Showing Active Tournament");
+            break;
+            
+        case 'archive':
+            document.getElementById('roundsArchiveCard').classList.add('active');
+            console.log("📁 Showing Rounds Archive");
+            if (typeof updateRoundsArchive === 'function') {
+                console.log("🔄 Calling updateRoundsArchive");
+                updateRoundsArchive();
+            }
+            break;
+            
+        case 'history':
+            document.getElementById('tournamentHistoryCard').classList.add('active');
+            console.log("📜 Showing Tournament History");
+            break;
+            
+        case 'manual':
+            document.getElementById('manualManagementCard').classList.add('active');
+            console.log("🛠️ Showing Manual Management");
+            break;
     }
     
     console.log("✅ Tab switch completed");
-}
+
 
     // =================================================================
     // NOUVELLES FONCTIONNALITÉS
