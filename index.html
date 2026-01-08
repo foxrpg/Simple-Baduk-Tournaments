@@ -2315,18 +2315,6 @@
                     </button>
                 </div>
             </div>
-
-                        <!-- Rounds Archive Card -->
-            <div id="roundsArchiveCard" class="tab-content">
-                <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title">📁 Rounds Archive</h2>
-                        <div style="color: var(--text-secondary); font-size: 0.9rem;">
-                            <span id="currentTournamentName">Current Tournament</span> • 
-                            <span id="archivedRoundsCount">0</span> rounds archived
-                        </div>
-                    </div>
-                    
                     <!-- Filtres pour les rounds -->
                     <div class="history-filters" id="roundsFilters">
                         <button class="history-filter active" onclick="filterRounds('all')">All Rounds</button>
@@ -3468,21 +3456,7 @@ function switchTab(tabName) {
     }
 }
 
-    document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-    
-    event.target.classList.add('active');
-    
-    if (tabName === 'active') {
-        document.getElementById('activeTournamentCard').classList.add('active');
-    } else if (tabName === 'archive') {  // NOUVEAU
-        document.getElementById('roundsArchiveCard').classList.add('active');
-        updateRoundsArchive();  // Rafraîchir l'affichage
-    } else if (tabName === 'history') {
-        document.getElementById('tournamentHistoryCard').classList.add('active');
-    } else if (tabName === 'manual') {
-        document.getElementById('manualManagementCard').classList.add('active');
-    }
+
 }
 
     // Fonction pour échanger les couleurs d'un match
