@@ -1904,64 +1904,6 @@
                         </div>
                     </div>
 
-                    <!-- Rounds Archive -->
-<div id="roundsArchiveCard" class="tab-content">
-    <div class="card">
-        <div class="card-header">
-            <h2 class="card-title">📁 Rounds Archive</h2>
-            <div style="color: var(--text-secondary); font-size: 0.9rem;">
-                <span id="currentTournamentName">Current Tournament</span> • 
-                <span id="archivedRoundsCount">0</span> rounds archived
-            </div>
-        </div>
-        
-        <!-- Filtres pour les rounds -->
-        <div class="history-filters" id="roundsFilters">
-            <button class="history-filter active" onclick="filterRounds('all')">All Rounds</button>
-            <button class="history-filter" onclick="filterRounds('completed')">Completed</button>
-            <button class="history-filter" onclick="filterRounds('current')">Current Round</button>
-            <button class="history-filter" onclick="filterRounds('withGames')">With Game Links</button>
-        </div>
-        
-        <!-- Statistiques des rounds -->
-        <div class="history-stats-grid">
-            <div class="history-stat-item">
-                <div class="history-stat-value" id="totalArchivedMatches">0</div>
-                <div class="history-stat-label">Total Matches</div>
-            </div>
-            <div class="history-stat-item">
-                <div class="history-stat-value" id="completedArchivedMatches">0</div>
-                <div class="history-stat-label">Completed</div>
-            </div>
-            <div class="history-stat-item">
-                <div class="history-stat-value" id="roundsWithGames">0</div>
-                <div class="history-stat-label">With Game Links</div>
-            </div>
-            <div class="history-stat-item">
-                <div class="history-stat-value" id="avgMatchesPerRound">0</div>
-                <div class="history-stat-label">Avg/Round</div>
-            </div>
-        </div>
-        
-        <!-- Liste des rounds archivés -->
-        <div class="rounds-archive-list" id="roundsArchiveList" style="margin-top: 20px;">
-            <!-- Les rounds seront affichés ici -->
-        </div>
-        
-        <!-- Bouton pour archiver manuellement le round actuel -->
-        <div class="admin-hidden" style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border);">
-            <div style="text-align: center;">
-                <button onclick="manuallyArchiveCurrentRound()" class="btn btn-secondary">
-                    <span>📥</span> Archive Current Round (Round <span id="currentRoundNumber">1</span>)
-                </button>
-                <div style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 10px;">
-                    This will save the current round to archive without ending the tournament
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
                     <!-- Bouton d'inversion des couleurs global -->
                     <div class="color-controls admin-hidden" id="globalColorControls">
                         <button onclick="swapAllMatchColors()" class="swap-colors-global-btn">
@@ -2321,6 +2263,64 @@
                     </button>
                 </div>
             </div>
+
+                        <!-- Rounds Archive Card -->
+            <div id="roundsArchiveCard" class="tab-content">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">📁 Rounds Archive</h2>
+                        <div style="color: var(--text-secondary); font-size: 0.9rem;">
+                            <span id="currentTournamentName">Current Tournament</span> • 
+                            <span id="archivedRoundsCount">0</span> rounds archived
+                        </div>
+                    </div>
+                    
+                    <!-- Filtres pour les rounds -->
+                    <div class="history-filters" id="roundsFilters">
+                        <button class="history-filter active" onclick="filterRounds('all')">All Rounds</button>
+                        <button class="history-filter" onclick="filterRounds('completed')">Completed</button>
+                        <button class="history-filter" onclick="filterRounds('current')">Current Round</button>
+                        <button class="history-filter" onclick="filterRounds('withGames')">With Game Links</button>
+                    </div>
+                    
+                    <!-- Statistiques des rounds -->
+                    <div class="history-stats-grid">
+                        <div class="history-stat-item">
+                            <div class="history-stat-value" id="totalArchivedMatches">0</div>
+                            <div class="history-stat-label">Total Matches</div>
+                        </div>
+                        <div class="history-stat-item">
+                            <div class="history-stat-value" id="completedArchivedMatches">0</div>
+                            <div class="history-stat-label">Completed</div>
+                        </div>
+                        <div class="history-stat-item">
+                            <div class="history-stat-value" id="roundsWithGames">0</div>
+                            <div class="history-stat-label">With Game Links</div>
+                        </div>
+                        <div class="history-stat-item">
+                            <div class="history-stat-value" id="avgMatchesPerRound">0</div>
+                            <div class="history-stat-label">Avg/Round</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Liste des rounds archivés -->
+                    <div class="rounds-archive-list" id="roundsArchiveList" style="margin-top: 20px;">
+                        <!-- Les rounds seront affichés ici -->
+                    </div>
+                    
+                    <!-- Bouton pour archiver manuellement le round actuel -->
+                    <div class="admin-hidden" style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border);">
+                        <div style="text-align: center;">
+                            <button onclick="manuallyArchiveCurrentRound()" class="btn btn-secondary">
+                                <span>📥</span> Archive Current Round (Round <span id="currentRoundNumber">1</span>)
+                            </button>
+                            <div style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 10px;">
+                                This will save the current round to archive without ending the tournament
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </main>
 
         <!-- Right Column -->
@@ -2528,22 +2528,39 @@ let state = {
     });
 
     // Tab Switching
-    function switchTab(tabName) {
+   function switchTab(tabName) {
+    console.log("🔄 Switching to tab:", tabName);
+    
+    // Retirer la classe active de tous les tabs
     document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
     
-    event.target.classList.add('active');
+    // Ajouter la classe active au tab cliqué
+    const clickedTab = event.target;
+    clickedTab.classList.add('active');
     
+    // Afficher le contenu correspondant
     if (tabName === 'active') {
+        console.log("📊 Showing Active Tournament");
         document.getElementById('activeTournamentCard').classList.add('active');
-    } else if (tabName === 'archive') {  // <-- AJOUTEZ CETTE LIGNE
+    } else if (tabName === 'archive') {
+        console.log("📁 Showing Rounds Archive");
         document.getElementById('roundsArchiveCard').classList.add('active');
-        updateRoundsArchive(); // Rafraîchir l'affichage
+        // Rafraîchir l'affichage des rounds archivés
+        if (typeof updateRoundsArchive === 'function') {
+            console.log("🔄 Calling updateRoundsArchive");
+            updateRoundsArchive();
+        }
     } else if (tabName === 'history') {
+        console.log("📜 Showing Tournament History");
         document.getElementById('tournamentHistoryCard').classList.add('active');
     } else if (tabName === 'manual') {
+        console.log("🛠️ Showing Manual Management");
         document.getElementById('manualManagementCard').classList.add('active');
     }
+    
+    // Vérification
+    console.log("✅ Tab switch completed");
 }
 
     // =================================================================
@@ -4466,7 +4483,7 @@ window.manuallyArchiveCurrentRound = manuallyArchiveCurrentRound;
 }
 
     // Mise à jour de l'interface utilisateur
-    function updateUI() {
+  function updateUI() {
     updateRankings();
     updateTournamentView();
     updateStatistics();
@@ -4479,7 +4496,8 @@ window.manuallyArchiveCurrentRound = manuallyArchiveCurrentRound;
     if (isAdmin) {
         updateEditMatchSelect();
     }
-    updateRoundsArchive();  // AJOUTEZ CETTE LIGNE
+    // AJOUTEZ CETTE LIGNE :
+    updateRoundsArchive();  // Mettre à jour l'affichage des rounds archivés
 }
 
 
@@ -4502,24 +4520,48 @@ window.manuallyArchiveCurrentRound = manuallyArchiveCurrentRound;
     }
 
     function updateRoundsArchive() {
+    console.log("📁 updateRoundsArchive called");
+    console.log("Active tournament:", state.activeTournament?.name);
+    console.log("Round history length:", state.roundHistory?.length || 0);
+    
+    const archiveList = document.getElementById('roundsArchiveList');
+    const currentTournamentName = document.getElementById('currentTournamentName');
+    const archivedRoundsCount = document.getElementById('archivedRoundsCount');
+    const currentRoundNumber = document.getElementById('currentRoundNumber');
+    
+    if (!archiveList || !currentTournamentName || !archivedRoundsCount || !currentRoundNumber) {
+        console.error("❌ Elements not found in DOM");
+        return;
+    }
+    
     if (!state.activeTournament) {
-        document.getElementById('roundsArchiveList').innerHTML = `
+        archiveList.innerHTML = `
             <div class="empty-state">
                 <div class="empty-state-icon">📁</div>
                 <h3>No active tournament</h3>
                 <p>Start a tournament to see archived rounds here</p>
             </div>
         `;
+        currentTournamentName.textContent = "No active tournament";
+        archivedRoundsCount.textContent = "0";
+        currentRoundNumber.textContent = "0";
         return;
     }
     
     const tournamentId = state.activeTournament.id;
-    const tournamentRounds = state.roundHistory.filter(r => r.tournamentId === tournamentId);
+    console.log("Tournament ID:", tournamentId);
+    
+    // Filtrer les rounds pour ce tournoi
+    const tournamentRounds = (state.roundHistory || []).filter(r => {
+        return r.tournamentId === tournamentId;
+    });
+    
+    console.log("Tournament rounds found:", tournamentRounds.length);
     
     // Mettre à jour les infos
-    document.getElementById('currentTournamentName').textContent = state.activeTournament.name;
-    document.getElementById('archivedRoundsCount').textContent = tournamentRounds.length;
-    document.getElementById('currentRoundNumber').textContent = state.activeTournament.round;
+    currentTournamentName.textContent = state.activeTournament.name;
+    archivedRoundsCount.textContent = tournamentRounds.length;
+    currentRoundNumber.textContent = state.activeTournament.round;
     
     // Calculer les statistiques
     const totalMatches = tournamentRounds.reduce((sum, round) => sum + (round.matches?.length || 0), 0);
@@ -4537,7 +4579,7 @@ window.manuallyArchiveCurrentRound = manuallyArchiveCurrentRound;
     
     // Afficher les rounds
     if (tournamentRounds.length === 0) {
-        document.getElementById('roundsArchiveList').innerHTML = `
+        archiveList.innerHTML = `
             <div class="empty-state">
                 <div class="empty-state-icon">📁</div>
                 <h3>No rounds archived yet</h3>
@@ -4626,7 +4668,8 @@ window.manuallyArchiveCurrentRound = manuallyArchiveCurrentRound;
         `;
     }).join('');
     
-    document.getElementById('roundsArchiveList').innerHTML = roundsHTML;
+    archiveList.innerHTML = roundsHTML;
+    console.log("✅ Rounds archive updated successfully");
 }
 
 // Fonction pour afficher/masquer les détails d'un round
@@ -5805,6 +5848,7 @@ window.toggleHistoryDetails = toggleHistoryDetails;
 </script>
 </body>
 </html>
+
 
 
 
