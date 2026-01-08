@@ -1869,9 +1869,10 @@
 
         <!-- Middle Column -->
         <main>
-            <!-- Tabs for Active/History -->
+            <!-- Tabs for Active/History/Archive -->
             <div class="tabs" id="tournamentTabs">
                 <button class="tab active" onclick="switchTab('active')">🎯 Active Tournament</button>
+                <button class="tab" onclick="switchTab('archive')">📁 Rounds Archive</button>
                 <button class="tab" onclick="switchTab('history')">📜 Tournament History</button>
                 <button class="tab admin-hidden" onclick="switchTab('manual')" id="manualTab">🛠️ Manual Management</button>
             </div>
@@ -1932,13 +1933,6 @@
                             </div>
                         </div>
                     </div>
-
-                    <div class="tabs" id="tournamentTabs">
-    <button class="tab active" onclick="switchTab('active')">🎯 Active Tournament</button>
-    <button class="tab" onclick="switchTab('archive')">📁 Rounds Archive</button>  <!-- NOUVEAU -->
-    <button class="tab" onclick="switchTab('history')">📜 Tournament History</button>
-    <button class="tab admin-hidden" onclick="switchTab('manual')" id="manualTab">🛠️ Manual Management</button>
-</div>
 
                     <!-- Manual Pairing avec améliorations -->
                     <div id="manualPairingSection" class="pairing-section admin-hidden">
@@ -2083,6 +2077,64 @@
                         <div style="text-align: center; margin-top: 10px; font-size: 0.9rem; color: var(--text-secondary);">
                             <span id="matchesCompleted">0</span> matches completed • 
                             <span id="totalMatchesEstimate">0</span> total matches estimated
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rounds Archive Card -->
+            <div id="roundsArchiveCard" class="tab-content">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">📁 Rounds Archive</h2>
+                        <div style="color: var(--text-secondary); font-size: 0.9rem;">
+                            <span id="currentTournamentName">Current Tournament</span> • 
+                            <span id="archivedRoundsCount">0</span> rounds archived
+                        </div>
+                    </div>
+                    
+                    <!-- Filtres pour les rounds -->
+                    <div class="history-filters" id="roundsFilters">
+                        <button class="history-filter active" onclick="filterRounds('all')">All Rounds</button>
+                        <button class="history-filter" onclick="filterRounds('completed')">Completed</button>
+                        <button class="history-filter" onclick="filterRounds('current')">Current Round</button>
+                        <button class="history-filter" onclick="filterRounds('withGames')">With Game Links</button>
+                    </div>
+                    
+                    <!-- Statistiques des rounds -->
+                    <div class="history-stats-grid">
+                        <div class="history-stat-item">
+                            <div class="history-stat-value" id="totalArchivedMatches">0</div>
+                            <div class="history-stat-label">Total Matches</div>
+                        </div>
+                        <div class="history-stat-item">
+                            <div class="history-stat-value" id="completedArchivedMatches">0</div>
+                            <div class="history-stat-label">Completed</div>
+                        </div>
+                        <div class="history-stat-item">
+                            <div class="history-stat-value" id="roundsWithGames">0</div>
+                            <div class="history-stat-label">With Game Links</div>
+                        </div>
+                        <div class="history-stat-item">
+                            <div class="history-stat-value" id="avgMatchesPerRound">0</div>
+                            <div class="history-stat-label">Avg/Round</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Liste des rounds archivés -->
+                    <div class="rounds-archive-list" id="roundsArchiveList" style="margin-top: 20px;">
+                        <!-- Les rounds seront affichés ici -->
+                    </div>
+                    
+                    <!-- Bouton pour archiver manuellement le round actuel -->
+                    <div class="admin-hidden" style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border);">
+                        <div style="text-align: center;">
+                            <button onclick="manuallyArchiveCurrentRound()" class="btn btn-secondary">
+                                <span>📥</span> Archive Current Round (Round <span id="currentRoundNumber">1</span>)
+                            </button>
+                            <div style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 10px;">
+                                This will save the current round to archive without ending the tournament
+                            </div>
                         </div>
                     </div>
                 </div>
