@@ -74,13 +74,13 @@
     background: linear-gradient(135deg, rgba(255, 215, 0, 0.05) 0%, transparent 100%) !important;
 }
 
-/* FORCE l'affichage exclusif des onglets - AJOUTEZ CECI */
+/* FORCE l'affichage exclusif des onglets - PRIORITÉ MAXIMALE */
 .tab-content {
-    display: none;
+    display: none !important;
 }
 
 .tab-content.active {
-    display: block;
+    display: block !important;
 }
 
 .rewards-badge {
@@ -2599,6 +2599,8 @@ function debugRoundArchive() {
     }
     
     console.log("✅ Tab switch completed");
+
+}
 
 
     // =================================================================
