@@ -2530,9 +2530,11 @@ let state = {
     document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
     
-    // Ajouter la classe active au tab cliqué
-    const clickedTab = event.target;
-    clickedTab.classList.add('active');
+    // Trouver le tab cliqué
+    const clickedTab = document.querySelector(`.tab[onclick*="${tabName}"]`);
+    if (clickedTab) {
+        clickedTab.classList.add('active');
+    }
     
     // Afficher le contenu correspondant
     if (tabName === 'active') {
@@ -2554,7 +2556,6 @@ let state = {
         document.getElementById('manualManagementCard').classList.add('active');
     }
     
-    // Vérification
     console.log("✅ Tab switch completed");
 }
 
@@ -3386,33 +3387,7 @@ window.debugMatches = debugMatches;
         });
         
         showNotification('Match created successfully', 'success');
-    
-function switchTab(tabName) {
-    // Retirer la classe active de tous les tabs
-    document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-    
-    // Ajouter la classe active au tab cliqué
-    event.target.classList.add('active');
-    
-    // Afficher le contenu correspondant
-    if (tabName === 'active') {
-        document.getElementById('activeTournamentCard').classList.add('active');
-    } else if (tabName === 'archive') {
-        document.getElementById('roundsArchiveCard').classList.add('active');
-        // Rafraîchir l'affichage des rounds archivés
-        if (typeof updateRoundsArchive === 'function') {
-            updateRoundsArchive();
-        }
-    } else if (tabName === 'history') {
-        document.getElementById('tournamentHistoryCard').classList.add('active');
-    } else if (tabName === 'manual') {
-        document.getElementById('manualManagementCard').classList.add('active');
     }
-}
-
-
-}
 
     // Fonction pour échanger les couleurs d'un match
     async function swapMatchColors(matchId) {
