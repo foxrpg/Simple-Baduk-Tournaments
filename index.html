@@ -1902,18 +1902,21 @@
                                 </span>
                             </div>
                         </div>
-                        <div class="tournament-controls admin-hidden">
-                            <button onclick="generateSwissPairs()" class="btn btn-secondary">
-                                <span>🔀</span> Generate Pairs
-                            </button>
-                            <button onclick="clearCurrentMatches()" class="btn btn-warning">
-                                <span>🔄</span> Next Round
-                            </button>
-                            <button onclick="endTournament()" class="btn btn-danger">
-                                <span>🏁</span> End Tournament
-                            </button>
-                        </div>
-                    </div>
+                        // Dans la section des contrôles du tournoi (vers la ligne ~610)
+<div class="tournament-controls admin-hidden">
+    <button onclick="generateSwissPairs()" class="btn btn-secondary">
+        <span>🔀</span> Generate Pairs
+    </button>
+    <button onclick="clearCurrentRoundMatches()" class="btn btn-warning">
+        <span>🗑️</span> Clear Round Matches
+    </button>
+    <button onclick="clearCurrentMatches()" class="btn btn-warning">
+        <span>🔄</span> Next Round
+    </button>
+    <button onclick="endTournament()" class="btn btn-danger">
+        <span>🏁</span> End Tournament
+    </button>
+</div>
 
                     <!-- Bouton d'inversion des couleurs global -->
                     <div class="color-controls admin-hidden" id="globalColorControls">
@@ -2194,6 +2197,8 @@
                     </div>
                 </div>
             </div>
+
+            
 
             <!-- Onglet de gestion manuelle -->
             <div id="manualManagementCard" class="tab-content">
@@ -2816,6 +2821,53 @@ function debugRoundArchive() {
         
         showNotification('All matches cleared for current round', 'success');
     }
+
+// Fonction pour effacer les matches de la ronde actuelle
+async function clearCurrentRoundMatches() {
+    if (!isAdmin) {
+        showNotification('Admin access required', 'error');
+        return;
+    }
+
+    if (!state.activeTournament) {
+        showNotification('No active tournament', 'error');
+        return;
+    }
+
+    const currentRound = state.activeTournament.round;
+    const matchesThisRound = state.activeTournament.matches.filter(m => m.round === currentRound);
+    
+    if (matchesThisRound.length === 0) {
+        showNotification(`No matches in round ${currentRound} to clear`, 'warning');
+        return;
+    }
+
+    if (!confirm(`Clear ${matchesThisRound.length} matches from round ${currentRound}? This action cannot be undone.`)) {
+        return;
+    }
+
+    try {
+        // Filtrer pour ne garder que les matches des autres rounds
+        const updatedMatches = state.activeTournament.matches.filter(m => m.round !== currentRound);
+        
+        await updateDoc(systemRef, {
+            "activeTournament.matches": updatedMatches,
+            lastAction: `🗑️ Cleared ${matchesThisRound.length} matches from round ${currentRound}`
+        });
+        
+        showNotification(`✅ Cleared ${matchesThisRound.length} matches from round ${currentRound}`, 'success');
+        
+        // Mettre à jour l'affichage
+        updateMatchesDisplay();
+        
+    } catch (error) {
+        console.error("Error clearing matches:", error);
+        showNotification("Error clearing matches: " + error.message, 'error');
+    }
+}
+
+// Exposer la fonction globalement pour y accéder depuis la console
+window.clearCurrentRoundMatches = clearCurrentRoundMatches;
 
     async function randomizeAllMatches() {
         if (!isAdmin || !confirm('Randomize all matches in current round?')) {
@@ -5822,6 +5874,17 @@ window.toggleTournamentRounds = toggleTournamentRounds;
         
         // Mettre à jour l'indicateur de mode
         updateModeIndicator();
+
+        // Dans la section DOMContentLoaded (vers la fin du fichier, après les autres écouteurs)
+document.getElementById('adminPin').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        loginAdmin();
+    } else if (e.key === 'e' && (e.ctrlKey || e.metaKey)) {
+        // Commande pour effacer les matches de la ronde actuelle
+        clearCurrentMatches();
+        e.preventDefault(); // Empêcher le comportement par défaut
+    }
+});
         
         // Exposer les fonctions au niveau global
 window.debugRoundArchive = debugRoundArchive;
@@ -5872,6 +5935,7 @@ window.toggleHistoryDetails = toggleHistoryDetails;
         window.saveMatchChanges = saveMatchChanges;
         window.deleteSelectedMatch = deleteSelectedMatch;
         window.setBulkWinner = setBulkWinner;
+window.clearCurrentRoundMatches = clearCurrentRoundMatches;
         
         console.log("✅ Application initialisée sans erreurs");
     });
@@ -5879,6 +5943,7 @@ window.toggleHistoryDetails = toggleHistoryDetails;
 </script>
 </body>
 </html>
+
 
 
 
