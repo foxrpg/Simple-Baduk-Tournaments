@@ -4746,13 +4746,19 @@ window.checkDuplicateMatches = checkDuplicateMatches;
         });
     }
 
-    function updateRoundsArchive() {
+   function updateRoundsArchive() {
     console.log("📁 UPDATE ROUNDS ARCHIVE CALLED");
     
     const archiveList = document.getElementById('roundsArchiveList');
     if (!archiveList) {
         console.error("❌ Element 'roundsArchiveList' not found");
         return;
+    }
+    
+    // Fonction utilitaire pour mettre à jour les compteurs en toute sécurité
+    function updateCounter(id, value) {
+        const element = document.getElementById(id);
+        if (element) element.textContent = value;
     }
     
     // Afficher toujours quelque chose
@@ -4769,19 +4775,15 @@ window.checkDuplicateMatches = checkDuplicateMatches;
             </div>
         `;
         
-        // Mettre à jour les compteurs - VERSION SIMPLIFIÉE
-function updateCounter(id, value) {
-    const element = document.getElementById(id);
-    if (element) element.textContent = value;
-}}
-
-updateCounter('archivedRoundsCount', '0');
-updateCounter('totalArchivedMatches', '0');
-updateCounter('completedArchivedMatches', '0');
-updateCounter('roundsWithGames', '0');
-updateCounter('avgMatchesPerRound', '0');
-
-return;
+        // Mettre à jour les compteurs
+        updateCounter('archivedRoundsCount', '0');
+        updateCounter('totalArchivedMatches', '0');
+        updateCounter('completedArchivedMatches', '0');
+        updateCounter('roundsWithGames', '0');
+        updateCounter('avgMatchesPerRound', '0');
+        
+        return;
+    }
     
     console.log(`Found ${state.roundHistory.length} rounds in history`);
     
@@ -4798,7 +4800,7 @@ return;
     }
     
     // Mettre à jour les compteurs
-    document.getElementById('archivedRoundsCount')?.textContent = tournamentRounds.length;
+    updateCounter('archivedRoundsCount', tournamentRounds.length);
     
     const totalMatches = tournamentRounds.reduce((sum, round) => sum + (round.matches?.length || 0), 0);
     const completedMatches = tournamentRounds.reduce((sum, round) => sum + (round.completedMatches || 0), 0);
@@ -4808,10 +4810,10 @@ return;
     const avgMatchesPerRound = tournamentRounds.length > 0 ? 
         Math.round(totalMatches / tournamentRounds.length) : 0;
     
-    document.getElementById('totalArchivedMatches')?.textContent = totalMatches;
-    document.getElementById('completedArchivedMatches')?.textContent = completedMatches;
-    document.getElementById('roundsWithGames')?.textContent = roundsWithGames;
-    document.getElementById('avgMatchesPerRound')?.textContent = avgMatchesPerRound;
+    updateCounter('totalArchivedMatches', totalMatches);
+    updateCounter('completedArchivedMatches', completedMatches);
+    updateCounter('roundsWithGames', roundsWithGames);
+    updateCounter('avgMatchesPerRound', avgMatchesPerRound);
     
     // Trier les rounds par date (plus récent d'abord)
     const sortedRounds = [...tournamentRounds].sort((a, b) => {
@@ -4835,11 +4837,11 @@ return;
                               roundNum === state.activeTournament.round &&
                               round.tournamentId === state.activeTournament.id;
         
-        const totalMatches = round.matches?.length || round.totalMatches || 0;
-        const completedMatches = round.completedMatches || 
+        const totalRoundMatches = round.matches?.length || round.totalMatches || 0;
+        const completedRoundMatches = round.completedMatches || 
             round.matches?.filter(m => m.winner).length || 0;
-        const completionRate = totalMatches > 0 ? 
-            Math.round((completedMatches / totalMatches) * 100) : 0;
+        const completionRate = totalRoundMatches > 0 ? 
+            Math.round((completedRoundMatches / totalRoundMatches) * 100) : 0;
         
         return `
             <div class="history-item ${isCurrentRound ? 'season-finale' : ''}" 
@@ -4857,7 +4859,7 @@ return;
                     <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
                         <div style="flex: 1;">
                             <div style="font-size: 0.9rem; color: var(--text-secondary);">
-                                <span>📊 ${completedMatches}/${totalMatches} matches</span>
+                                <span>📊 ${completedRoundMatches}/${totalRoundMatches} matches</span>
                             </div>
                             <div class="progress-bar" style="margin-top: 5px; height: 6px;">
                                 <div class="progress-fill" style="width: ${completionRate}%"></div>
