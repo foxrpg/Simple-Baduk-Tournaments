@@ -2556,7 +2556,7 @@ function debugRoundArchive() {
     }
 }
     // Tab Switching
-   function switchTab(tabName) {
+  function switchTab(tabName) {
     console.log("🔄 Switching to tab:", tabName);
     
     // 1. Désactiver tous les tabs
@@ -2569,10 +2569,22 @@ function debugRoundArchive() {
         content.classList.remove('active');
     });
     
-    // 3. Activer le tab cliqué
-    const clickedTab = event.target.closest('.tab');
+    // 3. Activer le tab cliqué (CORRECTION : obtenir le bouton correctement)
+    let clickedTab;
+    if (typeof event !== 'undefined' && event) {
+        clickedTab = event.target.closest('.tab');
+    } else {
+        // Fallback : trouver le tab par son onclick
+        clickedTab = Array.from(document.querySelectorAll('.tab')).find(tab => 
+            tab.getAttribute('onclick') && tab.getAttribute('onclick').includes(tabName)
+        );
+    }
+    
     if (clickedTab) {
         clickedTab.classList.add('active');
+    } else {
+        // Sélectionner le premier tab avec le bon nom
+        document.querySelector(`[onclick*="${tabName}"]`)?.classList.add('active');
     }
     
     // 4. Afficher SEULEMENT le contenu correspondant
@@ -2585,10 +2597,13 @@ function debugRoundArchive() {
         case 'archive':
             document.getElementById('roundsArchiveCard').classList.add('active');
             console.log("📁 Showing Rounds Archive");
-            if (typeof updateRoundsArchive === 'function') {
-                console.log("🔄 Calling updateRoundsArchive");
-                updateRoundsArchive();
-            }
+            // Appeler updateRoundsArchive directement
+            setTimeout(() => {
+                if (typeof updateRoundsArchive === 'function') {
+                    console.log("🔄 Calling updateRoundsArchive");
+                    updateRoundsArchive();
+                }
+            }, 100);
             break;
             
         case 'history':
@@ -2603,8 +2618,39 @@ function debugRoundArchive() {
     }
     
     console.log("✅ Tab switch completed");
-
 }
+
+// Ajoutez cette fonction après la fonction switchTab()
+function testArchiveTab() {
+    console.log("🧪 Testing Archive Tab...");
+    
+    // 1. Simuler un clic sur l'onglet Archive
+    const archiveTab = document.querySelector('[onclick*="archive"]');
+    if (archiveTab) {
+        console.log("Found archive tab, clicking...");
+        archiveTab.click();
+    } else {
+        console.log("Archive tab not found, forcing display...");
+        // Forcer l'affichage manuellement
+        document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+        
+        // Activer le tab Archive
+        document.querySelector('[onclick*="archive"]')?.classList.add('active');
+        document.getElementById('roundsArchiveCard').classList.add('active');
+        
+        // Appeler updateRoundsArchive
+        setTimeout(() => {
+            if (typeof updateRoundsArchive === 'function') {
+                console.log("Calling updateRoundsArchive...");
+                updateRoundsArchive();
+            }
+        }, 50);
+    }
+}
+
+// Exposez-la globalement
+window.testArchiveTab = testArchiveTab;
 
 
     // =================================================================
