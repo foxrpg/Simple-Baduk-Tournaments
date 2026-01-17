@@ -76,12 +76,18 @@
 
 
 /* Lignes ~150-160 - LAISSER COMME ÇA */
+/* REMPLACEZ le CSS des onglets (lignes ~150-160) par : */
 .tab-content {
-    display: none !important;
+    display: none;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
 }
 
 .tab-content.active {
-    display: block !important;
+    display: block;
+    opacity: 1;
+    visibility: visible;
 }
 .rewards-badge {
     background: linear-gradient(135deg, var(--gold) 0%, #FFA500 100%);
@@ -2564,60 +2570,75 @@ function debugRoundArchive() {
         tab.classList.remove('active');
     });
     
-    // 2. Cacher TOUS les contenus d'onglet
+    // 2. Cacher TOUS les contenus d'onglet AVEC FORCE
     document.querySelectorAll('.tab-content').forEach(content => {
         content.classList.remove('active');
+        content.style.display = 'none';
+        content.style.opacity = '0';
+        content.style.visibility = 'hidden';
     });
     
-    // 3. Activer le tab cliqué (CORRECTION : obtenir le bouton correctement)
-    let clickedTab;
-    if (typeof event !== 'undefined' && event) {
-        clickedTab = event.target.closest('.tab');
-    } else {
-        // Fallback : trouver le tab par son onclick
-        clickedTab = Array.from(document.querySelectorAll('.tab')).find(tab => 
-            tab.getAttribute('onclick') && tab.getAttribute('onclick').includes(tabName)
-        );
-    }
+    // 3. Activer le tab cliqué
+    const tabs = document.querySelectorAll('.tab');
+    tabs.forEach((tab, index) => {
+        if (tab.getAttribute('onclick') && tab.getAttribute('onclick').includes(tabName)) {
+            tab.classList.add('active');
+            tab.style.borderBottom = '2px solid var(--accent)';
+        }
+    });
     
-    if (clickedTab) {
-        clickedTab.classList.add('active');
-    } else {
-        // Sélectionner le premier tab avec le bon nom
-        document.querySelector(`[onclick*="${tabName}"]`)?.classList.add('active');
-    }
+    // 4. Afficher SEULEMENT le contenu correspondant AVEC FORCE
+    let activeCard = null;
     
-    // 4. Afficher SEULEMENT le contenu correspondant
     switch(tabName) {
         case 'active':
-            document.getElementById('activeTournamentCard').classList.add('active');
+            activeCard = document.getElementById('activeTournamentCard');
             console.log("📊 Showing Active Tournament");
             break;
             
         case 'archive':
-            document.getElementById('roundsArchiveCard').classList.add('active');
+            activeCard = document.getElementById('roundsArchiveCard');
             console.log("📁 Showing Rounds Archive");
-            // Appeler updateRoundsArchive directement
-            setTimeout(() => {
-                if (typeof updateRoundsArchive === 'function') {
-                    console.log("🔄 Calling updateRoundsArchive");
-                    updateRoundsArchive();
-                }
-            }, 100);
             break;
             
         case 'history':
-            document.getElementById('tournamentHistoryCard').classList.add('active');
+            activeCard = document.getElementById('tournamentHistoryCard');
             console.log("📜 Showing Tournament History");
             break;
             
         case 'manual':
-            document.getElementById('manualManagementCard').classList.add('active');
+            activeCard = document.getElementById('manualManagementCard');
             console.log("🛠️ Showing Manual Management");
             break;
     }
     
-    console.log("✅ Tab switch completed");
+    if (activeCard) {
+        activeCard.classList.add('active');
+        activeCard.style.display = 'block';
+        activeCard.style.opacity = '1';
+        activeCard.style.visibility = 'visible';
+        
+        // FORCER l'appel de updateRoundsArchive pour l'onglet archive
+        if (tabName === 'archive') {
+            console.log("🔄 FORCING updateRoundsArchive with visual display");
+            setTimeout(() => {
+                if (typeof updateRoundsArchive === 'function') {
+                    updateRoundsArchive();
+                    
+                    // Forcer l'affichage visuel après génération
+                    setTimeout(() => {
+                        if (activeCard) {
+                            activeCard.style.display = 'block !important';
+                            activeCard.style.opacity = '1 !important';
+                            activeCard.style.visibility = 'visible !important';
+                        }
+                    }, 50);
+                }
+            }, 10);
+        }
+    }
+    
+    console.log("✅ Tab switch completed for:", tabName);
 }
 
 // Ajoutez cette fonction après la fonction switchTab()
