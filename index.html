@@ -74,14 +74,15 @@
     background: linear-gradient(135deg, rgba(255, 215, 0, 0.05) 0%, transparent 100%) !important;
 }
 
-
+/* FORCE l'affichage exclusif des onglets - PRIORITÉ MAXIMALE */
 .tab-content {
-    display: none;
+    display: none !important;
 }
 
 .tab-content.active {
-    display: block !important; /* Force l'affichage */
+    display: block !important;
 }
+
 .rewards-badge {
     background: linear-gradient(135deg, var(--gold) 0%, #FFA500 100%);
     color: black;
@@ -1901,20 +1902,18 @@
                                 </span>
                             </div>
                         </div>
-            <div class="tournament-controls admin-hidden">
-    <button onclick="generateSwissPairs()" class="btn btn-secondary">
-        <span>🔀</span> Generate Pairs
-    </button>
-    <button onclick="clearCurrentRoundMatches()" class="btn btn-warning">
-        <span>🗑️</span> Clear Round Matches
-    </button>
-    <button onclick="clearCurrentMatches()" class="btn btn-warning">
-        <span>🔄</span> Next Round
-    </button>
-    <button onclick="endTournament()" class="btn btn-danger">
-        <span>🏁</span> End Tournament
-    </button>
-</div>
+                        <div class="tournament-controls admin-hidden">
+                            <button onclick="generateSwissPairs()" class="btn btn-secondary">
+                                <span>🔀</span> Generate Pairs
+                            </button>
+                            <button onclick="clearCurrentMatches()" class="btn btn-warning">
+                                <span>🔄</span> Next Round
+                            </button>
+                            <button onclick="endTournament()" class="btn btn-danger">
+                                <span>🏁</span> End Tournament
+                            </button>
+                        </div>
+                    </div>
 
                     <!-- Bouton d'inversion des couleurs global -->
                     <div class="color-controls admin-hidden" id="globalColorControls">
@@ -2095,26 +2094,14 @@
 
             <!-- Rounds Archive Card -->
             <div id="roundsArchiveCard" class="tab-content">
-    <div class="card">
-        <div class="card-header">
-            <h2 class="card-title">📁 Archives des Rounds</h2>
-            <div class="tournament-meta">
-                <span>Total : <strong id="archivedRoundsCount">0</strong> rounds</span>
-            </div>
-        </div>
-        <div id="roundsArchiveList">
-            </div>
-    </div>
-</div>
-        
-        <div id="roundsArchiveList">
-            <div class="empty-state">
-                <div class="empty-state-icon">📁</div>
-                <h3>Loading archives...</h3>
-            </div>
-        </div>
-    </div>
-</div>
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">📁 Rounds Archive</h2>
+                        <div style="color: var(--text-secondary); font-size: 0.9rem;">
+                            <span id="currentTournamentName">Current Tournament</span> • 
+                            <span id="archivedRoundsCount">0</span> rounds archived
+                        </div>
+                    </div>
                     
                     <!-- Filtres pour les rounds -->
                     <div class="history-filters" id="roundsFilters">
@@ -2207,8 +2194,6 @@
                     </div>
                 </div>
             </div>
-
-            
 
             <!-- Onglet de gestion manuelle -->
             <div id="manualManagementCard" class="tab-content">
@@ -2567,79 +2552,55 @@ function debugRoundArchive() {
     }
 }
     // Tab Switching
-  function switchTab(tabName) {
+   function switchTab(tabName) {
     console.log("🔄 Switching to tab:", tabName);
-
-    // 1. Désactiver tous les boutons d'onglets
+    
+    // 1. Désactiver tous les tabs
     document.querySelectorAll('.tab').forEach(tab => {
         tab.classList.remove('active');
-        tab.style.borderBottom = 'none';
     });
-
-    // 2. Cacher tous les contenus
+    
+    // 2. Cacher TOUS les contenus d'onglet
     document.querySelectorAll('.tab-content').forEach(content => {
         content.classList.remove('active');
-        content.style.display = 'none';
     });
-
-    // 3. Identifier la carte à afficher
-    let activeCard = null;
-    switch(tabName) {
-        case 'active': activeCard = document.getElementById('activeTournamentCard'); break;
-        case 'archive': activeCard = document.getElementById('roundsArchiveCard'); break;
-        case 'history': activeCard = document.getElementById('tournamentHistoryCard'); break;
-        case 'manual': activeCard = document.getElementById('manualManagementCard'); break;
-    }
-
-    // 4. Afficher la carte et mettre à jour le bouton
-    if (activeCard) {
-        activeCard.classList.add('active');
-        activeCard.style.display = 'block';
-        
-        // Mettre en surbrillance le bouton cliqué
-        const clickedTab = document.querySelector(`[onclick*="'${tabName}'"]`);
-        if (clickedTab) {
-            clickedTab.classList.add('active');
-            clickedTab.style.borderBottom = '2px solid var(--accent)';
-        }
-
-        // Si on va sur l'archive, on lance la mise à jour des données
-        if (tabName === 'archive') {
-            updateRoundsArchive();
-        }
-    }
-}
-// Ajoutez cette fonction après la fonction switchTab()
-function testArchiveTab() {
-    console.log("🧪 Testing Archive Tab...");
     
-    // 1. Simuler un clic sur l'onglet Archive
-    const archiveTab = document.querySelector('[onclick*="archive"]');
-    if (archiveTab) {
-        console.log("Found archive tab, clicking...");
-        archiveTab.click();
-    } else {
-        console.log("Archive tab not found, forcing display...");
-        // Forcer l'affichage manuellement
-        document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-        
-        // Activer le tab Archive
-        document.querySelector('[onclick*="archive"]')?.classList.add('active');
-        document.getElementById('roundsArchiveCard').classList.add('active');
-        
-        // Appeler updateRoundsArchive
-        setTimeout(() => {
+    // 3. Activer le tab cliqué
+    const clickedTab = event.target.closest('.tab');
+    if (clickedTab) {
+        clickedTab.classList.add('active');
+    }
+    
+    // 4. Afficher SEULEMENT le contenu correspondant
+    switch(tabName) {
+        case 'active':
+            document.getElementById('activeTournamentCard').classList.add('active');
+            console.log("📊 Showing Active Tournament");
+            break;
+            
+        case 'archive':
+            document.getElementById('roundsArchiveCard').classList.add('active');
+            console.log("📁 Showing Rounds Archive");
             if (typeof updateRoundsArchive === 'function') {
-                console.log("Calling updateRoundsArchive...");
+                console.log("🔄 Calling updateRoundsArchive");
                 updateRoundsArchive();
             }
-        }, 50);
+            break;
+            
+        case 'history':
+            document.getElementById('tournamentHistoryCard').classList.add('active');
+            console.log("📜 Showing Tournament History");
+            break;
+            
+        case 'manual':
+            document.getElementById('manualManagementCard').classList.add('active');
+            console.log("🛠️ Showing Manual Management");
+            break;
     }
-}
+    
+    console.log("✅ Tab switch completed");
 
-// Exposez-la globalement
-window.testArchiveTab = testArchiveTab;
+}
 
 
     // =================================================================
@@ -2855,53 +2816,6 @@ window.testArchiveTab = testArchiveTab;
         
         showNotification('All matches cleared for current round', 'success');
     }
-
-// Fonction pour effacer les matches de la ronde actuelle
-async function clearCurrentRoundMatches() {
-    if (!isAdmin) {
-        showNotification('Admin access required', 'error');
-        return;
-    }
-
-    if (!state.activeTournament) {
-        showNotification('No active tournament', 'error');
-        return;
-    }
-
-    const currentRound = state.activeTournament.round;
-    const matchesThisRound = state.activeTournament.matches.filter(m => m.round === currentRound);
-    
-    if (matchesThisRound.length === 0) {
-        showNotification(`No matches in round ${currentRound} to clear`, 'warning');
-        return;
-    }
-
-    if (!confirm(`Clear ${matchesThisRound.length} matches from round ${currentRound}? This action cannot be undone.`)) {
-        return;
-    }
-
-    try {
-        // Filtrer pour ne garder que les matches des autres rounds
-        const updatedMatches = state.activeTournament.matches.filter(m => m.round !== currentRound);
-        
-        await updateDoc(systemRef, {
-            "activeTournament.matches": updatedMatches,
-            lastAction: `🗑️ Cleared ${matchesThisRound.length} matches from round ${currentRound}`
-        });
-        
-        showNotification(`✅ Cleared ${matchesThisRound.length} matches from round ${currentRound}`, 'success');
-        
-        // Mettre à jour l'affichage
-        updateMatchesDisplay();
-        
-    } catch (error) {
-        console.error("Error clearing matches:", error);
-        showNotification("Error clearing matches: " + error.message, 'error');
-    }
-}
-
-// Exposer la fonction globalement pour y accéder depuis la console
-window.clearCurrentRoundMatches = clearCurrentRoundMatches;
 
     async function randomizeAllMatches() {
         if (!isAdmin || !confirm('Randomize all matches in current round?')) {
@@ -3119,75 +3033,74 @@ window.clearCurrentRoundMatches = clearCurrentRoundMatches;
         return { newWinnerElo, newLoserElo };
     }
 function displayTournamentRoundsDetails(rounds) {
-    console.log("📋 displayTournamentRoundsDetails called with:", rounds?.length || 0, "rounds");
-    
     if (!rounds || rounds.length === 0) {
         return '<div style="color: var(--text-secondary); padding: 10px; text-align: center;">No rounds archived</div>';
     }
     
-    let html = '';
+    // Trier les rounds par numéro
+    const sortedRounds = [...rounds].sort((a, b) => a.roundNumber - b.roundNumber);
     
-    rounds.forEach((round, roundIndex) => {
-        const roundDate = round.date ? new Date(round.date).toLocaleDateString('en-US', {
+    let html = '<div style="background: var(--bg-light); border-radius: var(--radius-md); padding: 15px;">';
+    
+    sortedRounds.forEach(round => {
+        const roundDate = new Date(round.date).toLocaleDateString('en-US', {
             day: '2-digit',
             month: 'short',
             hour: '2-digit',
             minute: '2-digit'
-        }) : 'Date inconnue';
+        });
         
         html += `
-            <div style="margin-bottom: 20px; padding: 10px; border-bottom: 1px solid var(--border);">
+            <div style="margin-bottom: 15px; padding: 10px; border-bottom: 1px solid var(--border);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                    <strong style="color: var(--accent);">Round ${round.roundNumber || roundIndex + 1}</strong>
+                    <strong style="color: var(--accent);">Round ${round.roundNumber}</strong>
                     <small style="color: var(--text-secondary);">${roundDate}</small>
                 </div>
-        `;
-        
-        if (round.matches && round.matches.length > 0) {
-            round.matches.forEach((match, matchIndex) => {
-                const player1Name = match.player1?.name || 'Player 1';
-                const player2Name = match.player2?.name || 'Player 2';
-                const winnerName = match.winnerName || 
-                    (match.winner === match.player1?.id ? player1Name : 
-                     match.winner === match.player2?.id ? player2Name : null);
                 
-                html += `
-                    <div style="margin: 5px 0; padding: 8px; background: rgba(255,255,255,0.05); border-radius: var(--radius-sm);">
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <span style="font-weight: ${match.winner === match.player1?.id ? 'bold' : 'normal'}; 
-                                  color: ${match.winner === match.player1?.id ? 'var(--success)' : 'inherit'};">
-                                ${player1Name}
-                            </span>
-                            <span style="color: var(--text-secondary);">vs</span>
-                            <span style="font-weight: ${match.winner === match.player2?.id ? 'bold' : 'normal'};
-                                  color: ${match.winner === match.player2?.id ? 'var(--success)' : 'inherit'};">
-                                ${player2Name}
-                            </span>
-                        </div>
-                        ${match.winner ? 
-                            `<div style="font-size: 0.8rem; color: var(--success); margin-top: 3px;">
-                                🏆 Winner: ${winnerName}
-                            </div>` : 
-                            `<div style="font-size: 0.8rem; color: var(--warning); margin-top: 3px;">
-                                ⏳ No result
-                            </div>`
-                        }
-                        ${match.gameLink ? 
-                            `<div style="font-size: 0.7rem; margin-top: 3px;">
-                                🔗 <a href="${match.gameLink}" target="_blank" style="color: var(--secondary);">Game link</a>
-                            </div>` : ''
-                        }
+                <div style="font-size: 0.85rem;">
+                    <div style="margin-bottom: 5px;">
+                        <span style="color: var(--text-secondary);">Matches: </span>
+                        <strong>${round.completedMatches || 0}/${round.totalMatches || 0} completed</strong>
                     </div>
-                `;
-            });
-        } else {
-            html += '<div style="color: var(--text-secondary); font-size: 0.8rem;">No match details</div>';
-        }
-        
-        html += `</div>`;
+                    
+                    ${round.matches && round.matches.length > 0 ? round.matches.map(match => `
+                        <div style="margin: 5px 0; padding: 8px; background: rgba(255,255,255,0.05); border-radius: var(--radius-sm);">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <div class="stone-display ${match.player1.playedBlack ? 'black' : 'white'}" 
+                                     style="width: 20px; height: 20px;"></div>
+                                <span style="font-weight: ${match.winner === match.player1.id ? 'bold' : 'normal'}; 
+                                      color: ${match.winner === match.player1.id ? 'var(--success)' : 'inherit'};">
+                                    ${match.player1.name}
+                                </span>
+                                <span style="color: var(--text-secondary);">vs</span>
+                                <div class="stone-display ${match.player2.playedBlack ? 'black' : 'white'}" 
+                                     style="width: 20px; height: 20px;"></div>
+                                <span style="font-weight: ${match.winner === match.player2.id ? 'bold' : 'normal'};
+                                      color: ${match.winner === match.player2.id ? 'var(--success)' : 'inherit'};">
+                                    ${match.player2.name}
+                                </span>
+                            </div>
+                            ${match.winner ? 
+                                `<div style="font-size: 0.8rem; color: var(--success); margin-top: 3px;">
+                                    🏆 Winner: ${match.winnerName}
+                                </div>` : 
+                                `<div style="font-size: 0.8rem; color: var(--warning); margin-top: 3px;">
+                                    ⏳ No result
+                                </div>`
+                            }
+                            ${match.gameLink ? 
+                                `<div style="font-size: 0.7rem; margin-top: 3px;">
+                                    🔗 <a href="${match.gameLink}" target="_blank" style="color: var(--secondary);">Game link</a>
+                                </div>` : ''
+                            }
+                        </div>
+                    `).join('') : '<div style="color: var(--text-secondary); font-size: 0.8rem;">No match details</div>'}
+                </div>
+            </div>
+        `;
     });
     
-    console.log("✅ HTML generated for rounds details");
+    html += '</div>';
     return html;
 }
     // Auto Qualifiers Logic
@@ -3216,6 +3129,7 @@ function displayTournamentRoundsDetails(rounds) {
             document.getElementById('nextQualifiers').textContent = '--';
         }
     }
+
     // Player Management
     async function addNewPlayer() {
         if (!isAdmin) {
@@ -4352,7 +4266,7 @@ window.manuallyArchiveCurrentRound = manuallyArchiveCurrentRound;
         return a.played - b.played;
     });
 
-        // 3. Générer les paires
+    // 3. Générer les paires
     const newMatches = [];
     const paired = new Set();
     const playersToPair = [...playerStats];
@@ -4365,7 +4279,7 @@ window.manuallyArchiveCurrentRound = manuallyArchiveCurrentRound;
         opponents: p.opponents || []
     })));
 
-    // Premier essai : pairing idéal sans répétition
+    // Premier essai : pairing idéal
     for (let i = 0; i < playersToPair.length; i++) {
         if (paired.has(playersToPair[i].id)) continue;
         
@@ -4377,17 +4291,8 @@ window.manuallyArchiveCurrentRound = manuallyArchiveCurrentRound;
         for (let j = i + 1; j < playersToPair.length; j++) {
             if (paired.has(playersToPair[j].id)) continue;
             
-            // VÉRIFICATION AMÉLIORÉE : Ne pas pairer si déjà rencontré dans CE tournoi
-            const alreadyPlayed = state.activeTournament.matches.some(m => 
-                ((m.player1.id === playersToPair[i].id && m.player2.id === playersToPair[j].id) ||
-                 (m.player2.id === playersToPair[i].id && m.player1.id === playersToPair[j].id)) &&
-                m.round < currentRound
-            );
-            
-            if (alreadyPlayed) {
-                console.log(`⚠️ Skip: ${playersToPair[i].name} already played ${playersToPair[j].name}`);
-                continue;
-            }
+            // Vérifier s'ils ne se sont pas déjà rencontrés (CORRIGÉ ICI)
+            if (playersToPair[i].opponents && playersToPair[i].opponents.includes(playersToPair[j].id)) continue;
             
             // Calculer la différence de score
             const scoreDiff = Math.abs(playersToPair[i].score - playersToPair[j].score);
@@ -4419,79 +4324,36 @@ window.manuallyArchiveCurrentRound = manuallyArchiveCurrentRound;
             paired.add(playersToPair[i].id);
             paired.add(playersToPair[bestOpponentIndex].id);
             
-            console.log(`✅ Paired: ${playersToPair[i].name} (${playersToPair[i].score} pts) vs ${playersToPair[bestOpponentIndex].name} (${playersToPair[bestOpponentIndex].score} pts)`);
+            console.log(`Paired: ${playersToPair[i].name} (${playersToPair[i].score} pts, ${playersToPair[i].elo} Elo) vs ${playersToPair[bestOpponentIndex].name} (${playersToPair[bestOpponentIndex].score} pts, ${playersToPair[bestOpponentIndex].elo} Elo)`);
         }
     }
     
-    // Deuxième essai : pour les joueurs restants, assouplir les contraintes
+    // Deuxième essai : pour les joueurs restants, on assouplit les contraintes
     const remainingPlayers = playersToPair.filter(p => !paired.has(p.id));
     if (remainingPlayers.length > 0) {
         console.log("Remaining players after first pass:", remainingPlayers.map(p => p.name));
         
-        // Essayer de pairer les restants même si différence de score plus grande
+        // Essayer de pairer les restants même s'ils se sont déjà rencontrés
         for (let i = 0; i < remainingPlayers.length - 1; i += 2) {
             const player1 = remainingPlayers[i];
             const player2 = remainingPlayers[i + 1];
             
             if (player2) {
-                // Vérifier quand même si pas déjà joué ensemble
-                const alreadyPlayed = state.activeTournament.matches.some(m => 
-                    ((m.player1.id === player1.id && m.player2.id === player2.id) ||
-                     (m.player2.id === player1.id && m.player1.id === player2.id)) &&
-                    m.round < currentRound
-                );
+                newMatches.push({
+                    id: Date.now() + Math.random(),
+                    player1: player1,
+                    player2: player2,
+                    winner: null,
+                    round: currentRound,
+                    player1IsBlack: Math.random() > 0.5,
+                    gameUrl: null,
+                    forcedPairing: true
+                });
                 
-                if (!alreadyPlayed) {
-                    newMatches.push({
-                        id: Date.now() + Math.random(),
-                        player1: player1,
-                        player2: player2,
-                        winner: null,
-                        round: currentRound,
-                        player1IsBlack: Math.random() > 0.5,
-                        gameUrl: null,
-                        forcedPairing: true
-                    });
-                    
-                    paired.add(player1.id);
-                    paired.add(player2.id);
-                    
-                    console.log(`🤝 Forced pairing: ${player1.name} vs ${player2.name}`);
-                } else {
-                    console.log(`❌ Cannot force pairing: ${player1.name} already played ${player2.name}`);
-                    // Chercher un autre partenaire
-                    for (let k = i + 2; k < remainingPlayers.length; k++) {
-                        const alternatePlayer = remainingPlayers[k];
-                        const altAlreadyPlayed = state.activeTournament.matches.some(m => 
-                            ((m.player1.id === player1.id && m.player2.id === alternatePlayer.id) ||
-                             (m.player2.id === player1.id && m.player1.id === alternatePlayer.id)) &&
-                            m.round < currentRound
-                        );
-                        
-                        if (!altAlreadyPlayed) {
-                            newMatches.push({
-                                id: Date.now() + Math.random(),
-                                player1: player1,
-                                player2: alternatePlayer,
-                                winner: null,
-                                round: currentRound,
-                                player1IsBlack: Math.random() > 0.5,
-                                gameUrl: null,
-                                forcedPairing: true,
-                                swapped: true
-                            });
-                            
-                            paired.add(player1.id);
-                            paired.add(alternatePlayer.id);
-                            // Réorganiser la liste des joueurs restants
-                            remainingPlayers.splice(k, 1);
-                            remainingPlayers.splice(i + 1, 0, player2); // Remettre player2 dans la liste
-                            
-                            console.log(`🔄 Swapped pairing: ${player1.name} vs ${alternatePlayer.name}`);
-                            break;
-                        }
-                    }
-                }
+                paired.add(player1.id);
+                paired.add(player2.id);
+                
+                console.log(`Forced pairing: ${player1.name} vs ${player2.name}`);
             }
         }
         
@@ -4499,7 +4361,7 @@ window.manuallyArchiveCurrentRound = manuallyArchiveCurrentRound;
         if (remainingPlayers.length % 2 === 1) {
             const byePlayer = remainingPlayers[remainingPlayers.length - 1];
             showNotification(`${byePlayer.name} gets a BYE (no opponent available)`, 'warning');
-            console.log(`🎲 Bye for: ${byePlayer.name}`);
+            console.log(`Bye for: ${byePlayer.name}`);
             
             // Ajouter un match fictif pour le bye
             newMatches.push({
@@ -4512,8 +4374,6 @@ window.manuallyArchiveCurrentRound = manuallyArchiveCurrentRound;
                 gameUrl: null,
                 isBye: true
             });
-            
-            paired.add(byePlayer.id);
         }
     }
 
@@ -4622,90 +4482,6 @@ window.manuallyArchiveCurrentRound = manuallyArchiveCurrentRound;
     }
 }
 
-// Fonction pour vérifier si deux joueurs se sont déjà rencontrés
-function havePlayersPlayed(player1Id, player2Id, tournamentId = null) {
-    // Si un tournoi spécifique est fourni, vérifier seulement dans ce tournoi
-    if (tournamentId) {
-        const tournament = state.activeTournament?.id === tournamentId 
-            ? state.activeTournament 
-            : state.tournamentHistory.find(t => t.id === tournamentId);
-        
-        if (tournament) {
-            return tournament.matches?.some(match => 
-                (match.player1.id === player1Id && match.player2.id === player2Id) ||
-                (match.player2.id === player1Id && match.player1.id === player2Id)
-            ) || false;
-        }
-        return false;
-    }
-    
-    // Sinon vérifier dans tous les tournois
-    let allMatches = [];
-    
-    if (state.activeTournament) {
-        allMatches = [...state.activeTournament.matches];
-    }
-    
-    state.tournamentHistory.forEach(t => {
-        if (t.matches) {
-            allMatches = [...allMatches, ...t.matches];
-        }
-    });
-    
-    return allMatches.some(match => 
-        (match.player1.id === player1Id && match.player2.id === player2Id) ||
-        (match.player2.id === player1Id && match.player1.id === player2Id)
-    );
-}
-
-function checkDuplicateMatches() {
-    console.log("🔍 Vérification des matchs répétés:");
-    
-    if (!state.activeTournament) {
-        console.log("❌ Pas de tournoi actif");
-        return;
-    }
-    
-    const matches = state.activeTournament.matches;
-    const duplicatePairs = new Map();
-    
-    for (let i = 0; i < matches.length; i++) {
-        for (let j = i + 1; j < matches.length; j++) {
-            const m1 = matches[i];
-            const m2 = matches[j];
-            
-            const samePair = 
-                (m1.player1.id === m2.player1.id && m1.player2.id === m2.player2.id) ||
-                (m1.player1.id === m2.player2.id && m1.player2.id === m2.player1.id);
-            
-            if (samePair) {
-                const key = [m1.player1.id, m1.player2.id].sort().join('_');
-                if (!duplicatePairs.has(key)) {
-                    duplicatePairs.set(key, []);
-                }
-                duplicatePairs.get(key).push({match1: m1, match2: m2});
-            }
-        }
-    }
-    
-    if (duplicatePairs.size === 0) {
-        console.log("✅ Aucun match répété trouvé");
-    } else {
-        console.log(`⚠️ ${duplicatePairs.size} paires répétées trouvées:`);
-        duplicatePairs.forEach((matches, key) => {
-            console.log(`- ${matches[0].match1.player1.name} vs ${matches[0].match1.player2.name}`);
-            matches.forEach(m => {
-                console.log(`  Round ${m.match1.round} (ID: ${m.match1.id}) et Round ${m.match2.round} (ID: ${m.match2.id})`);
-            });
-        });
-    }
-    
-    return duplicatePairs.size;
-}
-
-// Exposez-la globalement
-window.checkDuplicateMatches = checkDuplicateMatches;
-
     // Mise à jour de l'interface utilisateur
   function updateUI() {
     updateRankings();
@@ -4743,138 +4519,110 @@ window.checkDuplicateMatches = checkDuplicateMatches;
         });
     }
 
-  // Version simplifiée de updateRoundsArchive - à remplacer complètement
-function updateRoundsArchive() {
-    console.log("📁 UPDATE ROUNDS ARCHIVE - FIXED VERSION");
+  function updateRoundsArchive() {
+    console.log("📁 updateRoundsArchive called - DEBUG START");
+    debugRoundArchive(); // Appel de débogage
     
     const archiveList = document.getElementById('roundsArchiveList');
-    if (!archiveList) {
-        console.error("❌ Element 'roundsArchiveList' not found");
+    const currentTournamentName = document.getElementById('currentTournamentName');
+    const archivedRoundsCount = document.getElementById('archivedRoundsCount');
+    const currentRoundNumber = document.getElementById('currentRoundNumber');
+    
+    if (!archiveList || !currentTournamentName || !archivedRoundsCount || !currentRoundNumber) {
+        console.error("❌ Elements not found in DOM");
         return;
     }
     
-    // 1. Vérification des données (state.roundHistory doit être un tableau)
-    const history = state.roundHistory || [];
+    // Si pas de tournoi actif
+    if (!state.activeTournament) {
+        console.log("❌ No active tournament");
+        archiveList.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-state-icon">📁</div>
+                <h3>No active tournament</h3>
+                <p>Start a tournament to see archived rounds here</p>
+            </div>
+        `;
+        currentTournamentName.textContent = "No active tournament";
+        archivedRoundsCount.textContent = "0";
+        currentRoundNumber.textContent = "0";
+        return;
+    }
     
-    if (history.length === 0) {
-        console.log("No round history found");
+    const tournamentId = state.activeTournament.id;
+    console.log("Tournament ID to filter:", tournamentId);
+    
+    // Filtrer les rounds pour ce tournoi - méthode plus robuste
+    const tournamentRounds = (state.roundHistory || []).filter(r => {
+        // Vérifier plusieurs façons dont le tournoi pourrait être référencé
+        const matches = 
+            r.tournamentId === tournamentId || 
+            (r.tourneyId && r.tourneyId === tournamentId) ||
+            (r.tournament && r.tournament.id === tournamentId);
+        
+        console.log(`Round ${r.roundNumber} matches tournament?`, matches, 
+                   "tournamentId:", r.tournamentId, 
+                   "our tournamentId:", tournamentId);
+        return matches;
+    });
+    
+    console.log("Tournament rounds found:", tournamentRounds.length);
+    
+    if (tournamentRounds.length === 0 && state.roundHistory && state.roundHistory.length > 0) {
+        console.log("⚠️ No rounds linked to this tournament, but rounds exist. Showing all rounds.");
+        // Afficher tous les rounds comme fallback
+        tournamentRounds.push(...state.roundHistory);
+    }
+    
+    // Mettre à jour les infos
+    currentTournamentName.textContent = state.activeTournament.name;
+    archivedRoundsCount.textContent = tournamentRounds.length;
+    currentRoundNumber.textContent = state.activeTournament.round;
+    
+    // Calculer les statistiques
+    const totalMatches = tournamentRounds.reduce((sum, round) => sum + (round.matches?.length || 0), 0);
+    const completedMatches = tournamentRounds.reduce((sum, round) => sum + (round.completedMatches || 0), 0);
+    const roundsWithGames = tournamentRounds.filter(round => 
+        round.matches?.some(m => m.gameLink)
+    ).length;
+    const avgMatchesPerRound = tournamentRounds.length > 0 ? 
+        Math.round(totalMatches / tournamentRounds.length) : 0;
+    
+    document.getElementById('totalArchivedMatches').textContent = totalMatches;
+    document.getElementById('completedArchivedMatches').textContent = completedMatches;
+    document.getElementById('roundsWithGames').textContent = roundsWithGames;
+    document.getElementById('avgMatchesPerRound').textContent = avgMatchesPerRound;
+    
+    // Afficher les rounds
+    if (tournamentRounds.length === 0) {
+        console.log("❌ No rounds to display");
         archiveList.innerHTML = `
             <div class="empty-state">
                 <div class="empty-state-icon">📁</div>
                 <h3>No rounds archived yet</h3>
-                <p>Complete a round to see archived matches here</p>
+                <p>Rounds will appear here after they are archived</p>
+                <div style="margin-top: 15px;">
+                    <button onclick="manuallyArchiveCurrentRound()" class="btn btn-primary admin-hidden">
+                        📥 Archive Current Round
+                    </button>
+                </div>
             </div>
         `;
         return;
     }
     
-    // 2. Récupération des infos du tournoi actuel
-    const currentTournamentId = state.activeTournament?.id;
-    const currentRound = state.activeTournament?.round;
-    
-    // 3. Filtrage (Optionnel : si vous voulez vraiment TOUT voir, retirez le filter)
-    const archivedRounds = history.filter(round => {
-        const roundNum = round.roundNumber || round.round || 0;
-        // On n'exclut que si c'est EXACTEMENT le même tournoi ET le même round numéro
-        if (round.tournamentId === currentTournamentId && roundNum === currentRound) {
-            return false; 
-        }
-        return true;
+    // Trier les rounds par numéro (décroissant pour voir le plus récent en premier)
+    const sortedRounds = [...tournamentRounds].sort((a, b) => {
+        // Essayer plusieurs façons de comparer les rounds
+        const roundA = a.roundNumber || a.round || 0;
+        const roundB = b.roundNumber || b.round || 0;
+        return roundB - roundA;
     });
     
-    if (archivedRounds.length === 0) {
-        archiveList.innerHTML = `
-            <div class="empty-state">
-                <div class="empty-state-icon">📁</div>
-                <h3>No archives yet</h3>
-                <p>The current round (${currentRound}) is still active.</p>
-            </div>
-        `;
-        return;
-    }
-
-    // 4. Tri par date (Décroissant : le plus récent en haut)
-    const sortedRounds = [...archivedRounds].sort((a, b) => {
-        const dateA = new Date(a.timestamp || a.date || 0);
-        const dateB = new Date(b.timestamp || b.date || 0);
-        return dateB - dateA;
-    });
-
-    // 5. Génération du HTML
-    archiveList.innerHTML = sortedRounds.map((round, index) => {
-        const roundNum = round.roundNumber || round.round || "?";
-        const tName = round.tournamentName || 'Tournament';
-        const date = new Date(round.timestamp || round.date || Date.now());
-        
-        // Sécurité pour l'ID (utiliser l'index si round.id est absent)
-        const roundId = round.id || `round-${index}`;
-        
-        const matches = round.matches || [];
-        const completedCount = matches.filter(m => m.winner || m.result).length;
-        const progress = matches.length > 0 ? Math.round((completedCount / matches.length) * 100) : 0;
-
-        return `
-            <div class="history-item" style="margin-bottom: 15px; border-left: 4px solid var(--accent);">
-                <div class="history-header" onclick="toggleRoundDetails('${roundId}')" style="cursor:pointer">
-                    <div class="history-title">
-                        <span style="color: var(--accent); font-weight: 700;">Round ${roundNum}</span>
-                        <span style="margin-left: 8px; font-size: 0.85rem; opacity: 0.8;">(${tName})</span>
-                    </div>
-                    <div class="history-meta">${date.toLocaleDateString()} ${date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
-                </div>
-                
-                <div style="padding: 10px 0;">
-                    <div style="font-size: 0.85rem; margin-bottom: 5px;">Progress: ${completedCount}/${matches.length} matches</div>
-                    <div class="progress-bar" style="height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px;">
-                        <div class="progress-fill" style="width: ${progress}%; height: 100%; background: var(--success); border-radius: 3px;"></div>
-                    </div>
-                </div>
-
-                <div class="match-preview" style="display: grid; gap: 5px;">
-                    ${matches.slice(0, 3).map(m => `
-                        <div style="font-size: 0.8rem; display: flex; justify-content: space-between; background: rgba(255,255,255,0.03); padding: 4px 8px; border-radius: 4px;">
-                            <span>${m.player1?.name || 'P1'} vs ${m.player2?.name || 'P2'}</span>
-                            <span style="color: var(--success)">${m.winner ? '✓' : ''}</span>
-                        </div>
-                    `).join('')}
-                    ${matches.length > 3 ? `<div style="font-size: 0.75rem; text-align: center; opacity: 0.6;">+ ${matches.length - 3} more matches</div>` : ''}
-                </div>
-
-                <button class="btn btn-secondary" style="width: 100%; margin-top: 10px; font-size: 0.8rem; padding: 5px;" 
-                        onclick="toggleRoundDetails('${roundId}')">
-                    🔍 View Full Details
-                </button>
-            </div>
-        `;
-    }).join('');
-
-    console.log(`✅ ${archivedRounds.length} rounds displayed in archive`);
-}
-// Ajoutez cette fonction après les autres fonctions de débogage
-function fixRoundsArchive() {
-    console.log("🛠️ Fixing Rounds Archive Display...");
+    console.log("Sorted rounds:", sortedRounds);
     
-    // Forcer l'affichage de tous les rounds
-    const archiveList = document.getElementById('roundsArchiveList');
-    if (!archiveList) return;
-    
-    if (!state.roundHistory || state.roundHistory.length === 0) {
-        archiveList.innerHTML = `
-            <div class="empty-state">
-                <div class="empty-state-icon">📁</div>
-                <h3>No rounds archived yet</h3>
-                <p>Complete a round to see archived matches here</p>
-            </div>
-        `;
-        return;
-    }
-    
-    // Afficher TOUS les rounds sans filtrage
-    const allRounds = state.roundHistory.slice().reverse();
-    
-    const roundsHTML = allRounds.map(round => {
+    const roundsHTML = sortedRounds.map(round => {
         const roundNum = round.roundNumber || round.round || 1;
-        const tournamentName = round.tournamentName || 'Unknown Tournament';
         const roundDate = new Date(round.date || round.timestamp || Date.now());
         const formattedDate = roundDate.toLocaleDateString('en-US', {
             day: '2-digit',
@@ -4883,55 +4631,74 @@ function fixRoundsArchive() {
             minute: '2-digit'
         });
         
-        const totalMatches = round.matches?.length || 0;
-        const completedMatches = round.completedMatches || 
+        const isCurrentRound = roundNum === state.activeTournament.round;
+        const totalRoundMatches = round.matches?.length || round.totalMatches || 0;
+        const completedRoundMatches = round.completedMatches || 
             round.matches?.filter(m => m.winner).length || 0;
+        const completionRate = totalRoundMatches > 0 ? 
+            Math.round((completedRoundMatches / totalRoundMatches) * 100) : 0;
         
         return `
-            <div class="history-item">
+            <div class="history-item ${isCurrentRound ? 'season-finale' : ''}" 
+                 style="cursor: pointer;" 
+                 onclick="toggleRoundDetails('${round.id}')">
                 <div class="history-header">
                     <div class="history-title">
-                        <span style="color: var(--accent); font-weight: 700;">${tournamentName} - Round ${roundNum}</span>
+                        <span style="color: var(--accent); font-weight: 700;">Round ${roundNum}</span>
+                        ${isCurrentRound ? '<span style="margin-left: 10px; background: var(--accent); color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.7rem;">CURRENT</span>' : ''}
                     </div>
                     <div class="history-meta">${formattedDate}</div>
                 </div>
                 
                 <div style="margin: 10px 0;">
-                    <div style="display: flex; align-items: center; gap: 15px;">
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
                         <div style="flex: 1;">
                             <div style="font-size: 0.9rem; color: var(--text-secondary);">
-                                <span>📊 ${completedMatches}/${totalMatches} matches completed</span>
+                                <span>📊 ${completedRoundMatches}/${totalRoundMatches} matches completed</span>
                             </div>
+                            <div class="progress-bar" style="margin-top: 5px; height: 6px;">
+                                <div class="progress-fill" style="width: ${completionRate}%"></div>
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <span style="font-size: 0.85rem; color: var(--text-secondary);">
+                                ${completionRate}% complete
+                            </span>
                         </div>
                     </div>
                     
-                    ${round.matches && round.matches.length > 0 ? `
-                        <div style="margin-top: 10px; font-size: 0.85rem;">
-                            ${round.matches.slice(0, 3).map(match => `
-                                <div style="margin: 5px 0; padding: 8px; background: rgba(255,255,255,0.05); border-radius: var(--radius-sm);">
-                                    ${match.player1?.name || 'Player 1'} vs ${match.player2?.name || 'Player 2'}
-                                    ${match.winner ? `<span style="color: var(--success); margin-left: 10px;">🏆 Winner</span>` : ''}
-                                </div>
-                            `).join('')}
-                            ${round.matches.length > 3 ? `<div style="color: var(--text-secondary); font-size: 0.8rem;">+ ${round.matches.length - 3} more matches</div>` : ''}
-                        </div>
-                    ` : ''}
+                    <div style="display: flex; gap: 15px; font-size: 0.85rem; color: var(--text-secondary);">
+                        <span>👥 ${round.standings?.length || round.matches?.length * 2 || 0} players</span>
+                        <span>🎮 ${round.matches?.filter(m => m.gameLink).length || 0} with game links</span>
+                        <span>📅 ${round.manuallyArchived ? 'Manual archive' : 'Auto archive'}</span>
+                    </div>
                 </div>
+                
+                <!-- Détails du round (cachés par défaut) -->
+                <div id="roundDetails_${round.id}" class="history-details">
+                    ${displayTournamentRoundsDetails([round])}
+                    
+                    <!-- Actions sur le round -->
+                    <div class="history-actions admin-hidden">
+                        <button onclick="exportRoundData('${round.id}')" class="quick-action-btn">
+                            <span>📤</span> Export Round Data
+                        </button>
+                        <button onclick="deleteRound('${round.id}')" class="quick-action-btn" style="background: var(--danger); color: white;">
+                            <span>🗑️</span> Delete Round
+                        </button>
+                    </div>
+                </div>
+                
+                <button class="history-expand-btn" onclick="toggleRoundDetails('${round.id}')">
+                    📊 View Round Details
+                </button>
             </div>
         `;
     }).join('');
     
     archiveList.innerHTML = roundsHTML;
-    
-    // Mettre à jour les compteurs
-    document.getElementById('archivedRoundsCount').textContent = allRounds.length;
-    document.getElementById('totalArchivedMatches').textContent = allRounds.reduce((sum, r) => sum + (r.matches?.length || 0), 0);
-    
-    console.log("✅ Rounds Archive Fixed - Showing all rounds");
+    console.log("✅ Rounds archive updated successfully - DEBUG END");
 }
-
-// Exposez-la globalement
-window.fixRoundsArchive = fixRoundsArchive;
 // Fonction pour afficher/masquer les détails d'un round
 function toggleRoundDetails(roundId) {
     const detailsDiv = document.getElementById(`roundDetails_${roundId}`);
@@ -5929,25 +5696,6 @@ window.testSeasonRewards = testSeasonRewards;
         return 0;
     }
 
-// Ajoutez cette fonction après les autres fonctions (~ligne 6200)
-function sortPlayersByPointsThenElo(players) {
-    return [...players].sort((a, b) => {
-        // D'abord par points
-        if (b.points !== a.points) {
-            return b.points - a.points;
-        }
-        // Ensuite par Elo
-        const eloA = state.eloRatings[a.id] || state.systemSettings.initialElo;
-        const eloB = state.eloRatings[b.id] || state.systemSettings.initialElo;
-        return eloB - eloA;
-        // Ensuite par nom (pour éviter les égalités)
-        if (a.name !== b.name) {
-            return a.name.localeCompare(b.name);
-        }
-        return 0;
-    });
-}
-
     // Helper Functions
     function selectAllPlayers() {
         document.querySelectorAll('.enroll-check').forEach(checkbox => {
@@ -6074,17 +5822,6 @@ window.toggleTournamentRounds = toggleTournamentRounds;
         
         // Mettre à jour l'indicateur de mode
         updateModeIndicator();
-
-        // Dans la section DOMContentLoaded (vers la fin du fichier, après les autres écouteurs)
-document.getElementById('adminPin').addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-        loginAdmin();
-    } else if (e.key === 'e' && (e.ctrlKey || e.metaKey)) {
-        // Commande pour effacer les matches de la ronde actuelle
-        clearCurrentMatches();
-        e.preventDefault(); // Empêcher le comportement par défaut
-    }
-});
         
         // Exposer les fonctions au niveau global
 window.debugRoundArchive = debugRoundArchive;
@@ -6123,16 +5860,11 @@ window.toggleHistoryDetails = toggleHistoryDetails;
         window.randomizeAllColors = randomizeAllColors;
         window.swapSelectedPlayers = swapSelectedPlayers;
         window.toggleManualColor = toggleManualColor;
-        window.sortPlayersByPointsThenElo = sortPlayersByPointsThenElo;
-window.havePlayersPlayed = havePlayersPlayed;
-window.checkDuplicateMatches = checkDuplicateMatches;
         window.createMultipleMatches = createMultipleMatches;
         window.filterHistory = filterHistory;
         window.toggleHistoryDetails = toggleHistoryDetails;
         window.resetAllMatchColors = resetAllMatchColors;
         window.clearAllMatches = clearAllMatches;
-        window.sortPlayersByPointsThenElo = sortPlayersByPointsThenElo;
-
         window.randomizeAllMatches = randomizeAllMatches;
         window.exportTournamentData = exportTournamentData;
         window.loadMatchForEditing = loadMatchForEditing;
@@ -6140,7 +5872,6 @@ window.checkDuplicateMatches = checkDuplicateMatches;
         window.saveMatchChanges = saveMatchChanges;
         window.deleteSelectedMatch = deleteSelectedMatch;
         window.setBulkWinner = setBulkWinner;
-window.clearCurrentRoundMatches = clearCurrentRoundMatches;
         
         console.log("✅ Application initialisée sans erreurs");
     });
@@ -6148,8 +5879,6 @@ window.clearCurrentRoundMatches = clearCurrentRoundMatches;
 </script>
 </body>
 </html>
-
-
 
 
 
