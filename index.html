@@ -75,19 +75,12 @@
 }
 
 
-/* Lignes ~150-160 - LAISSER COMME ÇA */
-/* REMPLACEZ le CSS des onglets (lignes ~150-160) par : */
 .tab-content {
     display: none;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.3s ease, visibility 0.3s ease;
 }
 
 .tab-content.active {
-    display: block;
-    opacity: 1;
-    visibility: visible;
+    display: block !important; /* Force l'affichage */
 }
 .rewards-badge {
     background: linear-gradient(135deg, var(--gold) 0%, #FFA500 100%);
@@ -2104,10 +2097,22 @@
             <div id="roundsArchiveCard" class="tab-content">
     <div class="card">
         <div class="card-header">
-            <h2 class="card-title">📁 Rounds Archive</h2>
+            <h2 class="card-title">📁 Archives des Rounds</h2>
+            <div class="tournament-meta">
+                <span>Total : <strong id="archivedRoundsCount">0</strong> rounds</span>
+            </div>
         </div>
         <div id="roundsArchiveList">
             </div>
+    </div>
+</div>
+        
+        <div id="roundsArchiveList">
+            <div class="empty-state">
+                <div class="empty-state-icon">📁</div>
+                <h3>Loading archives...</h3>
+            </div>
+        </div>
     </div>
 </div>
                     
@@ -2564,83 +2569,46 @@ function debugRoundArchive() {
     // Tab Switching
   function switchTab(tabName) {
     console.log("🔄 Switching to tab:", tabName);
-    
-    // 1. Désactiver tous les tabs
+
+    // 1. Désactiver tous les boutons d'onglets
     document.querySelectorAll('.tab').forEach(tab => {
         tab.classList.remove('active');
+        tab.style.borderBottom = 'none';
     });
-    
-    // 2. Cacher TOUS les contenus d'onglet AVEC FORCE
+
+    // 2. Cacher tous les contenus
     document.querySelectorAll('.tab-content').forEach(content => {
         content.classList.remove('active');
         content.style.display = 'none';
-        content.style.opacity = '0';
-        content.style.visibility = 'hidden';
     });
-    
-    // 3. Activer le tab cliqué
-    const tabs = document.querySelectorAll('.tab');
-    tabs.forEach((tab, index) => {
-        if (tab.getAttribute('onclick') && tab.getAttribute('onclick').includes(tabName)) {
-            tab.classList.add('active');
-            tab.style.borderBottom = '2px solid var(--accent)';
-        }
-    });
-    
-    // 4. Afficher SEULEMENT le contenu correspondant AVEC FORCE
+
+    // 3. Identifier la carte à afficher
     let activeCard = null;
-    
     switch(tabName) {
-        case 'active':
-            activeCard = document.getElementById('activeTournamentCard');
-            console.log("📊 Showing Active Tournament");
-            break;
-            
-        case 'archive':
-            activeCard = document.getElementById('roundsArchiveCard');
-            console.log("📁 Showing Rounds Archive");
-            break;
-            
-        case 'history':
-            activeCard = document.getElementById('tournamentHistoryCard');
-            console.log("📜 Showing Tournament History");
-            break;
-            
-        case 'manual':
-            activeCard = document.getElementById('manualManagementCard');
-            console.log("🛠️ Showing Manual Management");
-            break;
+        case 'active': activeCard = document.getElementById('activeTournamentCard'); break;
+        case 'archive': activeCard = document.getElementById('roundsArchiveCard'); break;
+        case 'history': activeCard = document.getElementById('tournamentHistoryCard'); break;
+        case 'manual': activeCard = document.getElementById('manualManagementCard'); break;
     }
-    
+
+    // 4. Afficher la carte et mettre à jour le bouton
     if (activeCard) {
         activeCard.classList.add('active');
         activeCard.style.display = 'block';
-        activeCard.style.opacity = '1';
-        activeCard.style.visibility = 'visible';
         
-        // FORCER l'appel de updateRoundsArchive pour l'onglet archive
+        // Mettre en surbrillance le bouton cliqué
+        const clickedTab = document.querySelector(`[onclick*="'${tabName}'"]`);
+        if (clickedTab) {
+            clickedTab.classList.add('active');
+            clickedTab.style.borderBottom = '2px solid var(--accent)';
+        }
+
+        // Si on va sur l'archive, on lance la mise à jour des données
         if (tabName === 'archive') {
-            console.log("🔄 FORCING updateRoundsArchive with visual display");
-            setTimeout(() => {
-                if (typeof updateRoundsArchive === 'function') {
-                    updateRoundsArchive();
-                    
-                    // Forcer l'affichage visuel après génération
-                    setTimeout(() => {
-                        if (activeCard) {
-                            activeCard.style.display = 'block !important';
-                            activeCard.style.opacity = '1 !important';
-                            activeCard.style.visibility = 'visible !important';
-                        }
-                    }, 50);
-                }
-            }, 10);
+            updateRoundsArchive();
         }
     }
-    
-    console.log("✅ Tab switch completed for:", tabName);
 }
-
 // Ajoutez cette fonction après la fonction switchTab()
 function testArchiveTab() {
     console.log("🧪 Testing Archive Tab...");
@@ -4777,7 +4745,7 @@ window.checkDuplicateMatches = checkDuplicateMatches;
 
   // Version simplifiée de updateRoundsArchive - à remplacer complètement
 function updateRoundsArchive() {
-    console.log("📁 UPDATE ROUNDS ARCHIVE - SIMPLE VERSION");
+    console.log("📁 UPDATE ROUNDS ARCHIVE - FIXED VERSION");
     
     const archiveList = document.getElementById('roundsArchiveList');
     if (!archiveList) {
@@ -4785,8 +4753,10 @@ function updateRoundsArchive() {
         return;
     }
     
-    // Vérification des données
-    if (!state.roundHistory || state.roundHistory.length === 0) {
+    // 1. Vérification des données (state.roundHistory doit être un tableau)
+    const history = state.roundHistory || [];
+    
+    if (history.length === 0) {
         console.log("No round history found");
         archiveList.innerHTML = `
             <div class="empty-state">
@@ -4798,106 +4768,87 @@ function updateRoundsArchive() {
         return;
     }
     
-    console.log(`Found ${state.roundHistory.length} rounds in history`);
-    
-    // ID du tournoi actuel et round actuel
+    // 2. Récupération des infos du tournoi actuel
     const currentTournamentId = state.activeTournament?.id;
     const currentRound = state.activeTournament?.round;
     
-    // Filtrer pour EXCLURE le round actuel
-    const archivedRounds = state.roundHistory.filter(round => {
-        // Si c'est un round du tournoi actuel
-        if (round.tournamentId === currentTournamentId) {
-            const roundNum = round.roundNumber || round.round || 1;
-            // Exclure le round actuel
-            return roundNum !== currentRound;
+    // 3. Filtrage (Optionnel : si vous voulez vraiment TOUT voir, retirez le filter)
+    const archivedRounds = history.filter(round => {
+        const roundNum = round.roundNumber || round.round || 0;
+        // On n'exclut que si c'est EXACTEMENT le même tournoi ET le même round numéro
+        if (round.tournamentId === currentTournamentId && roundNum === currentRound) {
+            return false; 
         }
-        // Garder tous les rounds d'autres tournois
         return true;
     });
-    
-    console.log(`Showing ${archivedRounds.length} archived rounds (current round ${currentRound} hidden)`);
     
     if (archivedRounds.length === 0) {
         archiveList.innerHTML = `
             <div class="empty-state">
                 <div class="empty-state-icon">📁</div>
-                <h3>No archived rounds available</h3>
-                <p>Only current round (${currentRound}) is available</p>
+                <h3>No archives yet</h3>
+                <p>The current round (${currentRound}) is still active.</p>
             </div>
         `;
         return;
     }
-    
-    // Trier par date (plus récent d'abord)
+
+    // 4. Tri par date (Décroissant : le plus récent en haut)
     const sortedRounds = [...archivedRounds].sort((a, b) => {
-        const dateA = new Date(a.date || a.timestamp || 0);
-        const dateB = new Date(b.date || b.timestamp || 0);
+        const dateA = new Date(a.timestamp || a.date || 0);
+        const dateB = new Date(b.timestamp || b.date || 0);
         return dateB - dateA;
     });
-    
-    // Générer le HTML SIMPLE
-    const roundsHTML = sortedRounds.map(round => {
-        const roundNum = round.roundNumber || round.round || 1;
-        const tournamentName = round.tournamentName || 'Unknown Tournament';
-        const date = new Date(round.date || round.timestamp || Date.now());
-        const formattedDate = date.toLocaleDateString('en-US', {
-            day: '2-digit',
-            month: 'short',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
+
+    // 5. Génération du HTML
+    archiveList.innerHTML = sortedRounds.map((round, index) => {
+        const roundNum = round.roundNumber || round.round || "?";
+        const tName = round.tournamentName || 'Tournament';
+        const date = new Date(round.timestamp || round.date || Date.now());
         
-        const matchCount = round.matches?.length || 0;
-        const completedCount = round.completedMatches || 
-            round.matches?.filter(m => m.winner).length || 0;
+        // Sécurité pour l'ID (utiliser l'index si round.id est absent)
+        const roundId = round.id || `round-${index}`;
         
+        const matches = round.matches || [];
+        const completedCount = matches.filter(m => m.winner || m.result).length;
+        const progress = matches.length > 0 ? Math.round((completedCount / matches.length) * 100) : 0;
+
         return `
-            <div class="history-item" style="cursor: pointer;" onclick="toggleRoundDetails('${round.id}')">
-                <div class="history-header">
+            <div class="history-item" style="margin-bottom: 15px; border-left: 4px solid var(--accent);">
+                <div class="history-header" onclick="toggleRoundDetails('${roundId}')" style="cursor:pointer">
                     <div class="history-title">
                         <span style="color: var(--accent); font-weight: 700;">Round ${roundNum}</span>
-                        ${tournamentName !== state.activeTournament?.name ? 
-                          `<span style="margin-left: 10px; font-size: 0.8rem; color: var(--text-secondary);">(${tournamentName})</span>` : ''}
+                        <span style="margin-left: 8px; font-size: 0.85rem; opacity: 0.8;">(${tName})</span>
                     </div>
-                    <div class="history-meta">${formattedDate}</div>
+                    <div class="history-meta">${date.toLocaleDateString()} ${date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
                 </div>
                 
-                <div style="margin: 10px 0;">
-                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
-                        <div style="flex: 1;">
-                            <div style="font-size: 0.9rem; color: var(--text-secondary);">
-                                <span>📊 ${completedCount}/${matchCount} matches completed</span>
-                            </div>
-                            <div class="progress-bar" style="margin-top: 5px; height: 6px;">
-                                <div class="progress-fill" style="width: ${matchCount > 0 ? Math.round((completedCount/matchCount)*100) : 0}%"></div>
-                            </div>
-                        </div>
+                <div style="padding: 10px 0;">
+                    <div style="font-size: 0.85rem; margin-bottom: 5px;">Progress: ${completedCount}/${matches.length} matches</div>
+                    <div class="progress-bar" style="height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px;">
+                        <div class="progress-fill" style="width: ${progress}%; height: 100%; background: var(--success); border-radius: 3px;"></div>
                     </div>
-                    
-                    ${round.matches && round.matches.length > 0 ? `
-                        <div style="font-size: 0.85rem; color: var(--text-secondary);">
-                            ${round.matches.slice(0, 2).map(match => {
-                                const p1 = match.player1?.name || 'Player 1';
-                                const p2 = match.player2?.name || 'Player 2';
-                                return `<div style="margin: 3px 0; padding: 5px; background: rgba(255,255,255,0.05); border-radius: 4px;">
-                                    ${p1} vs ${p2} ${match.winner ? ' 🏆' : ''}
-                                </div>`;
-                            }).join('')}
-                            ${round.matches.length > 2 ? `<div style="margin-top: 5px; font-size: 0.8rem;">+ ${round.matches.length - 2} more matches</div>` : ''}
-                        </div>
-                    ` : ''}
                 </div>
-                
-                <button class="history-expand-btn" onclick="event.stopPropagation(); toggleRoundDetails('${round.id}')">
-                    📊 View Details
+
+                <div class="match-preview" style="display: grid; gap: 5px;">
+                    ${matches.slice(0, 3).map(m => `
+                        <div style="font-size: 0.8rem; display: flex; justify-content: space-between; background: rgba(255,255,255,0.03); padding: 4px 8px; border-radius: 4px;">
+                            <span>${m.player1?.name || 'P1'} vs ${m.player2?.name || 'P2'}</span>
+                            <span style="color: var(--success)">${m.winner ? '✓' : ''}</span>
+                        </div>
+                    `).join('')}
+                    ${matches.length > 3 ? `<div style="font-size: 0.75rem; text-align: center; opacity: 0.6;">+ ${matches.length - 3} more matches</div>` : ''}
+                </div>
+
+                <button class="btn btn-secondary" style="width: 100%; margin-top: 10px; font-size: 0.8rem; padding: 5px;" 
+                        onclick="toggleRoundDetails('${roundId}')">
+                    🔍 View Full Details
                 </button>
             </div>
         `;
     }).join('');
-    
-    archiveList.innerHTML = roundsHTML;
-    console.log(`✅ ${archivedRounds.length} archived rounds displayed`);
+
+    console.log(`✅ ${archivedRounds.length} rounds displayed in archive`);
 }
 // Ajoutez cette fonction après les autres fonctions de débogage
 function fixRoundsArchive() {
