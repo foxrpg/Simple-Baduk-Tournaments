@@ -3180,45 +3180,6 @@ function displayTournamentRoundsDetails(rounds) {
             document.getElementById('nextQualifiers').textContent = '--';
         }
     }
-
-    function updateRankings() {
-    // Utiliser la nouvelle fonction de tri
-    const sortedPlayers = sortPlayersByPointsThenElo();
-    
-    const rankingsHTML = sortedPlayers.map((player, index) => {
-        const elo = state.eloRatings[player.id] || state.systemSettings.initialElo;
-        const winRate = player.wins + player.losses > 0 
-            ? Math.round((player.wins / (player.wins + player.losses)) * 100) 
-            : 0;
-        
-        return `
-            <div class="player-item ${index < 3 ? 'top-3' : ''}">
-                <div class="player-rank">${index + 1}</div>
-                <div class="player-info">
-                    <div class="player-name">
-                        ${player.name}
-                        ${index === 0 ? '<span class="badge badge-gold">🥇</span>' : ''}
-                        ${index === 1 ? '<span class="badge badge-silver">🥈</span>' : ''}
-                        ${index === 2 ? '<span class="badge badge-bronze">🥉</span>' : ''}
-                    </div>
-                    <div class="player-meta">
-                        <span class="player-tag">${player.rank}</span>
-                        <span>Elo: ${elo}</span>
-                        <span>${player.wins || 0}W ${player.losses || 0}L</span>
-                    </div>
-                </div>
-                <div class="player-stats">
-                    <div class="player-points">${player.points || 0} pts</div>
-                    <div class="player-record">${winRate}% win rate</div>
-                </div>
-            </div>
-        `;
-    }).join('');
-
-    document.getElementById('rankingsList').innerHTML = rankingsHTML || 
-        '<div class="empty-state">No players registered yet</div>';
-}
-
     // Player Management
     async function addNewPlayer() {
         if (!isAdmin) {
