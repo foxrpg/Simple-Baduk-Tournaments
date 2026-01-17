@@ -4769,15 +4769,19 @@ window.checkDuplicateMatches = checkDuplicateMatches;
             </div>
         `;
         
-        // Mettre à jour les compteurs
-        document.getElementById('archivedRoundsCount')?.textContent = '0';
-        document.getElementById('totalArchivedMatches')?.textContent = '0';
-        document.getElementById('completedArchivedMatches')?.textContent = '0';
-        document.getElementById('roundsWithGames')?.textContent = '0';
-        document.getElementById('avgMatchesPerRound')?.textContent = '0';
-        
-        return;
-    }
+        // Mettre à jour les compteurs - VERSION SIMPLIFIÉE
+function updateCounter(id, value) {
+    const element = document.getElementById(id);
+    if (element) element.textContent = value;
+}}
+
+updateCounter('archivedRoundsCount', '0');
+updateCounter('totalArchivedMatches', '0');
+updateCounter('completedArchivedMatches', '0');
+updateCounter('roundsWithGames', '0');
+updateCounter('avgMatchesPerRound', '0');
+
+return;
     
     console.log(`Found ${state.roundHistory.length} rounds in history`);
     
