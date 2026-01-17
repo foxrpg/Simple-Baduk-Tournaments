@@ -74,15 +74,15 @@
     background: linear-gradient(135deg, rgba(255, 215, 0, 0.05) 0%, transparent 100%) !important;
 }
 
-/* FORCE l'affichage exclusif des onglets - PRIORITÉ MAXIMALE */
+/* AFFICHAGE DES ONGLETS */
 .tab-content {
-    display: none !important;
+    display: none;
 }
 
 .tab-content.active {
-    display: block !important;
+    display: block;
+    animation: fadeIn 0.3s ease;
 }
-
 .rewards-badge {
     background: linear-gradient(135deg, var(--gold) 0%, #FFA500 100%);
     color: black;
@@ -5910,6 +5910,25 @@ window.testSeasonRewards = testSeasonRewards;
         return 0;
     }
 
+// Ajoutez cette fonction après les autres fonctions (~ligne 6200)
+function sortPlayersByPointsThenElo(players) {
+    return [...players].sort((a, b) => {
+        // D'abord par points
+        if (b.points !== a.points) {
+            return b.points - a.points;
+        }
+        // Ensuite par Elo
+        const eloA = state.eloRatings[a.id] || state.systemSettings.initialElo;
+        const eloB = state.eloRatings[b.id] || state.systemSettings.initialElo;
+        return eloB - eloA;
+        // Ensuite par nom (pour éviter les égalités)
+        if (a.name !== b.name) {
+            return a.name.localeCompare(b.name);
+        }
+        return 0;
+    });
+}
+
     // Helper Functions
     function selectAllPlayers() {
         document.querySelectorAll('.enroll-check').forEach(checkbox => {
@@ -6093,6 +6112,8 @@ window.checkDuplicateMatches = checkDuplicateMatches;
         window.toggleHistoryDetails = toggleHistoryDetails;
         window.resetAllMatchColors = resetAllMatchColors;
         window.clearAllMatches = clearAllMatches;
+        window.sortPlayersByPointsThenElo = sortPlayersByPointsThenElo;
+
         window.randomizeAllMatches = randomizeAllMatches;
         window.exportTournamentData = exportTournamentData;
         window.loadMatchForEditing = loadMatchForEditing;
