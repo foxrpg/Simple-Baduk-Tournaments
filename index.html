@@ -4175,7 +4175,7 @@ window.manuallyArchiveCurrentRound = manuallyArchiveCurrentRound;
     // Generate Swiss Pairs
   async function generateSwissPairs() {
     if (!isAdmin || !state.activeTournament) {
-        showNotification('Admin access required', 'error');
+        showNotification('Accès Administrateur requis', 'error');
         return;
     }
 
@@ -4183,46 +4183,47 @@ window.manuallyArchiveCurrentRound = manuallyArchiveCurrentRound;
     const currentRound = state.activeTournament.round;
     const allMatches = state.activeTournament.matches || [];
     
-    // 1. CALCUL DES POINTS ET HISTORIQUE (Rétrocompatible)
+    // 1. CALCUL DES POINTS ET DE L'HISTORIQUE (Rétrocompatible Round 1 & 2)
     const playerStats = participants.map(player => {
-        // On cherche TOUS les matchs où ce joueur apparaît dans l'historique
+        // On récupère tous les matchs terminés des rounds précédents pour ce joueur
         const pastMatches = allMatches.filter(m => 
             (m.player1.id === player.id || m.player2.id === player.id) && 
             m.winner !== null && 
             m.round < currentRound
         );
         
-        // On compte les victoires (soit par ID, soit si l'objet player correspond)
+        // On compte les victoires (en vérifiant si winner est un ID ou un objet)
         const wins = pastMatches.filter(m => {
             const winnerId = (typeof m.winner === 'object') ? m.winner.id : m.winner;
             return winnerId === player.id;
         }).length;
 
-        // On récupère les IDs des adversaires déjà rencontrés
+        // On liste les IDs des adversaires déjà rencontrés pour éviter les doublons
         const opponents = pastMatches.map(m => 
             m.player1.id === player.id ? m.player2.id : m.player1.id
         );
 
         return {
             ...player,
-            score: wins, // Points réels basés sur l'historique des rounds 1 et 2
+            score: wins, // Points réels basés sur l'historique
             elo: state.eloRatings[player.id] || state.systemSettings.initialElo,
             opponents: opponents
         };
     });
 
-    // 2. TRI SELON TA RÈGLE
+    // 2. TRI STRATÉGIQUE
     playerStats.sort((a, b) => {
         if (currentRound === 1) {
-            return b.elo - a.elo; // Ronde 1 : Niveau équivalent
+            // Round 1 : On apparie par niveau Elo (équilibrage)
+            return b.elo - a.elo;
         } else {
-            // Ronde 2, 3... : Points d'abord, puis Elo
+            // Round 2, 3+ : Priorité aux points du tournoi, puis Elo
             if (b.score !== a.score) return b.score - a.score;
             return b.elo - a.elo;
         }
     });
 
-    // 3. GÉNÉRATION DES PAIRES SANS DOUBLONS
+    // 3. GÉNÉRATION DES PAIRES (Évitement des doublons)
     const newMatches = [];
     const pairedIds = new Set();
 
@@ -4232,16 +4233,17 @@ window.manuallyArchiveCurrentRound = manuallyArchiveCurrentRound;
 
         let bestOpponentIndex = -1;
 
+        // On cherche l'adversaire le plus proche au classement qui n'a pas encore joué contre p1
         for (let j = i + 1; j < playerStats.length; j++) {
             const p2 = playerStats[j];
             if (pairedIds.has(p2.id)) continue;
 
-            // Vérification stricte : pas de match déjà fait en R1 ou R2
+            // Vérification anti-doublon (ne se sont pas rencontrés en R1 ou R2)
             const alreadyPlayed = p1.opponents.includes(p2.id);
 
             if (!alreadyPlayed) {
                 bestOpponentIndex = j;
-                break;
+                break; 
             }
         }
 
@@ -4258,7 +4260,7 @@ window.manuallyArchiveCurrentRound = manuallyArchiveCurrentRound;
             pairedIds.add(p1.id);
             pairedIds.add(p2.id);
         } else {
-            // Si vraiment on ne trouve personne (cas mathématique rare)
+            // Si pas d'adversaire inédit trouvé, on prend le premier disponible
             const p2 = playerStats.find(p => !pairedIds.has(p.id) && p.id !== p1.id);
             if (p2) {
                 newMatches.push({
@@ -4268,17 +4270,17 @@ window.manuallyArchiveCurrentRound = manuallyArchiveCurrentRound;
                     winner: null,
                     round: currentRound,
                     player1IsBlack: Math.random() > 0.5,
-                    forced: true
+                    isForced: true // Note qu'on a dû briser la règle des doublons
                 });
                 pairedIds.add(p1.id);
                 pairedIds.add(p2.id);
             } else {
-                // BYE pour le joueur seul
+                // Gestion du BYE (joueur sans adversaire)
                 newMatches.push({
                     id: Date.now() + Math.random(),
                     player1: p1,
-                    player2: { id: 'bye', name: 'BYE', rank: 'N/A' },
-                    winner: p1.id,
+                    player2: { id: 'bye', name: 'BYE (Exempt)', rank: 'N/A' },
+                    winner: p1.id, // Victoire automatique
                     round: currentRound,
                     isBye: true
                 });
@@ -4287,16 +4289,21 @@ window.manuallyArchiveCurrentRound = manuallyArchiveCurrentRound;
         }
     }
 
-    // 4. ENREGISTREMENT
+    // 4. SAUVEGARDE DANS FIREBASE
     try {
+        const systemRef = doc(db, "system", "current");
+        // On conserve les matchs des rounds précédents et on ajoute les nouveaux
         const otherRoundsMatches = allMatches.filter(m => m.round !== currentRound);
+        
         await updateDoc(systemRef, {
             "activeTournament.matches": [...otherRoundsMatches, ...newMatches],
-            lastAction: `Round ${currentRound} generated (Swiss)`
+            lastAction: `🎲 Round ${currentRound} généré (Système Suisse)`
         });
+
         showNotification(`Round ${currentRound} généré avec succès !`, 'success');
-    } catch (e) {
-        showNotification("Erreur Firebase : " + e.message, 'error');
+    } catch (error) {
+        console.error("Erreur génération :", error);
+        showNotification("Erreur lors de la sauvegarde : " + error.message, 'error');
     }
 }
 
