@@ -4183,37 +4183,46 @@ window.manuallyArchiveCurrentRound = manuallyArchiveCurrentRound;
     const currentRound = state.activeTournament.round;
     const allMatches = state.activeTournament.matches || [];
     
-    // 1. Calculer les statistiques réelles basées sur l'historique
+    // 1. CALCUL DES POINTS ET HISTORIQUE (Rétrocompatible)
     const playerStats = participants.map(player => {
-        const matchesPlayed = allMatches.filter(m => 
-            (m.player1.id === player.id || m.player2.id === player.id) && m.winner
+        // On cherche TOUS les matchs où ce joueur apparaît dans l'historique
+        const pastMatches = allMatches.filter(m => 
+            (m.player1.id === player.id || m.player2.id === player.id) && 
+            m.winner !== null && 
+            m.round < currentRound
         );
         
-        const opponents = matchesPlayed.map(m => 
+        // On compte les victoires (soit par ID, soit si l'objet player correspond)
+        const wins = pastMatches.filter(m => {
+            const winnerId = (typeof m.winner === 'object') ? m.winner.id : m.winner;
+            return winnerId === player.id;
+        }).length;
+
+        // On récupère les IDs des adversaires déjà rencontrés
+        const opponents = pastMatches.map(m => 
             m.player1.id === player.id ? m.player2.id : m.player1.id
         );
 
         return {
             ...player,
-            score: matchesPlayed.filter(m => m.winner === player.id).length,
+            score: wins, // Points réels basés sur l'historique des rounds 1 et 2
             elo: state.eloRatings[player.id] || state.systemSettings.initialElo,
             opponents: opponents
         };
     });
 
-    // 2. TRI STRATÉGIQUE
+    // 2. TRI SELON TA RÈGLE
     playerStats.sort((a, b) => {
         if (currentRound === 1) {
-            // RONDE 1 : On apparie par niveau proche (Elo)
-            return b.elo - a.elo;
+            return b.elo - a.elo; // Ronde 1 : Niveau équivalent
         } else {
-            // RONDE 2+ : Priorité aux points du tournoi, puis Elo pour départager
+            // Ronde 2, 3... : Points d'abord, puis Elo
             if (b.score !== a.score) return b.score - a.score;
             return b.elo - a.elo;
         }
     });
 
-    // 3. GÉNÉRATION DES PAIRES (Algorithme d'évitement des doublons)
+    // 3. GÉNÉRATION DES PAIRES SANS DOUBLONS
     const newMatches = [];
     const pairedIds = new Set();
 
@@ -4227,45 +4236,67 @@ window.manuallyArchiveCurrentRound = manuallyArchiveCurrentRound;
             const p2 = playerStats[j];
             if (pairedIds.has(p2.id)) continue;
 
-            // CONDITION CRUCIALE : Ne pas avoir déjà joué ensemble
+            // Vérification stricte : pas de match déjà fait en R1 ou R2
             const alreadyPlayed = p1.opponents.includes(p2.id);
 
             if (!alreadyPlayed) {
                 bestOpponentIndex = j;
-                break; // On prend le plus proche disponible (déjà trié)
+                break;
             }
         }
 
         if (bestOpponentIndex !== -1) {
             const p2 = playerStats[bestOpponentIndex];
-            newMatches.push(createMatchData(p1, p2, currentRound));
+            newMatches.push({
+                id: Date.now() + Math.random(),
+                player1: p1,
+                player2: p2,
+                winner: null,
+                round: currentRound,
+                player1IsBlack: Math.random() > 0.5
+            });
             pairedIds.add(p1.id);
             pairedIds.add(p2.id);
         } else {
-            // Si aucun adversaire inédit n'est trouvé (cas rare), on prend le premier dispo
+            // Si vraiment on ne trouve personne (cas mathématique rare)
             const p2 = playerStats.find(p => !pairedIds.has(p.id) && p.id !== p1.id);
             if (p2) {
-                newMatches.push(createMatchData(p1, p2, currentRound, true));
+                newMatches.push({
+                    id: Date.now() + Math.random(),
+                    player1: p1,
+                    player2: p2,
+                    winner: null,
+                    round: currentRound,
+                    player1IsBlack: Math.random() > 0.5,
+                    forced: true
+                });
                 pairedIds.add(p1.id);
                 pairedIds.add(p2.id);
             } else {
-                // Gestion du BYE (Nombre impair)
-                newMatches.push(createByeMatch(p1, currentRound));
+                // BYE pour le joueur seul
+                newMatches.push({
+                    id: Date.now() + Math.random(),
+                    player1: p1,
+                    player2: { id: 'bye', name: 'BYE', rank: 'N/A' },
+                    winner: p1.id,
+                    round: currentRound,
+                    isBye: true
+                });
                 pairedIds.add(p1.id);
             }
         }
     }
 
-    // 4. SAUVEGARDE DANS FIREBASE
+    // 4. ENREGISTREMENT
     try {
         const otherRoundsMatches = allMatches.filter(m => m.round !== currentRound);
         await updateDoc(systemRef, {
             "activeTournament.matches": [...otherRoundsMatches, ...newMatches],
-            lastAction: `Round ${currentRound} generated`
+            lastAction: `Round ${currentRound} generated (Swiss)`
         });
-        showNotification(`Round ${currentRound} ready!`, 'success');
-    } catch (error) {
-        showNotification("Error: " + error.message, 'error');
+        showNotification(`Round ${currentRound} généré avec succès !`, 'success');
+    } catch (e) {
+        showNotification("Erreur Firebase : " + e.message, 'error');
     }
 }
 
