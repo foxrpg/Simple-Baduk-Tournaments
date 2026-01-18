@@ -1866,17 +1866,6 @@
                 </div>
             </div>
 
-            <!-- Chart Card -->
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">📈 Points Evolution</h2>
-                </div>
-                <div class="chart-container">
-                    <canvas id="seasonChart"></canvas>
-                </div>
-            </div>
-        </aside>
-
         <!-- Middle Column -->
         <main>
             <!-- Tabs for Active/History/Archive -->
@@ -4390,22 +4379,71 @@ function createByeMatch(player, round) {
 
     // Mise à jour de l'interface utilisateur
   function updateUI() {
+    // 1. Mises à jour des classements et vues de base
     updateRankings();
     updateTournamentView();
-    updateStatistics();
+    updateStats();
     updateRecentMatches();
     updateSeasonTimeline();
+    
+    // 2. LOGIQUE DE LA BARRE DE PROGRESSION (Round X/Y)
+    if (state.activeTournament) {
+        const currentRound = state.activeTournament.round || 1;
+        const totalRounds = state.activeTournament.settings?.totalRounds || 3;
+        
+        // Calcul du pourcentage : (Round actuel / Total rounds) * 100
+        const progressPercent = Math.min(Math.round((currentRound / totalRounds) * 100), 100);
+
+        // Mise à jour du texte "Round 1/3"
+        const progressText = document.getElementById('tournamentProgressText');
+        if (progressText) {
+            progressText.textContent = `Round ${currentRound}/${totalRounds}`;
+        }
+
+        // Mise à jour du remplissage de la barre (largeur CSS)
+        const progressFill = document.getElementById('tournamentProgressFill');
+        if (progressFill) {
+            progressFill.style.width = `${progressPercent}%`;
+            
+            // Changement de couleur : Accent par défaut, Vert si tournoi fini
+            if (currentRound === totalRounds) {
+                progressFill.style.backgroundColor = '#2ecc71'; // Vert succès
+            } else {
+                progressFill.style.backgroundColor = 'var(--accent)';
+            }
+        }
+
+        // Mise à jour des compteurs de matchs sous la barre
+        const allMatches = state.activeTournament.matches || [];
+        const completed = allMatches.filter(m => m.winner !== null).length;
+        
+        if (document.getElementById('matchesCompleted')) {
+            document.getElementById('matchesCompleted').textContent = completed;
+        }
+        if (document.getElementById('totalMatchesEstimate')) {
+            document.getElementById('totalMatchesEstimate').textContent = allMatches.length;
+        }
+    }
+
+    // 3. Autres composants et graphiques
     updateRoundProgress();
-    if (chart) chart.destroy();
+    
+    // Gestion du graphique principal (Chart.js)
+    if (typeof chart !== 'undefined' && chart) {
+        chart.destroy();
+    }
     renderChart();
+    
     updateSeasonInfo();
+    
+    // 4. Interface Administrateur
     if (isAdmin) {
         updateEditMatchSelect();
     }
-    // AJOUTEZ CETTE LIGNE :
-    updateRoundsArchive();  // Mettre à jour l'affichage des rounds archivés
+    
+    // Archives
+    updateRoundsArchive();
 }
-
 async function updatePlayerRank(playerId, currentRank) {
     if (!isAdmin) {
         showNotification('Accès Administrateur requis', 'error');
@@ -5391,24 +5429,74 @@ window.testSeasonRewards = testSeasonRewards;
         document.getElementById('seasonProgressText').textContent = `${tournamentInSeason}/4`;
         document.getElementById('seasonProgressFill').style.width = `${seasonProgress}%`;
     
+        function updateStats() {
+    // Vérification que le tournoi existe et que l'élément HTML est présent
+    if (!state.activeTournament) return;
+    const canvas = document.getElementById('roundProgressChart');
+    if (!canvas) return;
+    
+    const ctxProgress = canvas.getContext('2d');
 
-    function updateStatistics() {
-        const totalPlayers = state.players.length;
-        const totalMatches = state.tournamentHistory.reduce((sum, t) => sum + (t.matches?.length || 0), 0) + 
-                            (state.activeTournament?.matches?.length || 0);
+    // 1. Récupération des données réelles
+    const totalRounds = state.activeTournament.settings?.totalRounds || 5;
+    const matches = state.activeTournament.matches || [];
+    
+    const labels = [];
+    const data = [];
+
+    // 2. Calcul du % par round
+    for (let i = 1; i <= totalRounds; i++) {
+        labels.push(`Round ${i}`);
         
-        const totalWins = state.players.reduce((sum, p) => sum + (p.wins || 0), 0);
-        const totalLosses = state.players.reduce((sum, p) => sum + (p.losses || 0), 0);
-        const totalElo = Object.values(state.eloRatings).reduce((sum, elo) => sum + elo, state.systemSettings.initialElo * totalPlayers);
+        const roundMatches = matches.filter(m => m.round === i);
         
-        const avgElo = totalPlayers > 0 ? Math.round(totalElo / totalPlayers) : state.systemSettings.initialElo;
-        const winRate = totalWins + totalLosses > 0 ? Math.round((totalWins / (totalWins + totalLosses)) * 100) : 0;
-        
-        document.getElementById('totalPlayers').textContent = totalPlayers;
-        document.getElementById('totalMatches').textContent = totalMatches;
-        document.getElementById('avgElo').textContent = avgElo;
-        document.getElementById('winRate').textContent = `${winRate}%`;
+        if (roundMatches.length === 0) {
+            data.push(0);
+        } else {
+            // Un match est fini si 'winner' n'est pas null
+            const completed = roundMatches.filter(m => m.winner !== null).length;
+            const percentage = Math.round((completed / roundMatches.length) * 100);
+            data.push(percentage);
+        }
     }
+
+    // 3. Gestion du graphique (Chart.js)
+    if (window.progressChart instanceof Chart) {
+        window.progressChart.destroy();
+    }
+
+    window.progressChart = new Chart(ctxProgress, {
+        type: 'bar', 
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Matchs Terminés (%)',
+                data: data,
+                backgroundColor: data.map(v => v === 100 ? '#2ecc71' : '#e43f5a'), // Vert si fini, rouge sinon
+                borderRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { 
+                    beginAtZero: true, 
+                    max: 100,
+                    ticks: { color: '#8e94a5', callback: v => v + '%' },
+                    grid: { color: 'rgba(255,255,255,0.05)' }
+                },
+                x: { 
+                    ticks: { color: '#8e94a5' },
+                    grid: { display: false }
+                }
+            },
+            plugins: {
+                legend: { display: false }
+            }
+        }
+    });
+}
 
     function updateRecentMatches() {
         const recentMatches = [];
