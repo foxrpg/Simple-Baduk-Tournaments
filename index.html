@@ -4173,7 +4173,7 @@ async function manuallyArchiveCurrentRound() {
 window.manuallyArchiveCurrentRound = manuallyArchiveCurrentRound;
 
     // Generate Swiss Pairs
-   async function generateSwissPairs() {
+  async function generateSwissPairs() {
     if (!isAdmin || !state.activeTournament) {
         showNotification('Admin access required', 'error');
         return;
@@ -4181,251 +4181,116 @@ window.manuallyArchiveCurrentRound = manuallyArchiveCurrentRound;
 
     const participants = [...state.activeTournament.participants];
     const currentRound = state.activeTournament.round;
-    const existingMatches = state.activeTournament.matches.filter(m => m.round === currentRound);
+    const allMatches = state.activeTournament.matches || [];
     
-    if (existingMatches.length > 0) {
-        if (!confirm(`${existingMatches.length} matches already exist for round ${currentRound}. Generate new pairs anyway?`)) {
-            return;
-        }
-    }
-
-    // 1. Calculer les scores actuels pour ce tournoi
+    // 1. Calculer les statistiques réelles basées sur l'historique
     const playerStats = participants.map(player => {
-        // Compter les victoires dans ce tournoi
-        const winsInTournament = state.activeTournament.matches
-            .filter(m => m.winner === player.id && m.round < currentRound)
-            .length;
+        const matchesPlayed = allMatches.filter(m => 
+            (m.player1.id === player.id || m.player2.id === player.id) && m.winner
+        );
         
-        // Compter les défaites dans ce tournoi
-        const lossesInTournament = state.activeTournament.matches
-            .filter(m => 
-                (m.player1.id === player.id || m.player2.id === player.id) && 
-                m.winner && 
-                m.winner !== player.id &&
-                m.round < currentRound
-            ).length;
-        
-        // Liste des adversaires déjà rencontrés (tableau, pas Set)
-        const opponents = state.activeTournament.matches
-            .filter(m => 
-                (m.player1.id === player.id || m.player2.id === player.id) && 
-                m.round < currentRound
-            )
-            .map(m => m.player1.id === player.id ? m.player2.id : m.player1.id);
-        
-        // Score basé sur les victoires (1 point par victoire)
-        const score = winsInTournament;
-        
-        // Buchholz (somme des scores des adversaires)
-        const opponentScores = opponents.map(opponentId => {
-            const oppWins = state.activeTournament.matches
-                .filter(m => m.winner === opponentId && m.round < currentRound)
-                .length;
-            return oppWins;
-        });
-        const buchholz = opponentScores.reduce((sum, s) => sum + s, 0);
-        
-        // Sonneborn-Berger (points contre les adversaires battus)
-        const sonnebornBerger = opponents.reduce((total, opponentId, index) => {
-            if (state.activeTournament.matches.some(m => 
-                ((m.player1.id === player.id && m.player2.id === opponentId) ||
-                 (m.player2.id === player.id && m.player1.id === opponentId)) &&
-                m.winner === player.id
-            )) {
-                return total + opponentScores[index];
-            }
-            return total;
-        }, 0);
+        const opponents = matchesPlayed.map(m => 
+            m.player1.id === player.id ? m.player2.id : m.player1.id
+        );
 
         return {
             ...player,
-            id: player.id,
-            wins: winsInTournament,
-            losses: lossesInTournament,
-            score: score,
-            buchholz: buchholz,
-            sonnebornBerger: sonnebornBerger,
-            opponents: opponents, // Tableau, pas Set (pour Firebase)
+            score: matchesPlayed.filter(m => m.winner === player.id).length,
             elo: state.eloRatings[player.id] || state.systemSettings.initialElo,
-            played: opponents.length
+            opponents: opponents
         };
     });
 
-    // 2. Trier les joueurs selon le système suisse
+    // 2. TRI STRATÉGIQUE
     playerStats.sort((a, b) => {
-        // 1. Par score (victoires)
-        if (b.score !== a.score) return b.score - a.score;
-        
-        // 2. Par Buchholz
-        if (b.buchholz !== a.buchholz) return b.buchholz - a.buchholz;
-        
-        // 3. Par Sonneborn-Berger
-        if (b.sonnebornBerger !== a.sonnebornBerger) return b.sonnebornBerger - a.sonnebornBerger;
-        
-        // 4. Par Elo
-        if (b.elo !== a.elo) return b.elo - a.elo;
-        
-        // 5. Par moins de parties jouées (pour éviter les byes)
-        return a.played - b.played;
+        if (currentRound === 1) {
+            // RONDE 1 : On apparie par niveau proche (Elo)
+            return b.elo - a.elo;
+        } else {
+            // RONDE 2+ : Priorité aux points du tournoi, puis Elo pour départager
+            if (b.score !== a.score) return b.score - a.score;
+            return b.elo - a.elo;
+        }
     });
 
-    // 3. Générer les paires
+    // 3. GÉNÉRATION DES PAIRES (Algorithme d'évitement des doublons)
     const newMatches = [];
-    const paired = new Set();
-    const playersToPair = [...playerStats];
-    
-    console.log("Players sorted for pairing:", playersToPair.map(p => ({
-        name: p.name,
-        score: p.score,
-        buchholz: p.buchholz,
-        elo: p.elo,
-        opponents: p.opponents || []
-    })));
+    const pairedIds = new Set();
 
-    // Premier essai : pairing idéal
-    for (let i = 0; i < playersToPair.length; i++) {
-        if (paired.has(playersToPair[i].id)) continue;
-        
+    for (let i = 0; i < playerStats.length; i++) {
+        const p1 = playerStats[i];
+        if (pairedIds.has(p1.id)) continue;
+
         let bestOpponentIndex = -1;
-        let bestScoreDiff = Infinity;
-        let bestEloDiff = Infinity;
-        
-        // Chercher le meilleur adversaire
-        for (let j = i + 1; j < playersToPair.length; j++) {
-            if (paired.has(playersToPair[j].id)) continue;
-            
-            // Vérifier s'ils ne se sont pas déjà rencontrés (CORRIGÉ ICI)
-            if (playersToPair[i].opponents && playersToPair[i].opponents.includes(playersToPair[j].id)) continue;
-            
-            // Calculer la différence de score
-            const scoreDiff = Math.abs(playersToPair[i].score - playersToPair[j].score);
-            const eloDiff = Math.abs(playersToPair[i].elo - playersToPair[j].elo);
-            
-            // Priorité : même score, puis Elo proche
-            if (scoreDiff < bestScoreDiff || 
-                (scoreDiff === bestScoreDiff && eloDiff < bestEloDiff)) {
-                bestScoreDiff = scoreDiff;
-                bestEloDiff = eloDiff;
+
+        for (let j = i + 1; j < playerStats.length; j++) {
+            const p2 = playerStats[j];
+            if (pairedIds.has(p2.id)) continue;
+
+            // CONDITION CRUCIALE : Ne pas avoir déjà joué ensemble
+            const alreadyPlayed = p1.opponents.includes(p2.id);
+
+            if (!alreadyPlayed) {
                 bestOpponentIndex = j;
+                break; // On prend le plus proche disponible (déjà trié)
             }
         }
-        
-        // Si on a trouvé un adversaire
+
         if (bestOpponentIndex !== -1) {
-            newMatches.push({
-                id: Date.now() + Math.random(),
-                player1: playersToPair[i],
-                player2: playersToPair[bestOpponentIndex],
-                winner: null,
-                round: currentRound,
-                player1IsBlack: Math.random() > 0.5,
-                gameUrl: null,
-                scoreDiff: Math.abs(playersToPair[i].score - playersToPair[bestOpponentIndex].score),
-                eloDiff: Math.abs(playersToPair[i].elo - playersToPair[bestOpponentIndex].elo)
-            });
-            
-            paired.add(playersToPair[i].id);
-            paired.add(playersToPair[bestOpponentIndex].id);
-            
-            console.log(`Paired: ${playersToPair[i].name} (${playersToPair[i].score} pts, ${playersToPair[i].elo} Elo) vs ${playersToPair[bestOpponentIndex].name} (${playersToPair[bestOpponentIndex].score} pts, ${playersToPair[bestOpponentIndex].elo} Elo)`);
-        }
-    }
-    
-    // Deuxième essai : pour les joueurs restants, on assouplit les contraintes
-    const remainingPlayers = playersToPair.filter(p => !paired.has(p.id));
-    if (remainingPlayers.length > 0) {
-        console.log("Remaining players after first pass:", remainingPlayers.map(p => p.name));
-        
-        // Essayer de pairer les restants même s'ils se sont déjà rencontrés
-        for (let i = 0; i < remainingPlayers.length - 1; i += 2) {
-            const player1 = remainingPlayers[i];
-            const player2 = remainingPlayers[i + 1];
-            
-            if (player2) {
-                newMatches.push({
-                    id: Date.now() + Math.random(),
-                    player1: player1,
-                    player2: player2,
-                    winner: null,
-                    round: currentRound,
-                    player1IsBlack: Math.random() > 0.5,
-                    gameUrl: null,
-                    forcedPairing: true
-                });
-                
-                paired.add(player1.id);
-                paired.add(player2.id);
-                
-                console.log(`Forced pairing: ${player1.name} vs ${player2.name}`);
+            const p2 = playerStats[bestOpponentIndex];
+            newMatches.push(createMatchData(p1, p2, currentRound));
+            pairedIds.add(p1.id);
+            pairedIds.add(p2.id);
+        } else {
+            // Si aucun adversaire inédit n'est trouvé (cas rare), on prend le premier dispo
+            const p2 = playerStats.find(p => !pairedIds.has(p.id) && p.id !== p1.id);
+            if (p2) {
+                newMatches.push(createMatchData(p1, p2, currentRound, true));
+                pairedIds.add(p1.id);
+                pairedIds.add(p2.id);
+            } else {
+                // Gestion du BYE (Nombre impair)
+                newMatches.push(createByeMatch(p1, currentRound));
+                pairedIds.add(p1.id);
             }
         }
-        
-        // Si nombre impair de joueurs, le dernier a un bye
-        if (remainingPlayers.length % 2 === 1) {
-            const byePlayer = remainingPlayers[remainingPlayers.length - 1];
-            showNotification(`${byePlayer.name} gets a BYE (no opponent available)`, 'warning');
-            console.log(`Bye for: ${byePlayer.name}`);
-            
-            // Ajouter un match fictif pour le bye
-            newMatches.push({
-                id: Date.now() + Math.random(),
-                player1: byePlayer,
-                player2: { id: 'bye', name: 'BYE', rank: 'N/A' },
-                winner: byePlayer.id, // Victoire automatique
-                round: currentRound,
-                player1IsBlack: true,
-                gameUrl: null,
-                isBye: true
-            });
-        }
     }
 
-    // 4. Filtrer les anciens matchs de ce round et ajouter les nouveaux
-    const filteredExistingMatches = state.activeTournament.matches.filter(m => m.round !== currentRound);
-    const updatedMatches = [...filteredExistingMatches, ...newMatches];
-    
+    // 4. SAUVEGARDE DANS FIREBASE
     try {
+        const otherRoundsMatches = allMatches.filter(m => m.round !== currentRound);
         await updateDoc(systemRef, {
-            "activeTournament.matches": updatedMatches,
-            lastAction: `🎲 Swiss pairs generated for round ${currentRound}: ${newMatches.length} matches`
+            "activeTournament.matches": [...otherRoundsMatches, ...newMatches],
+            lastAction: `Round ${currentRound} generated`
         });
-
-        // Mettre à jour le round progress
-        const roundProgress = state.activeTournament.roundProgress || [];
-        const roundIndex = currentRound - 1;
-        
-        if (roundIndex >= 0 && roundIndex < roundProgress.length) {
-            roundProgress[roundIndex] = {
-                ...roundProgress[roundIndex],
-                totalMatches: newMatches.filter(m => !m.isBye).length
-            };
-            
-            await updateDoc(systemRef, {
-                "activeTournament.roundProgress": roundProgress
-            });
-        }
-
-        const normalMatches = newMatches.filter(m => !m.isBye);
-        const byeMatches = newMatches.filter(m => m.isBye);
-        
-        let message = `Generated ${normalMatches.length} pairs for round ${currentRound}`;
-        if (byeMatches.length > 0) {
-            message += ` (1 BYE for ${byeMatches[0].player1.name})`;
-        }
-        
-        showNotification(message, 'success');
-        
-        console.log("New matches generated:", newMatches.map(m => ({
-            players: `${m.player1.name} vs ${m.player2.name}`,
-            scoreDiff: m.scoreDiff,
-            eloDiff: m.eloDiff,
-            isBye: m.isBye
-        })));
-        
+        showNotification(`Round ${currentRound} ready!`, 'success');
     } catch (error) {
-        console.error("Error generating pairs:", error);
-        showNotification("Error generating pairs: " + error.message, 'error');
+        showNotification("Error: " + error.message, 'error');
     }
+}
+
+// Fonctions utilitaires pour alléger le code principal
+function createMatchData(p1, p2, round, forced = false) {
+    return {
+        id: Date.now() + Math.random(),
+        player1: p1,
+        player2: p2,
+        winner: null,
+        round: round,
+        player1IsBlack: Math.random() > 0.5,
+        isForced: forced // Indique si on a dû briser la règle du "jamais deux fois"
+    };
+}
+
+function createByeMatch(player, round) {
+    return {
+        id: Date.now() + Math.random(),
+        player1: player,
+        player2: { id: 'bye', name: 'BYE (Exempt)', rank: 'N/A' },
+        winner: player.id, // Victoire auto
+        round: round,
+        isBye: true
+    };
 }
     async function clearCurrentMatches() {
     if (!isAdmin) {
