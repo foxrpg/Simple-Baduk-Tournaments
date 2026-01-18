@@ -4406,6 +4406,37 @@ function createByeMatch(player, round) {
     updateRoundsArchive();  // Mettre à jour l'affichage des rounds archivés
 }
 
+async function updatePlayerRank(playerId, currentRank) {
+    if (!isAdmin) {
+        showNotification('Accès Administrateur requis', 'error');
+        return;
+    }
+
+    const newRank = prompt(`Modifier le rang pour ce joueur (actuel: ${currentRank}):`, currentRank);
+    
+    if (newRank === null || newRank === "" || newRank === currentRank) return;
+
+    try {
+        const systemRef = doc(db, "system", "current");
+        const participants = [...state.activeTournament.participants];
+        const playerIndex = participants.findIndex(p => p.id === playerId);
+
+        if (playerIndex !== -1) {
+            participants[playerIndex].rank = newRank;
+            
+            await updateDoc(systemRef, {
+                "activeTournament.participants": participants,
+                lastAction: `Rang de ${participants[playerIndex].name} mis à jour : ${newRank}`
+            });
+            
+            showNotification("Rang mis à jour avec succès", "success");
+        }
+    } catch (error) {
+        console.error("Erreur mise à jour rang:", error);
+        showNotification("Erreur lors de la modification", "error");
+    }
+}
+
 
     function updateEditMatchSelect() {
         if (!state.activeTournament) return;
@@ -4943,7 +4974,14 @@ async function deleteRound(roundId) {
                             ${index === 2 ? '<span class="badge badge-bronze">🥉</span>' : ''}
                         </div>
                         <div class="player-meta">
-                            <span class="player-tag">${player.rank}</span>
+                            <span class="player-tag" 
+                                  onclick="updatePlayerRank('${player.id}', '${player.rank}')" 
+                                  style="cursor: pointer; transition: transform 0.2s; display: inline-block;"
+                                  onmouseover="this.style.transform='scale(1.1)'"
+                                  onmouseout="this.style.transform='scale(1)'"
+                                  title="Cliquer pour modifier le rang">
+                                ${player.rank || 'N/A'} ✎
+                            </span>
                             <span>Elo: ${elo}</span>
                             <span>${player.wins || 0}W ${player.losses || 0}L</span>
                         </div>
@@ -5796,6 +5834,7 @@ window.toggleHistoryDetails = toggleHistoryDetails;
         window.toggleManualColor = toggleManualColor;
         window.createMultipleMatches = createMultipleMatches;
         window.filterHistory = filterHistory;
+        window.updatePlayerRank = updatePlayerRank;
         window.toggleHistoryDetails = toggleHistoryDetails;
         window.resetAllMatchColors = resetAllMatchColors;
         window.clearAllMatches = clearAllMatches;
