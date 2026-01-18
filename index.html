@@ -105,9 +105,19 @@
         }
 
         .container {
-            max-width: 1800px;
-            margin: 0 auto;
-        }
+    display: flex; /* Force l'alignement côte à côte */
+    gap: 20px;
+    align-items: flex-start;
+    padding: 20px;
+    max-width: 1600px;
+    margin: 0 auto;
+}
+
+/* Ajoute ou modifie cette partie pour que le Dashboard prenne toute la place */
+.main-content {
+    flex: 1; /* Prend tout l'espace à droite de la sidebar */
+    min-width: 0; /* Empêche les éléments larges de casser la mise en page */
+}
 
         .header {
             display: flex;
