@@ -1906,6 +1906,9 @@
                             <button onclick="generateSwissPairs()" class="btn btn-secondary">
                                 <span>🔀</span> Generate Pairs
                             </button>
+                            <button onclick="clearCurrentRoundMatches()" class="btn btn-danger">
+    <span>🗑️</span> Clear Current Round
+</button>
                             <button onclick="clearCurrentMatches()" class="btn btn-warning">
                                 <span>🔄</span> Next Round
                             </button>
@@ -4939,6 +4942,33 @@ async function deleteRound(roundId) {
     
     console.log("✅ Affichage mis à jour");
 }
+
+    async function clearCurrentRoundMatches() {
+    // 1. Demander une confirmation pour éviter les accidents
+    if (!confirm("Are you sure you want to delete ALL matches for the current round? This cannot be undone.")) {
+        return;
+    }
+
+    try {
+        // 2. Créer une copie de l'état actuel du tournoi
+        const updatedTournament = { ...state.activeTournament };
+        
+        // 3. Vider la liste des matchs
+        updatedTournament.matches = [];
+        
+        // 4. Mettre à jour Firebase
+        const systemRef = doc(db, "system", "current");
+        await updateDoc(systemRef, {
+            activeTournament: updatedTournament
+        });
+
+        showNotification("Current round matches have been cleared", "success");
+    } catch (error) {
+        console.error("Error clearing matches:", error);
+        showNotification("Failed to clear matches", "error");
+    }
+}
+
     function updateModeIndicator() {
     console.log("🎛️ updateModeIndicator, admin:", isAdmin);
     
@@ -5832,6 +5862,7 @@ window.manuallyArchiveCurrentRound = manuallyArchiveCurrentRound;
         
 window.toggleRoundDetails = toggleRoundDetails;
 window.filterRounds = filterRounds;
+window.clearCurrentRoundMatches = clearCurrentRoundMatches;
 window.exportRoundData = exportRoundData;
 window.deleteRound = deleteRound;
         window.getAppState = () => state;
