@@ -6063,40 +6063,69 @@ window.testSeasonRewards = testSeasonRewards;
         return Math.floor(seconds) + "s ago";
     }
 
-    function renderChart() {
-        const ctx = document.getElementById('seasonChart').getContext('2d');
+   function renderChart() {
+    // Vérifier si le canvas existe déjà
+    let canvas = document.getElementById('seasonChart');
+    
+    if (!canvas) {
+        // Créer le canvas s'il n'existe pas
+        canvas = document.createElement('canvas');
+        canvas.id = 'seasonChart';
+        canvas.style.width = '100%';
+        canvas.style.height = '250px';
         
-        if (chart) {
-            chart.destroy();
+        // Trouver où ajouter le canvas (dans la carte Season Overview)
+        const seasonOverviewCard = document.querySelector('.right-column .card');
+        if (seasonOverviewCard) {
+            seasonOverviewCard.appendChild(canvas);
+        } else {
+            console.log("Carte Season Overview non trouvée, graphique non créé");
+            return;
         }
-        
-        const topPlayers = [...state.players]
-            .sort((a, b) => {
-                if (a.elo !== undefined && b.elo !== undefined) {
-                    return b.elo - a.elo;
-                }
-                return (b.points || 0) - (a.points || 0);
-            })
-            .slice(0, 5);
-        
-        const tournamentCount = Math.min(state.tournamentCount, 4);
-        const labels = ['Start'];
-        for (let i = 1; i <= tournamentCount; i++) {
-            labels.push(`T${i}`);
-        }
-        
-        const colors = [
-            'rgb(228, 63, 90)',
-            'rgb(31, 64, 104)',
-            'rgb(46, 204, 113)',
-            'rgb(243, 156, 18)',
-            'rgb(155, 89, 182)'
-        ];
-        
-        const theme = document.body.getAttribute('data-theme') || 'light';
-        const gridColor = theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
-        const textColor = theme === 'dark' ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.8)';
-        
+    }
+    
+    const ctx = canvas.getContext('2d');
+    
+    // Détruire l'ancien graphique s'il existe
+    if (chart) {
+        chart.destroy();
+    }
+    
+    const topPlayers = [...state.players]
+        .sort((a, b) => {
+            if (a.elo !== undefined && b.elo !== undefined) {
+                return b.elo - a.elo;
+            }
+            return (b.points || 0) - (a.points || 0);
+        })
+        .slice(0, 5);
+    
+    const tournamentCount = Math.min(state.tournamentCount, 4);
+    const labels = ['Start'];
+    for (let i = 1; i <= tournamentCount; i++) {
+        labels.push(`T${i}`);
+    }
+    
+    // Si pas assez de données, ne pas créer le graphique
+    if (topPlayers.length === 0 || tournamentCount === 0) {
+        // Optionnel: afficher un message
+        canvas.parentElement.innerHTML += '<div style="text-align: center; padding: 20px; color: var(--text-secondary);">Pas assez de données pour le graphique</div>';
+        return;
+    }
+    
+    const colors = [
+        'rgb(228, 63, 90)',
+        'rgb(31, 64, 104)',
+        'rgb(46, 204, 113)',
+        'rgb(243, 156, 18)',
+        'rgb(155, 89, 182)'
+    ];
+    
+    const theme = document.body.getAttribute('data-theme') || 'light';
+    const gridColor = theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+    const textColor = theme === 'dark' ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.8)';
+    
+    try {
         chart = new Chart(ctx, {
             type: 'line',
             data: {
@@ -6129,17 +6158,6 @@ window.testSeasonRewards = testSeasonRewards;
                             padding: 20,
                             usePointStyle: true
                         }
-                    },
-                    tooltip: {
-                        mode: 'index',
-                        intersect: false,
-                        backgroundColor: theme === 'dark' ? 'rgba(0, 0, 0, 0.8)' : 'rgba(255, 255, 255, 0.9)',
-                        titleColor: textColor,
-                        bodyColor: textColor,
-                        borderColor: 'var(--accent)',
-                        borderWidth: 1,
-                        cornerRadius: 8,
-                        padding: 12
                     }
                 },
                 scales: {
@@ -6158,26 +6176,131 @@ window.testSeasonRewards = testSeasonRewards;
                         },
                         ticks: {
                             color: textColor
-                        },
-                        title: {
-                            display: true,
-                            text: 'Points',
-                            color: textColor
                         }
                     }
-                },
-                interaction: {
-                    intersect: false,
-                    mode: 'nearest'
-                },
-                animation: {
-                    duration: 1000,
-                    easing: 'easeOutQuart'
                 }
             }
         });
+    } catch (error) {
+        console.error("Erreur création graphique:", error);
     }
+}
 
+// Fonction pour effacer toutes les inscriptions
+async function clearAllEnrollments() {
+    if (!isAdmin || !confirm('Effacer toutes les inscriptions? Cette action est irréversible.')) {
+        return;
+    }
+    
+    tournamentEnrollments = [];
+    
+    try {
+        const systemRef = doc(db, "system", "current");
+        await updateDoc(systemRef, {
+            tournamentEnrollments: [],
+            lastAction: '❌ Toutes les inscriptions effacées'
+        });
+        
+        updateEnrollmentList();
+        showNotification('Toutes les inscriptions effacées', 'success');
+        
+    } catch (error) {
+        console.error("Erreur:", error);
+        showNotification("Erreur lors de la suppression: " + error.message, 'error');
+    }
+}
+
+// Fonction pour démarrer un tournoi à partir des inscriptions
+async function startTournamentFromEnrollments() {
+    if (!isAdmin) {
+        showNotification('Accès administrateur requis', 'error');
+        return;
+    }
+    
+    if (tournamentEnrollments.length < 2) {
+        showNotification('Minimum 2 joueurs requis pour démarrer un tournoi', 'error');
+        return;
+    }
+    
+    const name = document.getElementById('tournamentNameFromEnrollments').value.trim() || 
+                 `Tournoi - ${new Date().toLocaleDateString('fr-FR')}`;
+    const totalRounds = parseInt(document.getElementById('enrollmentRoundsCount').value) || 3;
+    const type = document.getElementById('enrollmentTournamentType').value;
+    
+    // Convertir les inscriptions en participants
+    const participants = tournamentEnrollments.map(enrollment => {
+        const player = state.players.find(p => p.id === enrollment.id);
+        return {
+            id: enrollment.id,
+            name: enrollment.name,
+            rank: enrollment.tournamentRank || enrollment.globalRank,
+            elo: enrollment.elo || state.systemSettings.initialElo,
+            points: enrollment.points || 0
+        };
+    });
+    
+    const tournament = {
+        id: Date.now().toString(),
+        name,
+        participants,
+        matches: [],
+        startTime: new Date().toISOString(),
+        status: 'active',
+        round: 1,
+        totalRounds: totalRounds,
+        type: type,
+        settings: {
+            pointsPerWin: 10,
+            pointsPerLoss: -5
+        },
+        roundProgress: Array(totalRounds).fill(0).map((_, i) => ({
+            round: i + 1,
+            completedMatches: 0,
+            totalMatches: Math.floor(participants.length / 2)
+        }))
+    };
+    
+    try {
+        const systemRef = doc(db, "system", "current");
+        await updateDoc(systemRef, {
+            activeTournament: tournament,
+            tournamentEnrollments: [], // Vider les inscriptions après création
+            lastAction: `🎯 Tournoi "${name}" démarré avec ${participants.length} joueurs`
+        });
+        
+        showNotification(`Tournoi "${name}" démarré avec succès!`, 'success');
+        // Basculer vers l'onglet actif
+        switchTab('active');
+        
+    } catch (error) {
+        console.error("Erreur:", error);
+        showNotification("Erreur: " + error.message, 'error');
+    }
+}
+
+// Fonction pour afficher les boutons admin
+function forceAdminButtonsDisplay() {
+    console.log("🔧 Vérification de l'affichage admin...");
+    
+    if (isAdmin) {
+        console.log("👑 Mode admin détecté, forçage de l'affichage...");
+        
+        // 1. Supprimer guest-mode
+        document.querySelector('.container')?.classList.remove('guest-mode');
+        
+        // 2. Afficher tous les éléments cachés
+        document.querySelectorAll('.admin-hidden').forEach(el => {
+            el.classList.remove('admin-hidden');
+        });
+        
+        // 3. Forcer l'affichage CSS
+        document.querySelectorAll('.win-btn, .swap-colors-btn').forEach(btn => {
+            btn.style.display = 'block';
+            btn.style.visibility = 'visible';
+            btn.style.opacity = '1';
+        });
+    }
+}
     function updateSeasonInfo() {
         document.getElementById('currentSeason').textContent = state.season;
         document.getElementById('currentSeasonNum').textContent = state.season;
@@ -6325,6 +6448,34 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 1500);
 });
 
+// Exporter la liste d'inscription
+// Exporter la liste d'inscription
+function exportEnrollmentList() {
+    const exportData = {
+        tournament: state.activeTournament?.name || 'Unnamed Tournament',
+        exportDate: new Date().toISOString(),
+        enrolledPlayers: tournamentEnrollments.map(p => ({
+            name: p.name,
+            rank: p.tournamentRank || p.rank,
+            elo: state.eloRatings[p.id] || 1500,
+            enrolledAt: p.enrolledAt
+        }))
+    };
+    
+    const dataStr = JSON.stringify(exportData, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+    const exportFileName = `tournament-enrollment-${new Date().toISOString().split('T')[0]}.json`;
+    
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileName);
+    linkElement.click();
+    
+    showNotification('Enrollment list exported', 'success');
+}
+
+
+
 // ============================================================
 // FONCTIONS POUR AFFICHER LES ROUNDS
 // ============================================================
@@ -6344,93 +6495,92 @@ function toggleTournamentRounds(tournamentId) {
 
 // Exposer les fonctions globalement
 window.toggleTournamentRounds = toggleTournamentRounds;
-    // Initialize
-    document.addEventListener('DOMContentLoaded', () => {
-        const savedTheme = localStorage.getItem('meijin-theme') || 'dark';
-        document.body.setAttribute('data-theme', savedTheme);
-        document.getElementById('themeIcon').textContent = savedTheme === 'dark' ? '☀️' : '🌙';
-        
-        document.getElementById('searchPlayers').addEventListener('input', () => filterPlayers('all'));
-         tournamentEnrollments = state.tournamentEnrollments || [];
-        
-        // Mode admin désactivé par défaut
-        isAdmin = false;
-        document.getElementById('adminControls').style.display = 'none';
-        document.getElementById('authSection').style.display = 'flex';
-        
-        // Masquer les éléments admin au chargement
-        toggleAdminElements(false);
-        
-        // Mettre à jour l'indicateur de mode
-        updateModeIndicator();
-        
-// Exposez les fonctions au niveau global
-window.switchTab = switchTab;
-window.toggleEnrollmentForm = toggleEnrollmentForm;
-window.loginAdmin = loginAdmin;
-window.logoutAdmin = logoutAdmin;
-window.addNewPlayer = addNewPlayer;
-window.updatePlayerRank = updatePlayerRank;
-window.addPlayerToTournament = addPlayerToTournament;
-window.updatePlayerTournamentRank = updatePlayerTournamentRank;
-window.removeFromTournament = removeFromTournament;
-window.exportEnrollmentList = exportEnrollmentList;
-window.clearAllEnrollments = clearAllEnrollments;
-window.startTournamentFromEnrollments = startTournamentFromEnrollments;
-window.startNewTournament = startNewTournament;
-window.generateSwissPairs = generateSwissPairs;
-window.clearCurrentMatches = clearCurrentMatches;
-window.endTournament = endTournament;
-window.toggleTheme = toggleTheme;
-window.filterPlayers = filterPlayers;
-window.selectAllPlayers = selectAllPlayers;
-window.deselectAllPlayers = deselectAllPlayers;
-window.promptGameLink = promptGameLink;
-window.swapAllMatchColors = swapAllMatchColors;
-window.randomizeAllColors = randomizeAllColors;
-window.setMatchWinner = setMatchWinner;
-window.swapMatchColors = swapMatchColors;
-window.createManualMatch = createManualMatch;
-window.clearCurrentRoundMatches = clearCurrentRoundMatches;
-window.filterHistory = filterHistory;
-window.toggleHistoryDetails = toggleHistoryDetails;
-window.updateRoundsArchive = updateRoundsArchive;
-window.archiveCurrentRound = archiveCurrentRound;
-window.manuallyArchiveCurrentRound = manuallyArchiveCurrentRound;
-window.recoverLostRounds = recoverLostRounds;
-window.swapSelectedPlayers = swapSelectedPlayers;
-window.toggleManualColor = toggleManualColor;
-window.createMultipleMatches = createMultipleMatches;
-window.resetAllMatchColors = resetAllMatchColors;
-window.clearAllMatches = clearAllMatches;
-window.randomizeAllMatches = randomizeAllMatches;
-window.exportTournamentData = exportTournamentData;
-window.loadMatchForEditing = loadMatchForEditing;
-window.swapMatchPlayers = swapMatchPlayers;
-window.saveMatchChanges = saveMatchChanges;
-window.deleteSelectedMatch = deleteSelectedMatch;
-window.setBulkWinner = setBulkWinner;
+   // Initialize
+document.addEventListener('DOMContentLoaded', () => {
+    const savedTheme = localStorage.getItem('meijin-theme') || 'dark';
+    document.body.setAttribute('data-theme', savedTheme);
+    document.getElementById('themeIcon').textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+    
+    document.getElementById('searchPlayers').addEventListener('input', () => filterPlayers('all'));
+    
+    // Mode admin désactivé par défaut
+    isAdmin = false;
+    document.getElementById('adminControls').style.display = 'none';
+    document.getElementById('authSection').style.display = 'flex';
+    
+    // Masquer les éléments admin au chargement
+    toggleAdminElements(false);
+    
+    // Mettre à jour l'indicateur de mode
+    updateModeIndicator();
+    
+    // Exposer les fonctions au niveau global
+    window.switchTab = switchTab;
+    window.toggleEnrollmentForm = toggleEnrollmentForm;
+    window.loginAdmin = loginAdmin;
+    window.logoutAdmin = logoutAdmin;
+    window.addNewPlayer = addNewPlayer;
+    window.updatePlayerRank = updatePlayerRank;
+    window.addPlayerToTournament = addPlayerToTournament;
+    window.updatePlayerTournamentRank = updatePlayerTournamentRank;
+    window.removeFromTournament = removeFromTournament;
+    window.exportEnrollmentList = exportEnrollmentList;
+    window.clearAllEnrollments = clearAllEnrollments;
+    window.startTournamentFromEnrollments = startTournamentFromEnrollments;
+    window.startNewTournament = startNewTournament;
+    window.generateSwissPairs = generateSwissPairs;
+    window.clearCurrentMatches = clearCurrentMatches;
+    window.endTournament = endTournament;
+    window.toggleTheme = toggleTheme;
+    window.filterPlayers = filterPlayers;
+    window.selectAllPlayers = selectAllPlayers;
+    window.deselectAllPlayers = deselectAllPlayers;
+    window.promptGameLink = promptGameLink;
+    window.swapAllMatchColors = swapAllMatchColors;
+    window.randomizeAllColors = randomizeAllColors;
+    window.setMatchWinner = setMatchWinner;
+    window.swapMatchColors = swapMatchColors;
+    window.createManualMatch = createManualMatch;
+    window.clearCurrentRoundMatches = clearCurrentRoundMatches;
+    window.filterHistory = filterHistory;
+    window.toggleHistoryDetails = toggleHistoryDetails;
+    window.updateRoundsArchive = updateRoundsArchive;
+    window.archiveCurrentRound = archiveCurrentRound;
+    window.manuallyArchiveCurrentRound = manuallyArchiveCurrentRound;
+    window.recoverLostRounds = recoverLostRounds;
+    window.swapSelectedPlayers = swapSelectedPlayers;
+    window.toggleManualColor = toggleManualColor;
+    window.createMultipleMatches = createMultipleMatches;
+    window.resetAllMatchColors = resetAllMatchColors;
+    window.clearAllMatches = clearAllMatches;
+    window.randomizeAllMatches = randomizeAllMatches;
+    window.exportTournamentData = exportTournamentData;
+    window.loadMatchForEditing = loadMatchForEditing;
+    window.swapMatchPlayers = swapMatchPlayers;
+    window.saveMatchChanges = saveMatchChanges;
+    window.deleteSelectedMatch = deleteSelectedMatch;
+    window.setBulkWinner = setBulkWinner;
+    window.forceAdminButtonsDisplay = forceAdminButtonsDisplay;
+    
+    // Débogage
+    window.debugMatches = debugMatches;
+    window.debugRoundArchive = debugRoundArchive;
+    window.debugTournamentData = debugTournamentData;
 
-// Débogage
-window.debugMatches = debugMatches;
-window.debugRoundArchive = debugRoundArchive;
-window.debugTournamentData = debugTournamentData;
-
-console.log("✅ Application initialisée sans erreurs");
-
-// Exécutez automatiquement après un délai
-setTimeout(() => {
-    if (isAdmin) {
-        forceAdminButtonsDisplay();
-        updateMatchesDisplay();
-    }
-}, 1500);
-    });
+    console.log("✅ Application initialisée sans erreurs");
+    
+    // Exécutez automatiquement après un délai
+    setTimeout(() => {
+        if (isAdmin) {
+            forceAdminButtonsDisplay();
+            updateMatchesDisplay();
+        }
+    }, 1500);
+});
 
 </script>
 </body>
 </html>
-
 
 
 
