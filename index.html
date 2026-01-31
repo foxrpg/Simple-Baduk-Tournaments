@@ -1762,12 +1762,14 @@
             <!-- Middle Column -->
             <div class="middle-column">
                 <!-- Tabs -->
-                <div class="tabs" id="tournamentTabs">
-                    <button class="tab active" onclick="switchTab('active')">🎯 Active Tournament</button>
-                    <button class="tab" onclick="switchTab('archive')">📁 Rounds Archive</button>
-                    <button class="tab" onclick="switchTab('history')">📜 Tournament History</button>
-                    <button class="tab admin-hidden" onclick="switchTab('manual')" id="manualTab">🛠️ Manual Management</button>
-                </div>
+<div class="tabs" id="tournamentTabs">
+    <button class="tab active" onclick="switchTab('active')">🎯 Active Tournament</button>
+    <button class="tab" onclick="switchTab('archive')">📁 Rounds Archive</button>
+    <button class="tab" onclick="switchTab('history')">📜 Tournament History</button>
+    <!-- AJOUTEZ CETTE LIGNE -->
+    <button class="tab" onclick="switchTab('enrollment')">📝 Enrollment</button>
+    <button class="tab admin-hidden" onclick="switchTab('manual')" id="manualTab">🛠️ Manual Management</button>
+</div>
 
                 <!-- Active Tournament Tab -->
                 <div id="activeTournamentCard" class="tab-content active">
@@ -1800,12 +1802,6 @@
                             </div>
                         </div>
 
-<!-- Tournament Enrollment Section -->
-<div id="tournamentEnrollment" class="card" style="margin-top: 20px;">
-    <div class="card-header">
-        <h2 class="card-title">📝 Tournament Enrollment</h2>
-        <span class="manual-control-indicator admin-hidden">Admin Controls</span>
-    </div>
     
     <!-- Enrolled Players List -->
     <div class="enrollment-grid" id="enrolledPlayersList">
@@ -2164,6 +2160,157 @@
                             <h2 class="card-title">🛠️ Manual Match Management</h2>
                             <span class="manual-control-indicator">Advanced Controls</span>
                         </div>
+
+                        <!-- =============================================== -->
+<!-- NOUVEAU ONGLET: TOURNAMENT ENROLLMENT -->
+<!-- =============================================== -->
+<div id="tournamentEnrollmentCard" class="tab-content">
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">📝 Tournament Enrollment & Player Levels</h2>
+            <span class="manual-control-indicator admin-hidden">Admin Controls Only</span>
+        </div>
+        
+        <!-- Enrollment Statistics -->
+        <div style="margin-bottom: 25px;">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalEnrolled">0</div>
+                    <div class="stat-label">Total Enrolled</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="avgEnrollmentRank">--</div>
+                    <div class="stat-label">Avg Rank</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="danEnrolled">0</div>
+                    <div class="stat-label">Dan Players</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="kyuEnrolled">0</div>
+                    <div class="stat-label">Kyu Players</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Add Player Form (Admin Only) -->
+        <div id="enrollmentForm" class="admin-hidden" style="margin-bottom: 30px; padding: 20px; background: var(--bg-light); border-radius: var(--radius-md); border: 2px dashed var(--border);">
+            <div class="pairing-title">➕ Add Player to Tournament</div>
+            <div style="display: grid; grid-template-columns: 2fr 1fr auto; gap: 10px; margin-top: 15px; align-items: end;">
+                <div>
+                    <select id="playerToEnroll" class="form-input">
+                        <option value="">Select player...</option>
+                    </select>
+                </div>
+                <div>
+                    <select id="enrollmentRank" class="form-input">
+                        <option value="30k">30k</option>
+                        <option value="20k">20k</option>
+                        <option value="10k">10k</option>
+                        <option value="5k">5k</option>
+                        <option value="1k" selected>1k</option>
+                        <option value="1d">1d</option>
+                        <option value="5d">5d</option>
+                        <option value="9d">9d</option>
+                    </select>
+                </div>
+                <div>
+                    <button onclick="addPlayerToTournament()" class="btn btn-success">
+                        <span>➕</span> Add to Tournament
+                    </button>
+                </div>
+            </div>
+            <div style="margin-top: 10px; font-size: 0.85rem; color: var(--text-secondary);">
+                ⓘ The tournament rank can be different from the player's global rank
+            </div>
+        </div>
+        
+        <!-- Enrolled Players List -->
+        <div style="margin-bottom: 25px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 style="color: var(--text-primary);">Enrolled Players</h3>
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="toggleEnrollmentForm()" class="btn btn-secondary admin-hidden">
+                        <span>👤</span> Add Player
+                    </button>
+                    <button onclick="exportEnrollmentList()" class="btn btn-secondary">
+                        <span>📋</span> Export List
+                    </button>
+                </div>
+            </div>
+            
+            <div class="enrollment-grid" id="enrolledPlayersList" style="max-height: 400px; overflow-y: auto;">
+                <!-- Enrolled players will be displayed here -->
+            </div>
+            
+            <!-- Empty State -->
+            <div id="enrollmentEmptyState" class="empty-state" style="display: none;">
+                <div class="empty-state-icon">👥</div>
+                <h3>No players enrolled yet</h3>
+                <p>Add players to start building the tournament roster</p>
+                <button onclick="toggleEnrollmentForm()" class="btn btn-primary admin-hidden" style="margin-top: 15px;">
+                    <span>➕</span> Add First Player
+                </button>
+            </div>
+        </div>
+        
+        <!-- Tournament Setup from Enrollments (Admin Only) -->
+        <div class="admin-hidden" style="padding: 25px; background: linear-gradient(135deg, rgba(46, 204, 113, 0.1) 0%, transparent 100%); border-radius: var(--radius-md); border: 1px solid var(--success);">
+            <div class="pairing-title">🚀 Start Tournament from Enrollments</div>
+            <div style="margin: 15px 0; color: var(--text-secondary);">
+                Ready to start the tournament with <span id="enrollmentCountReady">0</span> enrolled players. 
+                Set tournament details below:
+            </div>
+            
+            <div class="settings-grid" style="margin: 20px 0;">
+                <div class="setting-item">
+                    <label class="setting-label">Tournament Name:</label>
+                    <input type="text" id="tournamentNameFromEnrollments" class="form-input" placeholder="Enter tournament name">
+                </div>
+                <div class="setting-item">
+                    <label class="setting-label">Number of Rounds:</label>
+                    <input type="number" id="enrollmentRoundsCount" class="form-input" value="3" min="1" max="10">
+                </div>
+                <div class="setting-item">
+                    <label class="setting-label">Tournament Type:</label>
+                    <select id="enrollmentTournamentType" class="form-input">
+                        <option value="swiss">Swiss System</option>
+                        <option value="single-elimination">Single Elimination</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button onclick="startTournamentFromEnrollments()" class="btn btn-success" style="flex: 1;">
+                    <span>🎯</span> Start Tournament with Enrolled Players
+                </button>
+                <button onclick="clearAllEnrollments()" class="btn btn-danger">
+                    <span>🗑️</span> Clear All
+                </button>
+            </div>
+            
+            <div style="margin-top: 15px; font-size: 0.85rem; color: var(--text-secondary);">
+                ⓘ Tournament will include all enrolled players with their specified ranks
+            </div>
+        </div>
+        
+        <!-- Enrollment Instructions -->
+        <div style="margin-top: 30px; padding: 20px; background: var(--bg-light); border-radius: var(--radius-md); border-left: 4px solid var(--secondary);">
+            <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 10px;">How to use enrollment system:</div>
+            <div style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6;">
+                <p>1. <strong>Add players</strong> using the form above (admin only)</p>
+                <p>2. <strong>Adjust tournament ranks</strong> using dropdown next to each player</p>
+                <p>3. <strong>Manage enrollment</strong> - add/remove players as needed</p>
+                <p>4. <strong>Start tournament</strong> when all players are enrolled</p>
+                <p>5. <strong>Export list</strong> for record keeping</p>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- =============================================== -->
+<!-- FIN DU NOUVEL ONGLET -->
+<!-- =============================================== -->
+
 
                         <!-- Quick Actions -->
                         <div class="quick-actions">
@@ -2574,6 +2721,12 @@ function debugRoundArchive() {
             console.log("📜 Showing Tournament History");
             break;
             
+        case 'enrollment': // AJOUTEZ CE CAS
+            document.getElementById('tournamentEnrollmentCard').classList.add('active');
+            console.log("📝 Showing Enrollment");
+            updateEnrollmentList();
+            break;
+            
         case 'manual':
             document.getElementById('manualManagementCard').classList.add('active');
             console.log("🛠️ Showing Manual Management");
@@ -2581,7 +2734,6 @@ function debugRoundArchive() {
     }
     
     console.log("✅ Tab switch completed");
-
 }
 
 
@@ -3918,7 +4070,7 @@ let tournamentEnrollments = [];
 
 // Afficher/Masquer le formulaire d'inscription
 function toggleEnrollmentForm() {
-    const form = document.getElementById('addToTournamentForm');
+    const form = document.getElementById('enrollmentForm'); // Changé de 'addToTournamentForm'
     form.style.display = form.style.display === 'none' ? 'block' : 'none';
 }
 
@@ -3963,16 +4115,14 @@ async function addPlayerToTournament() {
     // Mettre à jour l'affichage
     updateEnrollmentList();
     
-    // Optionnel: Sauvegarder dans Firebase
-    if (state.activeTournament) {
-        try {
-            const systemRef = doc(db, "system", "current");
-            await updateDoc(systemRef, {
-                tournamentEnrollments: tournamentEnrollments
-            });
-        } catch (error) {
-            console.error("Error saving enrollments:", error);
-        }
+    // Sauvegarder dans Firebase
+    try {
+        const systemRef = doc(db, "system", "current");
+        await updateDoc(systemRef, {
+            tournamentEnrollments: tournamentEnrollments
+        });
+    } catch (error) {
+        console.error("Error saving enrollments:", error);
     }
 
     showNotification(`${player.name} enrolled as ${rank}`, 'success');
@@ -3981,17 +4131,16 @@ async function addPlayerToTournament() {
 // Mettre à jour la liste des inscrits
 function updateEnrollmentList() {
     const enrolledList = document.getElementById('enrolledPlayersList');
+    const emptyState = document.getElementById('enrollmentEmptyState');
     
     if (!tournamentEnrollments || tournamentEnrollments.length === 0) {
-        enrolledList.innerHTML = `
-            <div class="empty-state" style="grid-column: 1 / -1; text-align: center; padding: 40px 20px;">
-                <div class="empty-state-icon">👥</div>
-                <h3>No players enrolled yet</h3>
-                <p>Add players using the form above</p>
-            </div>
-        `;
+        enrolledList.innerHTML = '';
+        if (emptyState) emptyState.style.display = 'block';
+        updateEnrollmentStats(); // Mettre à jour les stats même quand vide
         return;
     }
+
+    if (emptyState) emptyState.style.display = 'none';
 
     // Mettre à jour les statistiques
     updateEnrollmentStats();
@@ -4051,10 +4200,10 @@ function updateEnrollmentList() {
 // Mettre à jour les statistiques d'inscription
 function updateEnrollmentStats() {
     if (!tournamentEnrollments || tournamentEnrollments.length === 0) {
-        document.getElementById('enrolledCount').textContent = '0';
-        document.getElementById('avgRank').textContent = '--';
-        document.getElementById('danPlayers').textContent = '0';
-        document.getElementById('kyuPlayers').textContent = '0';
+        document.getElementById('totalEnrolled').textContent = '0';
+        document.getElementById('avgEnrollmentRank').textContent = '--';
+        document.getElementById('danEnrolled').textContent = '0';
+        document.getElementById('kyuEnrolled').textContent = '0';
         return;
     }
 
@@ -4095,6 +4244,13 @@ function updateEnrollmentStats() {
         avgRankDisplay = '1k';
     }
 
+    // Mettre à jour les statistiques dans l'onglet Enrollment
+    document.getElementById('totalEnrolled').textContent = totalPlayers;
+    document.getElementById('avgEnrollmentRank').textContent = avgRankDisplay;
+    document.getElementById('danEnrolled').textContent = danPlayers;
+    document.getElementById('kyuEnrolled').textContent = kyuPlayers;
+    
+    // Mettre à jour aussi les stats dans l'onglet Active Tournament
     document.getElementById('enrolledCount').textContent = totalPlayers;
     document.getElementById('avgRank').textContent = avgRankDisplay;
     document.getElementById('danPlayers').textContent = danPlayers;
@@ -4120,15 +4276,13 @@ async function updatePlayerTournamentRank(playerId, newRank) {
     };
 
     // Sauvegarder dans Firebase
-    if (state.activeTournament) {
-        try {
-            const systemRef = doc(db, "system", "current");
-            await updateDoc(systemRef, {
-                tournamentEnrollments: tournamentEnrollments
-            });
-        } catch (error) {
-            console.error("Error updating enrollment:", error);
-        }
+    try {
+        const systemRef = doc(db, "system", "current");
+        await updateDoc(systemRef, {
+            tournamentEnrollments: tournamentEnrollments
+        });
+    } catch (error) {
+        console.error("Error updating enrollment:", error);
     }
 
     updateEnrollmentList();
@@ -4149,15 +4303,13 @@ async function removeFromTournament(playerId) {
     tournamentEnrollments = tournamentEnrollments.filter(p => p.id !== playerId);
 
     // Sauvegarder dans Firebase
-    if (state.activeTournament) {
-        try {
-            const systemRef = doc(db, "system", "current");
-            await updateDoc(systemRef, {
-                tournamentEnrollments: tournamentEnrollments
-            });
-        } catch (error) {
-            console.error("Error removing enrollment:", error);
-        }
+    try {
+        const systemRef = doc(db, "system", "current");
+        await updateDoc(systemRef, {
+            tournamentEnrollments: tournamentEnrollments
+        });
+    } catch (error) {
+        console.error("Error removing enrollment:", error);
     }
 
     updateEnrollmentList();
@@ -4219,15 +4371,13 @@ async function clearAllEnrollments() {
 
     tournamentEnrollments = [];
 
-    if (state.activeTournament) {
-        try {
-            const systemRef = doc(db, "system", "current");
-            await updateDoc(systemRef, {
-                tournamentEnrollments: []
-            });
-        } catch (error) {
-            console.error("Error clearing enrollments:", error);
-        }
+    try {
+        const systemRef = doc(db, "system", "current");
+        await updateDoc(systemRef, {
+            tournamentEnrollments: []
+        });
+    } catch (error) {
+        console.error("Error clearing enrollments:", error);
     }
 
     updateEnrollmentList();
@@ -4246,19 +4396,24 @@ async function startTournamentFromEnrollments() {
         return;
     }
 
-    const name = document.getElementById('tournamentName').value.trim() || 
+    const name = document.getElementById('tournamentNameFromEnrollments').value.trim() || 
                  `Season ${state.season} - Tournament ${(state.tournamentCount % 4) + 1}`;
 
     const participants = tournamentEnrollments.map(enrollment => ({
-        ...enrollment,
-        rank: enrollment.tournamentRank || enrollment.rank
+        id: enrollment.id,
+        name: enrollment.name,
+        rank: enrollment.tournamentRank || enrollment.rank,
+        points: enrollment.points || 0,
+        wins: enrollment.wins || 0,
+        losses: enrollment.losses || 0,
+        draws: enrollment.draws || 0
     }));
 
     // Créer le tournoi avec les participants inscrits
     const tournamentInSeason = (state.tournamentCount % 4) + 1;
     const tournamentType = tournamentInSeason === 4 ? 'single-elimination' : 'swiss';
     
-    const roundsCount = parseInt(document.getElementById('roundsCount').value) || 3;
+    const roundsCount = parseInt(document.getElementById('enrollmentRoundsCount').value) || 3;
     
     const tournament = {
         id: Date.now().toString(),
@@ -4289,13 +4444,22 @@ async function startTournamentFromEnrollments() {
         round.totalMatches = Math.floor(participants.length / 2);
     });
 
-    await updateDoc(systemRef, { 
-        activeTournament: tournament,
-        tournamentEnrollments: [], // Vider les inscriptions après démarrage
-        lastAction: `🎯 Tournament "${name}" started with ${participants.length} enrolled players`
-    });
+    try {
+        const systemRef = doc(db, "system", "current");
+        await updateDoc(systemRef, { 
+            activeTournament: tournament,
+            tournamentEnrollments: [], // Vider les inscriptions après démarrage
+            lastAction: `🎯 Tournament "${name}" started with ${participants.length} enrolled players`
+        });
 
-    showNotification(`Tournament "${name}" started with ${participants.length} players!`, 'success');
+        showNotification(`Tournament "${name}" started with ${participants.length} players!`, 'success');
+        
+        // Revenir à l'onglet Active Tournament
+        switchTab('active');
+    } catch (error) {
+        console.error("Error starting tournament:", error);
+        showNotification("Error starting tournament: " + error.message, 'error');
+    }
 }
 
 // Ajoutez cette fonction et appelez-la depuis la console
@@ -6285,6 +6449,7 @@ window.toggleTournamentRounds = toggleTournamentRounds;
         document.getElementById('themeIcon').textContent = savedTheme === 'dark' ? '☀️' : '🌙';
         
         document.getElementById('searchPlayers').addEventListener('input', () => filterPlayers('all'));
+         tournamentEnrollments = state.tournamentEnrollments || [];
         
         // Mode admin désactivé par défaut
         isAdmin = false;
