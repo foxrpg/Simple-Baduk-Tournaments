@@ -3264,54 +3264,6 @@ function displayTournamentRoundsDetails(rounds) {
         }
     }
 
-    // Player Management
-    async function addNewPlayer() {
-        if (!isAdmin) {
-            showNotification('Admin access required', 'error');
-            return;
-        }
-
-        const name = document.getElementById('newPlayerName').value.trim();
-        const rank = document.getElementById('newPlayerRank').value;
-
-        if (!name) {
-            showNotification('Please enter a name', 'error');
-            return;
-        }
-
-        if (state.players.some(p => p.name.toLowerCase() === name.toLowerCase())) {
-            showNotification('Player already exists', 'error');
-            return;
-        }
-
-        const newPlayer = {
-            id: Date.now().toString(),
-            name,
-            rank,
-            points: 0,
-            wins: 0,
-            losses: 0,
-            draws: 0,
-            elo: state.systemSettings.initialElo,
-            history: [0],
-            joinedDate: new Date().toISOString(),
-            tournamentsPlayed: 0
-        };
-
-        const updatedPlayers = [...state.players, newPlayer];
-        const updatedEloRatings = {
-            ...state.eloRatings,
-            [newPlayer.id]: state.systemSettings.initialElo
-        };
-        
-        await updateDoc(systemRef, { 
-            players: updatedPlayers,
-            eloRatings: updatedEloRatings
-        });
-        
-        document.getElementById('newPlayerName').value = '';
-        showNotification(`Player "${name}" added successfully`, 'success');
-    }
 
     // Tournament Management
     async function startNewTournament() {
@@ -4068,6 +4020,9 @@ function debugRoundArchiving() {
 
 let tournamentEnrollments = [];
 
+// ==================== GESTION DES JOUEURS ====================
+
+// Créer un nouveau joueur dans la base de données
 // ==================== GESTION DES JOUEURS ====================
 
 // Créer un nouveau joueur dans la base de données
