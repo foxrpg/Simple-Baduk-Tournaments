@@ -1687,27 +1687,41 @@
                     </div>
 
                     <!-- Add Player Form (Admin Only) -->
-                    <!-- Add New Player Form -->
-<div class="pairing-section admin-hidden" style="margin-bottom: 25px;">
-    <div class="pairing-title">➕ Add New Player</div>
-    <div style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 10px; margin-top: 15px; align-items: end;">
+                    <!-- Add New Player Form - VERSION CORRIGÉE -->
+<div class="pairing-section admin-hidden" style="margin-bottom: 25px; background: rgba(228, 63, 90, 0.05) !important; border: 2px solid var(--accent) !important; padding: 20px !important;">
+    <div class="pairing-title" style="color: var(--accent); font-size: 1.2rem; margin-bottom: 20px;">
+        <span>➕</span> Add New Player
+    </div>
+    
+    <div style="display: grid; grid-template-columns: 3fr 1fr auto; gap: 15px; margin-top: 15px; align-items: center;">
         <div>
-            <input type="text" id="newPlayerFullName" class="form-input" placeholder="Pseudo/Full name" style="width: 100%;">
+            <input type="text" 
+                   id="newPlayerFullName" 
+                   class="form-input" 
+                   placeholder="Enter player name here..." 
+                   style="width: 100%; padding: 14px; font-size: 16px; min-height: 48px; border: 2px solid var(--accent);">
         </div>
+        
         <div>
-            <input type="text" id="newPlayerGlobalRank" class="form-input" placeholder="Rank (ex: 1k, 5d)" value="1k">
+            <input type="text" 
+                   id="newPlayerGlobalRank" 
+                   class="form-input" 
+                   placeholder="Rank" 
+                   value="1k"
+                   style="padding: 14px; font-size: 16px; min-height: 48px; text-align: center;">
         </div>
+        
         <div>
-            <input type="number" id="newPlayerInitialElo" class="form-input" value="1500" placeholder="Initial Elo">
-        </div>
-        <div>
-            <button onclick="addNewPlayerToDatabase()" class="btn btn-success">
-                <span>➕</span> Add Player
+            <button onclick="addNewPlayerToDatabase()" 
+                    class="btn btn-success" 
+                    style="padding: 14px 24px; font-size: 16px; min-height: 48px; font-weight: bold;">
+                <span>➕</span> ADD
             </button>
         </div>
     </div>
-    <div style="margin-top: 10px; font-size: 0.85rem; color: var(--text-secondary);">
-        ⓘ Rank format: 30k (beginner) to 9d (expert). Examples: 10k, 1k, 1d, 5d
+    
+    <div style="margin-top: 15px; font-size: 0.9rem; color: var(--text-secondary); padding: 10px; background: rgba(0,0,0,0.05); border-radius: 8px;">
+        <strong>Format:</strong> Name (any text) • Rank (examples: 30k, 10k, 1k, 1d, 5d, 9d)
     </div>
 </div>
 
