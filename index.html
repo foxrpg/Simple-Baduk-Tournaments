@@ -3812,21 +3812,6 @@ async function archiveCurrentRound() {
     }
 }
 
-
-// Forcer l'affichage des boutons admin
-function forceAdminButtonsDisplay() {
-    console.log("🔧 Vérification de l'affichage admin...");
-    
-    if (isAdmin) {
-        console.log("👑 Mode admin détecté, forçage de l'affichage...");
-        document.querySelector('.container')?.classList.remove('guest-mode');
-        document.querySelectorAll('.admin-hidden').forEach(el => {
-            el.classList.remove('admin-hidden');
-        });
-    }
-}
-window.forceAdminButtonsDisplay = forceAdminButtonsDisplay;
-
 function debugRoundArchiving() {
     console.log("🔍 Debug Round Archiving:");
     console.log("Active Tournament:", state.activeTournament);
