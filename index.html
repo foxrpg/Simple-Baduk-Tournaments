@@ -4063,18 +4063,150 @@ function debugRoundArchiving() {
 
 
 // ============================================================
-// GESTION DE L'INSCRIPTION AU TOURNOI
+// GESTION COMPLÈTE DES JOUEURS ET INSCRIPTIONS
 // ============================================================
 
 let tournamentEnrollments = [];
 
-// Afficher/Masquer le formulaire d'inscription
-function toggleEnrollmentForm() {
-    const form = document.getElementById('enrollmentForm'); // Changé de 'addToTournamentForm'
-    form.style.display = form.style.display === 'none' ? 'block' : 'none';
+// ==================== GESTION DES JOUEURS ====================
+
+// Créer un nouveau joueur dans la base de données
+async function addNewPlayer() {
+    if (!isAdmin) {
+        showNotification('Admin access required', 'error');
+        return;
+    }
+
+    const name = document.getElementById('newPlayerName').value.trim();
+    const rank = document.getElementById('newPlayerRank').value;
+
+    if (!name) {
+        showNotification('Please enter a name', 'error');
+        return;
+    }
+
+    if (state.players.some(p => p.name.toLowerCase() === name.toLowerCase())) {
+        showNotification('Player already exists', 'error');
+        return;
+    }
+
+    const newPlayer = {
+        id: Date.now().toString(),
+        name,
+        rank,
+        points: 0,
+        wins: 0,
+        losses: 0,
+        draws: 0,
+        elo: state.systemSettings.initialElo,
+        history: [0],
+        joinedDate: new Date().toISOString(),
+        tournamentsPlayed: 0
+    };
+
+    try {
+        const systemRef = doc(db, "system", "current");
+        const updatedPlayers = [...state.players, newPlayer];
+        const updatedEloRatings = {
+            ...state.eloRatings,
+            [newPlayer.id]: state.systemSettings.initialElo
+        };
+        
+        await updateDoc(systemRef, { 
+            players: updatedPlayers,
+            eloRatings: updatedEloRatings
+        });
+        
+        document.getElementById('newPlayerName').value = '';
+        showNotification(`Player "${name}" added successfully`, 'success');
+        
+        // Mettre à jour la liste des joueurs disponibles pour l'inscription
+        updateEnrollmentPlayerSelect();
+        
+    } catch (error) {
+        console.error("Error adding player:", error);
+        showNotification("Error adding player: " + error.message, 'error');
+    }
 }
 
-// Ajouter un joueur au tournoi
+// Modifier le rang d'un joueur (dans la base globale)
+async function updatePlayerRank(playerId, currentRank) {
+    if (!isAdmin) {
+        showNotification('Admin access required', 'error');
+        return;
+    }
+
+    const newRank = prompt(`Modify global rank for this player (current: ${currentRank}):`, currentRank);
+    
+    if (newRank === null || newRank === "" || newRank === currentRank) return;
+
+    try {
+        const systemRef = doc(db, "system", "current");
+        
+        // 1. Mettre à jour dans state.players (rang global)
+        const updatedPlayers = state.players.map(p => 
+            p.id === playerId ? { ...p, rank: newRank } : p
+        );
+        
+        // 2. Mettre à jour aussi dans les inscriptions si le joueur est inscrit
+        const playerEnrollmentIndex = tournamentEnrollments.findIndex(e => e.id === playerId);
+        if (playerEnrollmentIndex !== -1) {
+            tournamentEnrollments[playerEnrollmentIndex].globalRank = newRank;
+        }
+        
+        // 3. Mettre à jour le tournoi actif si nécessaire
+        let updatedActiveTournament = null;
+        if (state.activeTournament) {
+            const updatedParticipants = state.activeTournament.participants.map(p =>
+                p.id === playerId ? { ...p, rank: newRank } : p
+            );
+            
+            const updatedMatches = state.activeTournament.matches.map(match => {
+                let updatedMatch = { ...match };
+                if (match.player1.id === playerId) {
+                    updatedMatch.player1 = { ...match.player1, rank: newRank };
+                }
+                if (match.player2.id === playerId) {
+                    updatedMatch.player2 = { ...match.player2, rank: newRank };
+                }
+                return updatedMatch;
+            });
+            
+            updatedActiveTournament = {
+                ...state.activeTournament,
+                participants: updatedParticipants,
+                matches: updatedMatches
+            };
+        }
+        
+        // 4. Préparer l'objet de mise à jour
+        const updateData = {
+            players: updatedPlayers
+        };
+        
+        if (updatedActiveTournament) {
+            updateData.activeTournament = updatedActiveTournament;
+        }
+        
+        // 5. Sauvegarder les inscriptions si modifiées
+        if (playerEnrollmentIndex !== -1) {
+            updateData.tournamentEnrollments = tournamentEnrollments;
+        }
+        
+        // 6. Mettre à jour Firebase
+        await updateDoc(systemRef, updateData);
+        
+        showNotification("Player rank updated globally", "success");
+        
+    } catch (error) {
+        console.error("Error updating player rank:", error);
+        showNotification("Error updating rank: " + error.message, "error");
+    }
+}
+
+// ==================== GESTION DES INSCRIPTIONS ====================
+
+// Ajouter un joueur au tournoi (à partir de la liste des joueurs existants)
 async function addPlayerToTournament() {
     if (!isAdmin) {
         showNotification('Admin access required', 'error');
@@ -4082,7 +4214,7 @@ async function addPlayerToTournament() {
     }
 
     const playerId = document.getElementById('playerToEnroll').value;
-    const rank = document.getElementById('enrollmentRank').value;
+    const tournamentRank = document.getElementById('enrollmentRank').value;
 
     if (!playerId) {
         showNotification('Please select a player', 'error');
@@ -4103,161 +4235,34 @@ async function addPlayerToTournament() {
 
     // Ajouter à la liste d'inscription
     const enrollment = {
-        ...player,
-        tournamentRank: rank,
+        id: player.id,
+        name: player.name,
+        globalRank: player.rank, // Rang global (de la base de données)
+        tournamentRank: tournamentRank, // Rang spécifique pour ce tournoi
+        elo: state.eloRatings[player.id] || state.systemSettings.initialElo,
+        points: player.points || 0,
         enrolledAt: new Date().toISOString(),
-        enrolledBy: 'admin',
         status: 'confirmed'
     };
 
     tournamentEnrollments.push(enrollment);
 
-    // Mettre à jour l'affichage
-    updateEnrollmentList();
-    
     // Sauvegarder dans Firebase
     try {
         const systemRef = doc(db, "system", "current");
         await updateDoc(systemRef, {
-            tournamentEnrollments: tournamentEnrollments
+            tournamentEnrollments: tournamentEnrollments,
+            lastAction: `👤 ${player.name} enrolled in tournament as ${tournamentRank}`
         });
     } catch (error) {
-        console.error("Error saving enrollments:", error);
+        console.error("Error saving enrollment:", error);
     }
 
-    showNotification(`${player.name} enrolled as ${rank}`, 'success');
+    updateEnrollmentList();
+    showNotification(`${player.name} enrolled as ${tournamentRank}`, 'success');
 }
 
-// Mettre à jour la liste des inscrits
-function updateEnrollmentList() {
-    const enrolledList = document.getElementById('enrolledPlayersList');
-    const emptyState = document.getElementById('enrollmentEmptyState');
-    
-    if (!tournamentEnrollments || tournamentEnrollments.length === 0) {
-        enrolledList.innerHTML = '';
-        if (emptyState) emptyState.style.display = 'block';
-        updateEnrollmentStats(); // Mettre à jour les stats même quand vide
-        return;
-    }
-
-    if (emptyState) emptyState.style.display = 'none';
-
-    // Mettre à jour les statistiques
-    updateEnrollmentStats();
-
-    // Générer la liste des inscrits
-    const enrollmentHTML = tournamentEnrollments.map((player, index) => {
-        return `
-            <div class="enrollment-item" data-player-id="${player.id}">
-                <div style="display: flex; align-items: center; gap: 15px; width: 100%;">
-                    <div style="min-width: 30px; text-align: center; font-weight: 600; color: var(--text-secondary);">
-                        ${index + 1}
-                    </div>
-                    
-                    <div style="flex: 1;">
-                        <div style="font-weight: 600; margin-bottom: 4px;">${player.name}</div>
-                        <div style="display: flex; gap: 10px; font-size: 0.85rem; color: var(--text-secondary);">
-                            <span>${player.tournamentRank || player.rank}</span>
-                            <span>•</span>
-                            <span>${state.eloRatings[player.id] || 1500} Elo</span>
-                        </div>
-                    </div>
-                    
-                    <!-- Modifier le niveau (admin only) -->
-                    ${isAdmin ? `
-                        <select class="form-input" style="padding: 5px 10px; font-size: 0.9rem; width: 80px;"
-                                onchange="updatePlayerTournamentRank('${player.id}', this.value)">
-                            <option value="30k" ${(player.tournamentRank || player.rank) === '30k' ? 'selected' : ''}>30k</option>
-                            <option value="20k" ${(player.tournamentRank || player.rank) === '20k' ? 'selected' : ''}>20k</option>
-                            <option value="10k" ${(player.tournamentRank || player.rank) === '10k' ? 'selected' : ''}>10k</option>
-                            <option value="5k" ${(player.tournamentRank || player.rank) === '5k' ? 'selected' : ''}>5k</option>
-                            <option value="1k" ${(player.tournamentRank || player.rank) === '1k' ? 'selected' : ''}>1k</option>
-                            <option value="1d" ${(player.tournamentRank || player.rank) === '1d' ? 'selected' : ''}>1d</option>
-                            <option value="5d" ${(player.tournamentRank || player.rank) === '5d' ? 'selected' : ''}>5d</option>
-                            <option value="9d" ${(player.tournamentRank || player.rank) === '9d' ? 'selected' : ''}>9d</option>
-                        </select>
-                        
-                        <button onclick="removeFromTournament('${player.id}')" 
-                                style="background: var(--danger); color: white; border: none; width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
-                            ×
-                        </button>
-                    ` : `
-                        <div style="padding: 4px 8px; background: var(--secondary); color: white; border-radius: 12px; font-size: 0.8rem;">
-                            ${player.tournamentRank || player.rank}
-                        </div>
-                    `}
-                </div>
-            </div>
-        `;
-    }).join('');
-
-    enrolledList.innerHTML = enrollmentHTML;
-
-    // Mettre à jour la liste des joueurs pour le formulaire d'ajout
-    updateEnrollmentPlayerSelect();
-}
-
-// Mettre à jour les statistiques d'inscription
-function updateEnrollmentStats() {
-    if (!tournamentEnrollments || tournamentEnrollments.length === 0) {
-        document.getElementById('totalEnrolled').textContent = '0';
-        document.getElementById('avgEnrollmentRank').textContent = '--';
-        document.getElementById('danEnrolled').textContent = '0';
-        document.getElementById('kyuEnrolled').textContent = '0';
-        return;
-    }
-
-    const totalPlayers = tournamentEnrollments.length;
-    
-    // Compter les joueurs dan et kyu
-    const danPlayers = tournamentEnrollments.filter(p => {
-        const rank = p.tournamentRank || p.rank;
-        return rank && rank.includes('d');
-    }).length;
-    
-    const kyuPlayers = tournamentEnrollments.filter(p => {
-        const rank = p.tournamentRank || p.rank;
-        return rank && rank.includes('k');
-    }).length;
-
-    // Calculer le rang moyen (simplifié)
-    let rankValues = {
-        '30k': 30, '20k': 20, '10k': 10, '5k': 5, '1k': 1,
-        '1d': -1, '5d': -5, '9d': -9
-    };
-    
-    let totalRankValue = 0;
-    tournamentEnrollments.forEach(p => {
-        const rank = p.tournamentRank || p.rank;
-        totalRankValue += rankValues[rank] || 0;
-    });
-    
-    const avgRankValue = totalRankValue / totalPlayers;
-    
-    // Convertir en rang lisible
-    let avgRankDisplay = '--';
-    if (avgRankValue > 0) {
-        avgRankDisplay = Math.round(avgRankValue) + 'k';
-    } else if (avgRankValue < 0) {
-        avgRankDisplay = Math.abs(Math.round(avgRankValue)) + 'd';
-    } else {
-        avgRankDisplay = '1k';
-    }
-
-    // Mettre à jour les statistiques dans l'onglet Enrollment
-    document.getElementById('totalEnrolled').textContent = totalPlayers;
-    document.getElementById('avgEnrollmentRank').textContent = avgRankDisplay;
-    document.getElementById('danEnrolled').textContent = danPlayers;
-    document.getElementById('kyuEnrolled').textContent = kyuPlayers;
-    
-    // Mettre à jour aussi les stats dans l'onglet Active Tournament
-    document.getElementById('enrolledCount').textContent = totalPlayers;
-    document.getElementById('avgRank').textContent = avgRankDisplay;
-    document.getElementById('danPlayers').textContent = danPlayers;
-    document.getElementById('kyuPlayers').textContent = kyuPlayers;
-}
-
-// Mettre à jour le rang d'un joueur dans le tournoi
+// Mettre à jour le rang d'un joueur pour CE TOURNOI SEULEMENT
 async function updatePlayerTournamentRank(playerId, newRank) {
     if (!isAdmin) {
         showNotification('Admin access required', 'error');
@@ -4279,14 +4284,90 @@ async function updatePlayerTournamentRank(playerId, newRank) {
     try {
         const systemRef = doc(db, "system", "current");
         await updateDoc(systemRef, {
-            tournamentEnrollments: tournamentEnrollments
+            tournamentEnrollments: tournamentEnrollments,
+            lastAction: `📊 ${tournamentEnrollments[playerIndex].name} tournament rank updated to ${newRank}`
         });
     } catch (error) {
-        console.error("Error updating enrollment:", error);
+        console.error("Error updating tournament rank:", error);
     }
 
     updateEnrollmentList();
-    showNotification('Rank updated successfully', 'success');
+    showNotification('Tournament rank updated successfully', 'success');
+}
+
+// Mettre à jour la liste des inscrits
+function updateEnrollmentList() {
+    const enrolledList = document.getElementById('enrolledPlayersList');
+    const emptyState = document.getElementById('enrollmentEmptyState');
+    
+    if (!tournamentEnrollments || tournamentEnrollments.length === 0) {
+        if (enrolledList) enrolledList.innerHTML = '';
+        if (emptyState) emptyState.style.display = 'block';
+        updateEnrollmentStats();
+        return;
+    }
+
+    if (emptyState) emptyState.style.display = 'none';
+
+    // Mettre à jour les statistiques
+    updateEnrollmentStats();
+
+    // Générer la liste des inscrits
+    const enrollmentHTML = tournamentEnrollments.map((player, index) => {
+        return `
+            <div class="enrollment-item" data-player-id="${player.id}">
+                <div style="display: flex; align-items: center; gap: 15px; width: 100%;">
+                    <div style="min-width: 30px; text-align: center; font-weight: 600; color: var(--text-secondary);">
+                        ${index + 1}
+                    </div>
+                    
+                    <div style="flex: 1;">
+                        <div style="font-weight: 600; margin-bottom: 4px; display: flex; align-items: center; gap: 10px;">
+                            ${player.name}
+                            <span style="font-size: 0.8rem; color: var(--text-secondary); font-weight: normal;">
+                                (Global: ${player.globalRank})
+                            </span>
+                        </div>
+                        <div style="display: flex; gap: 10px; font-size: 0.85rem; color: var(--text-secondary);">
+                            <span>${state.eloRatings[player.id] || 1500} Elo</span>
+                            <span>•</span>
+                            <span>${player.points || 0} points</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Modifier le rang DU TOURNOI (admin only) -->
+                    ${isAdmin ? `
+                        <select class="form-input" style="padding: 5px 10px; font-size: 0.9rem; width: 80px;"
+                                onchange="updatePlayerTournamentRank('${player.id}', this.value)">
+                            <option value="30k" ${player.tournamentRank === '30k' ? 'selected' : ''}>30k</option>
+                            <option value="20k" ${player.tournamentRank === '20k' ? 'selected' : ''}>20k</option>
+                            <option value="10k" ${player.tournamentRank === '10k' ? 'selected' : ''}>10k</option>
+                            <option value="5k" ${player.tournamentRank === '5k' ? 'selected' : ''}>5k</option>
+                            <option value="1k" ${player.tournamentRank === '1k' ? 'selected' : ''}>1k</option>
+                            <option value="1d" ${player.tournamentRank === '1d' ? 'selected' : ''}>1d</option>
+                            <option value="5d" ${player.tournamentRank === '5d' ? 'selected' : ''}>5d</option>
+                            <option value="9d" ${player.tournamentRank === '9d' ? 'selected' : ''}>9d</option>
+                        </select>
+                        
+                        <button onclick="removeFromTournament('${player.id}')" 
+                                style="background: var(--danger); color: white; border: none; width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer;"
+                                title="Remove from tournament">
+                            ×
+                        </button>
+                    ` : `
+                        <div style="padding: 4px 8px; background: var(--secondary); color: white; border-radius: 12px; font-size: 0.8rem; font-weight: 600;">
+                            ${player.tournamentRank}
+                        </div>
+                    `}
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    if (enrolledList) enrolledList.innerHTML = enrollmentHTML;
+
+    // Mettre à jour la liste des joueurs pour le formulaire d'ajout
+    updateEnrollmentPlayerSelect();
 }
 
 // Retirer un joueur du tournoi
@@ -4300,13 +4381,15 @@ async function removeFromTournament(playerId) {
         return;
     }
 
+    const playerName = tournamentEnrollments.find(p => p.id === playerId)?.name || 'Player';
     tournamentEnrollments = tournamentEnrollments.filter(p => p.id !== playerId);
 
     // Sauvegarder dans Firebase
     try {
         const systemRef = doc(db, "system", "current");
         await updateDoc(systemRef, {
-            tournamentEnrollments: tournamentEnrollments
+            tournamentEnrollments: tournamentEnrollments,
+            lastAction: `❌ ${playerName} removed from tournament`
         });
     } catch (error) {
         console.error("Error removing enrollment:", error);
@@ -4316,7 +4399,7 @@ async function removeFromTournament(playerId) {
     showNotification('Player removed from tournament', 'success');
 }
 
-// Mettre à jour la liste des joueurs pour le formulaire d'ajout
+// Mettre à jour la liste des joueurs pour le formulaire d'ajout (exclure déjà inscrits)
 function updateEnrollmentPlayerSelect() {
     if (!isAdmin) return;
 
@@ -4329,139 +4412,82 @@ function updateEnrollmentPlayerSelect() {
 
     select.innerHTML = '<option value="">Select player...</option>' + 
         availablePlayers.map(p => 
-            `<option value="${p.id}">${p.name} (${p.rank})</option>`
+            `<option value="${p.id}">${p.name} (${p.rank}) - ${state.eloRatings[p.id] || 1500} Elo</option>`
         ).join('');
 }
 
-// Exporter la liste d'inscription
-function exportEnrollmentList() {
-    const exportData = {
-        tournament: state.activeTournament?.name || 'Unnamed Tournament',
-        exportDate: new Date().toISOString(),
-        enrolledPlayers: tournamentEnrollments.map(p => ({
-            name: p.name,
-            rank: p.tournamentRank || p.rank,
-            elo: state.eloRatings[p.id] || 1500,
-            enrolledAt: p.enrolledAt
-        }))
+// Mettre à jour les statistiques d'inscription
+function updateEnrollmentStats() {
+    if (!tournamentEnrollments || tournamentEnrollments.length === 0) {
+        document.getElementById('totalEnrolled').textContent = '0';
+        document.getElementById('avgEnrollmentRank').textContent = '--';
+        document.getElementById('danEnrolled').textContent = '0';
+        document.getElementById('kyuEnrolled').textContent = '0';
+        return;
+    }
+
+    const totalPlayers = tournamentEnrollments.length;
+    
+    // Compter les joueurs dan et kyu (basé sur le rang du tournoi)
+    const danPlayers = tournamentEnrollments.filter(p => 
+        p.tournamentRank && p.tournamentRank.includes('d')
+    ).length;
+    
+    const kyuPlayers = tournamentEnrollments.filter(p => 
+        p.tournamentRank && p.tournamentRank.includes('k')
+    ).length;
+
+    // Calculer le rang moyen du tournoi
+    let rankValues = {
+        '30k': 30, '20k': 20, '10k': 10, '5k': 5, '1k': 1,
+        '1d': -1, '5d': -5, '9d': -9
     };
     
-    const dataStr = JSON.stringify(exportData, null, 2);
-    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-    const exportFileName = `tournament-enrollment-${new Date().toISOString().split('T')[0]}.json`;
-    
-    const linkElement = document.createElement('a');
-    linkElement.setAttribute('href', dataUri);
-    linkElement.setAttribute('download', exportFileName);
-    linkElement.click();
-    
-    showNotification('Enrollment list exported', 'success');
-}
-
-// Vider toutes les inscriptions
-async function clearAllEnrollments() {
-    if (!isAdmin) {
-        showNotification('Admin access required', 'error');
-        return;
-    }
-
-    if (!confirm('Clear ALL enrollments? This cannot be undone.')) {
-        return;
-    }
-
-    tournamentEnrollments = [];
-
-    try {
-        const systemRef = doc(db, "system", "current");
-        await updateDoc(systemRef, {
-            tournamentEnrollments: []
-        });
-    } catch (error) {
-        console.error("Error clearing enrollments:", error);
-    }
-
-    updateEnrollmentList();
-    showNotification('All enrollments cleared', 'success');
-}
-
-// Utiliser les inscriptions pour démarrer le tournoi
-async function startTournamentFromEnrollments() {
-    if (!isAdmin) {
-        showNotification('Admin access required', 'error');
-        return;
-    }
-
-    if (tournamentEnrollments.length < 2) {
-        showNotification('Need at least 2 players to start tournament', 'error');
-        return;
-    }
-
-    const name = document.getElementById('tournamentNameFromEnrollments').value.trim() || 
-                 `Season ${state.season} - Tournament ${(state.tournamentCount % 4) + 1}`;
-
-    const participants = tournamentEnrollments.map(enrollment => ({
-        id: enrollment.id,
-        name: enrollment.name,
-        rank: enrollment.tournamentRank || enrollment.rank,
-        points: enrollment.points || 0,
-        wins: enrollment.wins || 0,
-        losses: enrollment.losses || 0,
-        draws: enrollment.draws || 0
-    }));
-
-    // Créer le tournoi avec les participants inscrits
-    const tournamentInSeason = (state.tournamentCount % 4) + 1;
-    const tournamentType = tournamentInSeason === 4 ? 'single-elimination' : 'swiss';
-    
-    const roundsCount = parseInt(document.getElementById('enrollmentRoundsCount').value) || 3;
-    
-    const tournament = {
-        id: Date.now().toString(),
-        name,
-        participants,
-        matches: [],
-        startTime: new Date().toISOString(),
-        status: 'active',
-        round: 1,
-        totalRounds: roundsCount,
-        type: tournamentType,
-        settings: {
-            pointsPerWin: parseInt(document.getElementById('pointsPerWin').value) || 10,
-            pointsPerLoss: parseInt(document.getElementById('pointsPerLoss').value) || -5
-        },
-        roundProgress: Array(roundsCount).fill(0).map((_, i) => ({
-            round: i + 1,
-            completedMatches: 0,
-            totalMatches: Math.floor(participants.length / 2)
-        })),
-        seedings: participants.map(p => ({ 
-            id: p.id, 
-            seed: (state.eloRatings[p.id] || state.systemSettings.initialElo) + Math.random() 
-        })).sort((a, b) => b.seed - a.seed)
-    };
-
-    tournament.roundProgress.forEach(round => {
-        round.totalMatches = Math.floor(participants.length / 2);
+    let totalRankValue = 0;
+    tournamentEnrollments.forEach(p => {
+        const rank = p.tournamentRank;
+        totalRankValue += rankValues[rank] || 0;
     });
+    
+    const avgRankValue = totalRankValue / totalPlayers;
+    
+    // Convertir en rang lisible
+    let avgRankDisplay = '--';
+    if (avgRankValue > 0) {
+        avgRankDisplay = Math.round(avgRankValue) + 'k';
+    } else if (avgRankValue < 0) {
+        avgRankDisplay = Math.abs(Math.round(avgRankValue)) + 'd';
+    } else {
+        avgRankDisplay = '1k';
+    }
 
-    try {
-        const systemRef = doc(db, "system", "current");
-        await updateDoc(systemRef, { 
-            activeTournament: tournament,
-            tournamentEnrollments: [], // Vider les inscriptions après démarrage
-            lastAction: `🎯 Tournament "${name}" started with ${participants.length} enrolled players`
-        });
-
-        showNotification(`Tournament "${name}" started with ${participants.length} players!`, 'success');
-        
-        // Revenir à l'onglet Active Tournament
-        switchTab('active');
-    } catch (error) {
-        console.error("Error starting tournament:", error);
-        showNotification("Error starting tournament: " + error.message, 'error');
+    // Mettre à jour les statistiques
+    if (document.getElementById('totalEnrolled')) {
+        document.getElementById('totalEnrolled').textContent = totalPlayers;
+    }
+    if (document.getElementById('avgEnrollmentRank')) {
+        document.getElementById('avgEnrollmentRank').textContent = avgRankDisplay;
+    }
+    if (document.getElementById('danEnrolled')) {
+        document.getElementById('danEnrolled').textContent = danPlayers;
+    }
+    if (document.getElementById('kyuEnrolled')) {
+        document.getElementById('kyuEnrolled').textContent = kyuPlayers;
     }
 }
 
+// ==================== FONCTIONS UTILITAIRES ====================
+
+// Initialiser les inscriptions depuis Firebase
+function initEnrollmentsFromState() {
+    if (state.tournamentEnrollments) {
+        tournamentEnrollments = state.tournamentEnrollments;
+        updateEnrollmentList();
+    }
+}
+
+// Appeler cette fonction quand l'état est chargé
+initEnrollmentsFromState();
 // Ajoutez cette fonction et appelez-la depuis la console
 function debugRoundHistory() {
     console.log("📊 DEBUG Round History:");
