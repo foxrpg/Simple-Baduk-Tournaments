@@ -2496,6 +2496,7 @@
 </body>
 </html>
 <script type="module">
+    // Ces lignes doivent être en HAUT de votre script
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getFirestore, doc, onSnapshot, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
@@ -2507,9 +2508,9 @@
         3: "One-hour personalized lesson with Hugo"
     };
 
-    const firebaseConfig = {
+        const firebaseConfig = {
         apiKey: "AIzaSyDzse9aVDIAFscTbGs-3Disy2wdRHWPRF0",
-        authDomain: "meijin-system.firebaseapp.com",
+        authDomain: "meijin-system.firebasestorage.app",
         projectId: "meijin-system",
         storageBucket: "meijin-system.firebasestorage.app",
         messagingSenderId: "935283801474",
@@ -2680,8 +2681,8 @@ function debugRoundArchive() {
         });
     }
 }
-    // Tab Switching
-   function switchTab(tabName) {
+    // Fonction pour changer d'onglet
+function switchTab(tabName) {
     console.log("🔄 Switching to tab:", tabName);
     
     // 1. Désactiver tous les tabs
@@ -2704,38 +2705,33 @@ function debugRoundArchive() {
     switch(tabName) {
         case 'active':
             document.getElementById('activeTournamentCard').classList.add('active');
-            console.log("📊 Showing Active Tournament");
             break;
-            
         case 'archive':
             document.getElementById('roundsArchiveCard').classList.add('active');
-            console.log("📁 Showing Rounds Archive");
             if (typeof updateRoundsArchive === 'function') {
-                console.log("🔄 Calling updateRoundsArchive");
                 updateRoundsArchive();
             }
             break;
-            
         case 'history':
             document.getElementById('tournamentHistoryCard').classList.add('active');
-            console.log("📜 Showing Tournament History");
             break;
-            
-        case 'enrollment': // AJOUTEZ CE CAS
+        case 'enrollment':
             document.getElementById('tournamentEnrollmentCard').classList.add('active');
-            console.log("📝 Showing Enrollment");
             updateEnrollmentList();
             break;
-            
         case 'manual':
             document.getElementById('manualManagementCard').classList.add('active');
-            console.log("🛠️ Showing Manual Management");
             break;
     }
-    
-    console.log("✅ Tab switch completed");
 }
 
+// Fonction pour afficher/masquer le formulaire d'inscription
+function toggleEnrollmentForm() {
+    const form = document.getElementById('enrollmentForm');
+    if (form) {
+        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    }
+}
 
     // =================================================================
     // NOUVELLES FONCTIONNALITÉS
@@ -3815,6 +3811,57 @@ async function archiveCurrentRound() {
         return null;
     }
 }
+
+// Mode indicator
+function updateModeIndicator() {
+    console.log("🎛️ updateModeIndicator, admin:", isAdmin);
+    
+    const headerControls = document.querySelector('.header-controls');
+    if (!headerControls) return;
+    
+    let modeIndicator = document.getElementById('modeIndicator');
+    
+    if (!modeIndicator) {
+        modeIndicator = document.createElement('div');
+        modeIndicator.id = 'modeIndicator';
+        modeIndicator.style.marginRight = '15px';
+        headerControls.insertBefore(modeIndicator, headerControls.firstChild);
+    }
+    
+    if (isAdmin) {
+        modeIndicator.innerHTML = `
+            <span style="font-weight: 600; color: var(--accent);">🔧 Admin Mode</span>
+            <span class="guest-badge" style="background: var(--accent);">Full Control</span>
+        `;
+        
+        document.querySelector('.container')?.classList.remove('guest-mode');
+        document.querySelectorAll('.admin-hidden').forEach(el => {
+            el.classList.remove('admin-hidden');
+        });
+        
+    } else {
+        modeIndicator.innerHTML = `
+            <span style="font-weight: 600; color: var(--text-secondary);">👁️ Guest Mode</span>
+            <span class="guest-badge" style="background: var(--secondary);">View Only</span>
+        `;
+        
+        document.querySelector('.container')?.classList.add('guest-mode');
+    }
+}
+
+// Forcer l'affichage des boutons admin
+function forceAdminButtonsDisplay() {
+    console.log("🔧 Vérification de l'affichage admin...");
+    
+    if (isAdmin) {
+        console.log("👑 Mode admin détecté, forçage de l'affichage...");
+        document.querySelector('.container')?.classList.remove('guest-mode');
+        document.querySelectorAll('.admin-hidden').forEach(el => {
+            el.classList.remove('admin-hidden');
+        });
+    }
+}
+window.forceAdminButtonsDisplay = forceAdminButtonsDisplay;
 
 function debugRoundArchiving() {
     console.log("🔍 Debug Round Archiving:");
@@ -6368,66 +6415,67 @@ window.toggleTournamentRounds = toggleTournamentRounds;
         // Mettre à jour l'indicateur de mode
         updateModeIndicator();
         
-        // Exposer les fonctions au niveau global
-window.debugRoundArchive = debugRoundArchive;
-window.debugMatches = debugMatches;
-window.recoverLostRounds = recoverLostRounds;
-window.manuallyArchiveCurrentRound = manuallyArchiveCurrentRound;
-        window.updateRoundsArchive = updateRoundsArchive;
-        
-window.toggleRoundDetails = toggleRoundDetails;
-window.filterRounds = filterRounds;
-window.clearCurrentRoundMatches = clearCurrentRoundMatches;
-window.exportRoundData = exportRoundData;
-window.deleteRound = deleteRound;
-        window.getAppState = () => state;
-        window.debugTournamentData = debugTournamentData;
-        window.archiveCurrentRound = archiveCurrentRound;  // <-- AJOUTEZ CETTE LIGNE
-        window.debugRoundArchiving = debugRoundArchiving;
-        window.toggleTheme = toggleTheme;
-        window.toggleTournamentRounds = toggleTournamentRounds;
-window.toggleHistoryDetails = toggleHistoryDetails;
-        window.loginAdmin = loginAdmin;
-        window.logoutAdmin = logoutAdmin;
-        window.addNewPlayer = addNewPlayer;
-        window.startNewTournament = startNewTournament;
-        window.createManualMatch = createManualMatch;
-        window.swapMatchColors = swapMatchColors;
-        window.setMatchWinner = setMatchWinner;
-        window.endTournament = endTournament;
-        window.generateSwissPairs = generateSwissPairs;
-        window.clearCurrentMatches = clearCurrentMatches;
-        window.selectAllPlayers = selectAllPlayers;
-        window.deselectAllPlayers = deselectAllPlayers;
-        window.filterPlayers = filterPlayers;
-        window.toggleEnrollmentForm = toggleEnrollmentForm;
+// Exposez les fonctions au niveau global
+window.switchTab = switchTab;
+window.toggleEnrollmentForm = toggleEnrollmentForm;
+window.loginAdmin = loginAdmin;
+window.logoutAdmin = logoutAdmin;
+window.addNewPlayer = addNewPlayer;
+window.updatePlayerRank = updatePlayerRank;
 window.addPlayerToTournament = addPlayerToTournament;
 window.updatePlayerTournamentRank = updatePlayerTournamentRank;
 window.removeFromTournament = removeFromTournament;
 window.exportEnrollmentList = exportEnrollmentList;
 window.clearAllEnrollments = clearAllEnrollments;
 window.startTournamentFromEnrollments = startTournamentFromEnrollments;
-        window.switchTab = switchTab;
-        window.promptGameLink = promptGameLink;
-        window.swapAllMatchColors = swapAllMatchColors;
-        window.randomizeAllColors = randomizeAllColors;
-        window.swapSelectedPlayers = swapSelectedPlayers;
-        window.toggleManualColor = toggleManualColor;
-        window.createMultipleMatches = createMultipleMatches;
-        window.filterHistory = filterHistory;
-        window.updatePlayerRank = updatePlayerRank;
-        window.toggleHistoryDetails = toggleHistoryDetails;
-        window.resetAllMatchColors = resetAllMatchColors;
-        window.clearAllMatches = clearAllMatches;
-        window.randomizeAllMatches = randomizeAllMatches;
-        window.exportTournamentData = exportTournamentData;
-        window.loadMatchForEditing = loadMatchForEditing;
-        window.swapMatchPlayers = swapMatchPlayers;
-        window.saveMatchChanges = saveMatchChanges;
-        window.deleteSelectedMatch = deleteSelectedMatch;
-        window.setBulkWinner = setBulkWinner;
-        
-        console.log("✅ Application initialisée sans erreurs");
+window.startNewTournament = startNewTournament;
+window.generateSwissPairs = generateSwissPairs;
+window.clearCurrentMatches = clearCurrentMatches;
+window.endTournament = endTournament;
+window.toggleTheme = toggleTheme;
+window.filterPlayers = filterPlayers;
+window.selectAllPlayers = selectAllPlayers;
+window.deselectAllPlayers = deselectAllPlayers;
+window.promptGameLink = promptGameLink;
+window.swapAllMatchColors = swapAllMatchColors;
+window.randomizeAllColors = randomizeAllColors;
+window.setMatchWinner = setMatchWinner;
+window.swapMatchColors = swapMatchColors;
+window.createManualMatch = createManualMatch;
+window.clearCurrentRoundMatches = clearCurrentRoundMatches;
+window.filterHistory = filterHistory;
+window.toggleHistoryDetails = toggleHistoryDetails;
+window.updateRoundsArchive = updateRoundsArchive;
+window.archiveCurrentRound = archiveCurrentRound;
+window.manuallyArchiveCurrentRound = manuallyArchiveCurrentRound;
+window.recoverLostRounds = recoverLostRounds;
+window.swapSelectedPlayers = swapSelectedPlayers;
+window.toggleManualColor = toggleManualColor;
+window.createMultipleMatches = createMultipleMatches;
+window.resetAllMatchColors = resetAllMatchColors;
+window.clearAllMatches = clearAllMatches;
+window.randomizeAllMatches = randomizeAllMatches;
+window.exportTournamentData = exportTournamentData;
+window.loadMatchForEditing = loadMatchForEditing;
+window.swapMatchPlayers = swapMatchPlayers;
+window.saveMatchChanges = saveMatchChanges;
+window.deleteSelectedMatch = deleteSelectedMatch;
+window.setBulkWinner = setBulkWinner;
+
+// Débogage
+window.debugMatches = debugMatches;
+window.debugRoundArchive = debugRoundArchive;
+window.debugTournamentData = debugTournamentData;
+
+console.log("✅ Application initialisée sans erreurs");
+
+// Exécutez automatiquement après un délai
+setTimeout(() => {
+    if (isAdmin) {
+        forceAdminButtonsDisplay();
+        updateMatchesDisplay();
+    }
+}, 1500);
     });
 
 </script>
