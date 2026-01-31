@@ -1692,32 +1692,22 @@
     <div class="pairing-title">➕ Add New Player</div>
     <div style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 10px; margin-top: 15px; align-items: end;">
         <div>
-            <input type="text" id="newPlayerFullName" class="form-input" placeholder="Full name" style="width: 100%;">
+            <input type="text" id="newPlayerFullName" class="form-input" placeholder="Pseudo/Full name" style="width: 100%;">
         </div>
         <div>
-            <select id="newPlayerGlobalRank" class="form-input">
-                <option value="30k">30k</option>
-                <option value="20k">20k</option>
-                <option value="10k">10k</option>
-                <option value="5k">5k</option>
-                <option value="1k" selected>1k</option>
-                <option value="1d">1d</option>
-                <option value="5d">5d</option>
-                <option value="9d">9d</option>
-            </select>
+            <input type="text" id="newPlayerGlobalRank" class="form-input" placeholder="Rank (ex: 1k, 5d)" value="1k">
         </div>
         <div>
             <input type="number" id="newPlayerInitialElo" class="form-input" value="1500" placeholder="Initial Elo">
         </div>
         <div>
-            <!-- ICI VOUS DEVEZ METTRE LE BOUTON -->
             <button onclick="addNewPlayerToDatabase()" class="btn btn-success">
                 <span>➕</span> Add Player
             </button>
         </div>
     </div>
     <div style="margin-top: 10px; font-size: 0.85rem; color: var(--text-secondary);">
-        ⓘ The initial Elo is 1500 for new players (standard)
+        ⓘ Rank format: 30k (beginner) to 9d (expert). Examples: 10k, 1k, 1d, 5d
     </div>
 </div>
 
@@ -6649,29 +6639,39 @@ function updatePlayersDatabaseList() {
 
 // Ajouter un nouveau joueur à la base de données
 // Ajouter un nouveau joueur à la base de données
+// Ajouter un nouveau joueur à la base de données
 async function addNewPlayerToDatabase() {
     if (!isAdmin) {
         showNotification('Admin access required', 'error');
         return;
     }
 
-    // Récupérer les valeurs du formulaire
     const nameInput = document.getElementById('newPlayerFullName');
-    const rankSelect = document.getElementById('newPlayerGlobalRank');
+    const rankInput = document.getElementById('newPlayerGlobalRank');
     const eloInput = document.getElementById('newPlayerInitialElo');
     
-    if (!nameInput || !rankSelect || !eloInput) {
-        showNotification('Form elements not found', 'error');
+    if (!nameInput || !rankInput || !eloInput) {
+        showNotification('Form error: fields not found', 'error');
         return;
     }
 
     const name = nameInput.value.trim();
-    const rank = rankSelect.value;
+    const rank = rankInput.value.trim().toLowerCase();
     const initialElo = parseInt(eloInput.value) || state.systemSettings.initialElo;
 
+    // Validation
     if (!name) {
         showNotification('Please enter a name', 'error');
         nameInput.focus();
+        return;
+    }
+
+    // Validation du format du rang
+    const rankPattern = /^([1-9][0-9]?k|1k|[1-9]d)$/i;
+    if (!rankPattern.test(rank)) {
+        showNotification('Invalid rank format. Use: 30k to 1k for kyu, 1d to 9d for dan', 'error');
+        rankInput.focus();
+        rankInput.value = '1k';
         return;
     }
 
@@ -6685,7 +6685,7 @@ async function addNewPlayerToDatabase() {
     const newPlayer = {
         id: Date.now().toString(),
         name,
-        rank,
+        rank: rank.toUpperCase(), // Stocker en majuscules
         points: 0,
         wins: 0,
         losses: 0,
@@ -6708,12 +6708,12 @@ async function addNewPlayerToDatabase() {
         await updateDoc(systemRef, { 
             players: updatedPlayers,
             eloRatings: updatedEloRatings,
-            lastAction: `👤 New player "${name}" added to database`
+            lastAction: `👤 New player "${name}" added as ${rank}`
         });
         
         // Réinitialiser le formulaire
         nameInput.value = '';
-        rankSelect.value = '1k';
+        rankInput.value = '1k';
         eloInput.value = state.systemSettings.initialElo;
         
         showNotification(`Player "${name}" added successfully as ${rank}`, 'success');
