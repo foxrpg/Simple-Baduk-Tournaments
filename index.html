@@ -1687,28 +1687,39 @@
                     </div>
 
                     <!-- Add Player Form (Admin Only) -->
-                    <div id="addPlayerForm" class="add-player-form admin-hidden">
-                        <div class="form-grid">
-                            <div>
-                                <input type="text" id="newPlayerName" class="form-input" placeholder="Player name">
-                            </div>
-                            <div>
-                                <select id="newPlayerRank" class="form-input">
-                                    <option value="30k">30k</option>
-                                    <option value="20k">20k</option>
-                                    <option value="10k">10k</option>
-                                    <option value="5k">5k</option>
-                                    <option value="1k" selected>1k</option>
-                                    <option value="1d">1d</option>
-                                    <option value="5d">5d</option>
-                                    <option value="9d">9d</option>
-                                </select>
-                            </div>
-                            <div>
-                                <button onclick="addNewPlayer()" class="btn btn-primary">Add</button>
-                            </div>
-                        </div>
-                    </div>
+                    <!-- Add New Player Form -->
+<div class="pairing-section admin-hidden" style="margin-bottom: 25px;">
+    <div class="pairing-title">➕ Add New Player</div>
+    <div style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 10px; margin-top: 15px; align-items: end;">
+        <div>
+            <input type="text" id="newPlayerFullName" class="form-input" placeholder="Full name" style="width: 100%;">
+        </div>
+        <div>
+            <select id="newPlayerGlobalRank" class="form-input">
+                <option value="30k">30k</option>
+                <option value="20k">20k</option>
+                <option value="10k">10k</option>
+                <option value="5k">5k</option>
+                <option value="1k" selected>1k</option>
+                <option value="1d">1d</option>
+                <option value="5d">5d</option>
+                <option value="9d">9d</option>
+            </select>
+        </div>
+        <div>
+            <input type="number" id="newPlayerInitialElo" class="form-input" value="1500" placeholder="Initial Elo">
+        </div>
+        <div>
+            <!-- ICI VOUS DEVEZ METTRE LE BOUTON -->
+            <button onclick="addNewPlayerToDatabase()" class="btn btn-success">
+                <span>➕</span> Add Player
+            </button>
+        </div>
+    </div>
+    <div style="margin-top: 10px; font-size: 0.85rem; color: var(--text-secondary);">
+        ⓘ The initial Elo is 1500 for new players (standard)
+    </div>
+</div>
 
                     <!-- Search and Filter -->
                     <div class="rankings-header">
@@ -6637,24 +6648,37 @@ function updatePlayersDatabaseList() {
 }
 
 // Ajouter un nouveau joueur à la base de données
+// Ajouter un nouveau joueur à la base de données
 async function addNewPlayerToDatabase() {
     if (!isAdmin) {
         showNotification('Admin access required', 'error');
         return;
     }
 
-    const name = document.getElementById('newPlayerFullName').value.trim();
-    const rank = document.getElementById('newPlayerGlobalRank').value;
-    const initialElo = parseInt(document.getElementById('newPlayerInitialElo').value) || state.systemSettings.initialElo;
+    // Récupérer les valeurs du formulaire
+    const nameInput = document.getElementById('newPlayerFullName');
+    const rankSelect = document.getElementById('newPlayerGlobalRank');
+    const eloInput = document.getElementById('newPlayerInitialElo');
+    
+    if (!nameInput || !rankSelect || !eloInput) {
+        showNotification('Form elements not found', 'error');
+        return;
+    }
+
+    const name = nameInput.value.trim();
+    const rank = rankSelect.value;
+    const initialElo = parseInt(eloInput.value) || state.systemSettings.initialElo;
 
     if (!name) {
         showNotification('Please enter a name', 'error');
+        nameInput.focus();
         return;
     }
 
     // Vérifier si le joueur existe déjà
     if (state.players.some(p => p.name.toLowerCase() === name.toLowerCase())) {
         showNotification('Player already exists', 'error');
+        nameInput.focus();
         return;
     }
 
@@ -6688,12 +6712,17 @@ async function addNewPlayerToDatabase() {
         });
         
         // Réinitialiser le formulaire
-        document.getElementById('newPlayerFullName').value = '';
+        nameInput.value = '';
+        rankSelect.value = '1k';
+        eloInput.value = state.systemSettings.initialElo;
         
         showNotification(`Player "${name}" added successfully as ${rank}`, 'success');
         
         // Mettre à jour l'affichage
         updatePlayersDatabase();
+        
+        // Remettre le focus sur le champ nom
+        setTimeout(() => nameInput.focus(), 100);
         
     } catch (error) {
         console.error("Error adding player:", error);
@@ -7277,6 +7306,7 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
+
 
 
 
