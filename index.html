@@ -6277,30 +6277,6 @@ async function startTournamentFromEnrollments() {
         showNotification("Erreur: " + error.message, 'error');
     }
 }
-
-// Fonction pour afficher les boutons admin
-function forceAdminButtonsDisplay() {
-    console.log("🔧 Vérification de l'affichage admin...");
-    
-    if (isAdmin) {
-        console.log("👑 Mode admin détecté, forçage de l'affichage...");
-        
-        // 1. Supprimer guest-mode
-        document.querySelector('.container')?.classList.remove('guest-mode');
-        
-        // 2. Afficher tous les éléments cachés
-        document.querySelectorAll('.admin-hidden').forEach(el => {
-            el.classList.remove('admin-hidden');
-        });
-        
-        // 3. Forcer l'affichage CSS
-        document.querySelectorAll('.win-btn, .swap-colors-btn').forEach(btn => {
-            btn.style.display = 'block';
-            btn.style.visibility = 'visible';
-            btn.style.opacity = '1';
-        });
-    }
-}
     function updateSeasonInfo() {
         document.getElementById('currentSeason').textContent = state.season;
         document.getElementById('currentSeasonNum').textContent = state.season;
