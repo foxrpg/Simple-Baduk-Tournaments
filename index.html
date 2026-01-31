@@ -3812,42 +3812,6 @@ async function archiveCurrentRound() {
     }
 }
 
-// Mode indicator
-function updateModeIndicator() {
-    console.log("🎛️ updateModeIndicator, admin:", isAdmin);
-    
-    const headerControls = document.querySelector('.header-controls');
-    if (!headerControls) return;
-    
-    let modeIndicator = document.getElementById('modeIndicator');
-    
-    if (!modeIndicator) {
-        modeIndicator = document.createElement('div');
-        modeIndicator.id = 'modeIndicator';
-        modeIndicator.style.marginRight = '15px';
-        headerControls.insertBefore(modeIndicator, headerControls.firstChild);
-    }
-    
-    if (isAdmin) {
-        modeIndicator.innerHTML = `
-            <span style="font-weight: 600; color: var(--accent);">🔧 Admin Mode</span>
-            <span class="guest-badge" style="background: var(--accent);">Full Control</span>
-        `;
-        
-        document.querySelector('.container')?.classList.remove('guest-mode');
-        document.querySelectorAll('.admin-hidden').forEach(el => {
-            el.classList.remove('admin-hidden');
-        });
-        
-    } else {
-        modeIndicator.innerHTML = `
-            <span style="font-weight: 600; color: var(--text-secondary);">👁️ Guest Mode</span>
-            <span class="guest-badge" style="background: var(--secondary);">View Only</span>
-        `;
-        
-        document.querySelector('.container')?.classList.add('guest-mode');
-    }
-}
 
 // Forcer l'affichage des boutons admin
 function forceAdminButtonsDisplay() {
